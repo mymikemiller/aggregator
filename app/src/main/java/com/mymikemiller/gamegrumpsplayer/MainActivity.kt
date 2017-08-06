@@ -46,12 +46,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         player!!.fullscreenControlFlags = controlFlags
 
         if (!wasRestored) {
-            player.cueVideo("avP5d16wEp0")
+            player.cueVideo("qNqfYtd3HTg")
         }
     }
 
     override val youTubePlayerProvider: YouTubePlayer.Provider
-        get() = playerView as YouTubePlayer.Provider //To change initializer of created properties use File | Settings | File Templates.
+        get() = playerView as YouTubePlayer.Provider
 
     private fun doLayout() {
         val playerParams = playerView!!.layoutParams as LinearLayout.LayoutParams
@@ -63,7 +63,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
             otherViews!!.visibility = View.GONE
         } else {
-            // vertically stacked boxes in portrait, horizontally stacked in landscape).
+            // vertically stacked boxes in portrait, horizontally stacked in landscape.
             otherViews!!.visibility = View.VISIBLE
             val otherViewsParams = otherViews!!.layoutParams
             otherViewsParams.width = ViewGroup.LayoutParams.MATCH_PARENT
