@@ -13,7 +13,7 @@ import android.widget.LinearLayout
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
  */
-class MainActivity : YouTubeFailureRecoveryActivity(), View.OnClickListener, YouTubePlayer.OnFullscreenListener {
+class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener {
     private var baseLayout: LinearLayout? = null
     private var playerView: YouTubePlayerView? = null
     private var player: YouTubePlayer? = null
@@ -53,10 +53,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), View.OnClickListener, You
     override val youTubePlayerProvider: YouTubePlayer.Provider
         get() = playerView as YouTubePlayer.Provider //To change initializer of created properties use File | Settings | File Templates.
 
-    override fun onClick(v: View) {
-        player!!.setFullscreen(!fullscreen)
-    }
-
     private fun doLayout() {
         val playerParams = playerView!!.layoutParams as LinearLayout.LayoutParams
         if (fullscreen) {
@@ -67,25 +63,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), View.OnClickListener, You
 
             otherViews!!.visibility = View.GONE
         } else {
-            // This layout is up to you - this is just a simple example (vertically stacked boxes in
-            // portrait, horizontally stacked in landscape).
+            // vertically stacked boxes in portrait, horizontally stacked in landscape).
             otherViews!!.visibility = View.VISIBLE
             val otherViewsParams = otherViews!!.layoutParams
-            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                otherViewsParams.width = 0
-                playerParams.width = otherViewsParams.width
-                playerParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
-                otherViewsParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-                playerParams.weight = 1f
-                baseLayout!!.orientation = LinearLayout.HORIZONTAL
-            } else {
-                otherViewsParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-                playerParams.width = otherViewsParams.width
-                playerParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
-                playerParams.weight = 0f
-                otherViewsParams.height = 0
-                baseLayout!!.orientation = LinearLayout.VERTICAL
-            }
+            otherViewsParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+            playerParams.width = otherViewsParams.width
+            playerParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+            playerParams.weight = 0f
+            otherViewsParams.height = 0
+            baseLayout!!.orientation = LinearLayout.VERTICAL
         }
     }
 
