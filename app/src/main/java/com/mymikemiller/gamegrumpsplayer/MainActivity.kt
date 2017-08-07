@@ -5,19 +5,32 @@ import com.google.android.youtube.player.YouTubePlayerView
 
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.os.AsyncTask
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
+import java.net.URL
+
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
  */
-class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener {
-    private var baseLayout: LinearLayout? = null
-    private var playerView: YouTubePlayerView? = null
-    private var player: YouTubePlayer? = null
-    private var otherViews: View? = null
+class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener, OnDetailsFetchedListener {
+    private lateinit var baseLayout: LinearLayout
+    private lateinit var playerView: YouTubePlayerView
+    private lateinit var player: YouTubePlayer
+    private lateinit var otherViews: View
+    private lateinit var thumbnail: ImageView;
+    private lateinit var team: TextView;
+    private lateinit var game: TextView;
+    private lateinit var episodeTitle: TextView;
+    private lateinit var episodePart: TextView;
+    private lateinit var episodeDescription: TextView;
     private var fullscreen: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +40,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         baseLayout = findViewById<LinearLayout>(R.id.layout)
         playerView = findViewById<YouTubePlayerView>(R.id.player)
         otherViews = findViewById(R.id.other_views)
+        thumbnail = findViewById<ImageView>(R.id.thumbnail)
+        team = findViewById<TextView>(R.id.team)
+        game = findViewById<TextView>(R.id.game)
+        episodeTitle = findViewById<TextView>(R.id.episodeTitle)
+        episodePart = findViewById<TextView>(R.id.episodePart)
+        episodeDescription = findViewById<TextView>(R.id.episodeDescription)
 
         playerView!!.initialize(DeveloperKey.DEVELOPER_KEY, this)
 
@@ -40,14 +59,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT)
         player.setOnFullscreenListener(this)
 
-        var controlFlags = player!!.fullscreenControlFlags
+        var controlFlags = player.fullscreenControlFlags
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
-        player!!.fullscreenControlFlags = controlFlags
+        player.fullscreenControlFlags = controlFlags
 
         if (!wasRestored) {
-            player.cueVideo("qNqfYtd3HTg")
+            player.cueVideo("rxbm052_TXE")
         }
+
+        Details.fetchDetails("rxbm052_TXE", this)
     }
 
     override val youTubePlayerProvider: YouTubePlayer.Provider
@@ -85,4 +106,46 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         doLayout()
     }
 
+    override fun onDetailsFetched(id: String, details: Details) {
+        println(details)
+
+        runOnUiThread {
+            team.setText(details.team)
+            game.setText(details.game)
+            episodeTitle.setText(details.title)
+            episodePart.setText(details.part)
+            episodeDescription.setText(details.description)
+        }
+
+        val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
+
+        DownloadImageTask(setBitmap)
+                .execute(details.thumbnail);
+
+    }
+}
+
+
+
+private class DownloadImageTask(callback: (Bitmap) -> Unit) : AsyncTask<String, Void, Bitmap>() {
+
+    val callback = callback
+
+    override protected fun doInBackground(vararg urls: String): Bitmap {
+        val urldisplay = urls[0]
+        var bmp: Bitmap? = null
+        try {
+            val url = URL(urldisplay)
+            val stream = url.openConnection().getInputStream()
+            bmp = BitmapFactory.decodeStream(stream)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return bmp!!
+    }
+
+    override protected fun onPostExecute(result: Bitmap) {
+        callback(result)
+    }
 }
