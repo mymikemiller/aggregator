@@ -25,12 +25,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var playerView: YouTubePlayerView
     private lateinit var player: YouTubePlayer
     private lateinit var otherViews: View
-    private lateinit var thumbnail: ImageView;
-    private lateinit var team: TextView;
-    private lateinit var game: TextView;
-    private lateinit var episodeTitle: TextView;
-    private lateinit var episodePart: TextView;
-    private lateinit var episodeDescription: TextView;
+    private lateinit var thumbnail: ImageView
+    private lateinit var team: TextView
+    private lateinit var game: TextView
+    private lateinit var episodeTitle: TextView
+    private lateinit var episodePart: TextView
+    private lateinit var episodeDescription: TextView
     private var fullscreen: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +47,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodePart = findViewById<TextView>(R.id.episodePart)
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
 
-        playerView!!.initialize(DeveloperKey.DEVELOPER_KEY, this)
+        playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
 
         doLayout()
     }
@@ -64,35 +64,37 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
         player.fullscreenControlFlags = controlFlags
 
+        val id = "lYe1JwLFuMU"
+
         if (!wasRestored) {
-            player.cueVideo("rxbm052_TXE")
+            player.cueVideo(id)
         }
 
-        Details.fetchDetails("rxbm052_TXE", this)
+        Details.fetchDetails(id, this)
     }
 
     override val youTubePlayerProvider: YouTubePlayer.Provider
-        get() = playerView as YouTubePlayer.Provider
+        get() = playerView
 
     private fun doLayout() {
-        val playerParams = playerView!!.layoutParams as LinearLayout.LayoutParams
+        val playerParams = playerView.layoutParams as LinearLayout.LayoutParams
         if (fullscreen) {
             // When in fullscreen, the visibility of all other views than the player should be set to
             // GONE and the player should be laid out across the whole screen.
             playerParams.width = LinearLayout.LayoutParams.MATCH_PARENT
             playerParams.height = LinearLayout.LayoutParams.MATCH_PARENT
 
-            otherViews!!.visibility = View.GONE
+            otherViews.visibility = View.GONE
         } else {
             // vertically stacked boxes in portrait, horizontally stacked in landscape.
-            otherViews!!.visibility = View.VISIBLE
-            val otherViewsParams = otherViews!!.layoutParams
+            otherViews.visibility = View.VISIBLE
+            val otherViewsParams = otherViews.layoutParams
             otherViewsParams.width = ViewGroup.LayoutParams.MATCH_PARENT
             playerParams.width = otherViewsParams.width
             playerParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
             playerParams.weight = 0f
             otherViewsParams.height = 0
-            baseLayout!!.orientation = LinearLayout.VERTICAL
+            baseLayout.orientation = LinearLayout.VERTICAL
         }
     }
 
@@ -107,8 +109,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     }
 
     override fun onDetailsFetched(id: String, details: Details) {
-        println(details)
-
         runOnUiThread {
             team.setText(details.team)
             game.setText(details.game)
@@ -120,18 +120,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
 
         DownloadImageTask(setBitmap)
-                .execute(details.thumbnail);
+                .execute(details.thumbnail)
 
     }
 }
 
 
 
-private class DownloadImageTask(callback: (Bitmap) -> Unit) : AsyncTask<String, Void, Bitmap>() {
+private class DownloadImageTask(val callback: (Bitmap) -> Unit) : AsyncTask<String, Void, Bitmap>() {
 
-    val callback = callback
-
-    override protected fun doInBackground(vararg urls: String): Bitmap {
+    override fun doInBackground(vararg urls: String): Bitmap {
         val urldisplay = urls[0]
         var bmp: Bitmap? = null
         try {
@@ -145,7 +143,7 @@ private class DownloadImageTask(callback: (Bitmap) -> Unit) : AsyncTask<String, 
         return bmp!!
     }
 
-    override protected fun onPostExecute(result: Bitmap) {
+    override fun onPostExecute(result: Bitmap) {
         callback(result)
     }
 }
