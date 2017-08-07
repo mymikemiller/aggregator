@@ -1,10 +1,5 @@
 package com.mymikemiller.gamegrumpsplayer
 
-// todo: move this into a callback function
-interface OnDetailsFetchedListener {
-    fun onDetailsFetched(id: String, details: Details)
-}
-
 /**
 *   Contains detailed information about the video, e.g. the thumbnail image, title and description
 */
@@ -102,7 +97,7 @@ data class Details(val fullVideoTitle: String,
     }
 
     companion object {
-        fun fetchDetails(id: String, callback: OnDetailsFetchedListener) {
+        fun fetchDetails(id: String, callback: (Details) -> Unit) {
             YouTubeAPI.fetchDetails(id, callback)
         }
         private fun getTitle(fullVideoTitle: String) : String {

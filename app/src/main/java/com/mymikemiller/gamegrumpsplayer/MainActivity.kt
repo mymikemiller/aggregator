@@ -20,7 +20,7 @@ import java.net.URL
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
  */
-class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener, OnDetailsFetchedListener {
+class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener {
     private lateinit var baseLayout: LinearLayout
     private lateinit var playerView: YouTubePlayerView
     private lateinit var player: YouTubePlayer
@@ -70,7 +70,23 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             player.cueVideo(id)
         }
 
-        Details.fetchDetails(id, this)
+        val populateDetails: (Details) -> Unit = {details -> run {
+            runOnUiThread {
+                team.setText(details.team)
+                game.setText(details.game)
+                episodeTitle.setText(details.title)
+                episodePart.setText(details.part)
+                episodeDescription.setText(details.description)
+            }
+
+            val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
+
+            DownloadImageTask(setBitmap)
+                    .execute(details.thumbnail)
+
+        } }
+
+        Details.fetchDetails(id, populateDetails)
     }
 
     override val youTubePlayerProvider: YouTubePlayer.Provider
@@ -106,22 +122,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         doLayout()
-    }
-
-    override fun onDetailsFetched(id: String, details: Details) {
-        runOnUiThread {
-            team.setText(details.team)
-            game.setText(details.game)
-            episodeTitle.setText(details.title)
-            episodePart.setText(details.part)
-            episodeDescription.setText(details.description)
-        }
-
-        val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
-
-        DownloadImageTask(setBitmap)
-                .execute(details.thumbnail)
-
     }
 }
 

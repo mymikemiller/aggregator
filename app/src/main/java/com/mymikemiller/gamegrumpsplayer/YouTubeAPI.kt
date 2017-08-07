@@ -23,7 +23,7 @@ class YouTubeAPI {
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
                 HttpRequestInitializer { }).setApplicationName("game-grumps-player").build()
 
-        fun fetchDetails(id:String, callback: OnDetailsFetchedListener) {
+        fun fetchDetails(id:String, callback: (Details) -> Unit) {
 
             val parameters = HashMap<String, String>()
             parameters.put("part", "snippet,contentDetails,statistics")
@@ -40,7 +40,7 @@ class YouTubeAPI {
             searchTask.execute()
         }
 
-        class FindVideoByIdTask(val search: YouTube.Videos.List, val callback: OnDetailsFetchedListener) : AsyncTask<Unit, Unit, Unit>() {
+        class FindVideoByIdTask(val search: YouTube.Videos.List, val callback: (Details) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 // Call the API and print results.
                 val searchResponse = search.execute()
@@ -53,7 +53,7 @@ class YouTubeAPI {
                             video.getSnippet().description,
                             video.getSnippet().thumbnails.maxres.url)//video.getSnippet().thumbnails[0])
 
-                    callback.onDetailsFetched(video.id, details)
+                    callback(details)
                 }
             }
 
