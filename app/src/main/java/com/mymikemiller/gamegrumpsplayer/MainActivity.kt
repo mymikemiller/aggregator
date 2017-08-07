@@ -15,7 +15,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import java.net.URL
+import com.mymikemiller.gamegrumpsplayer.util.DownloadImageTask
 
+val testVideoID = "V82qSnN9eFE"
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
@@ -48,27 +50,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
-
         doLayout()
-    }
-
-    override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
-                                         wasRestored: Boolean) {
-        this.player = player
-        // Specify that we want to handle fullscreen behavior ourselves.
-        player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT)
-        player.setOnFullscreenListener(this)
-
-        var controlFlags = player.fullscreenControlFlags
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-        controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
-        player.fullscreenControlFlags = controlFlags
-
-        val id = "lYe1JwLFuMU"
-
-        if (!wasRestored) {
-            player.cueVideo(id)
-        }
 
         val populateDetails: (Details) -> Unit = {details -> run {
             runOnUiThread {
@@ -86,7 +68,26 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         } }
 
-        Details.fetchDetails(id, populateDetails)
+        Details.fetchDetails(testVideoID, populateDetails)
+    }
+
+    override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
+                                         wasRestored: Boolean) {
+        this.player = player
+
+        // Specify that we want to handle fullscreen behavior ourselves.
+        player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT)
+        player.setOnFullscreenListener(this)
+
+        var controlFlags = player.fullscreenControlFlags
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+        controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
+        player.fullscreenControlFlags = controlFlags
+
+        if (!wasRestored) {
+            player.cueVideo(testVideoID)
+        }
+
     }
 
     override val youTubePlayerProvider: YouTubePlayer.Provider
@@ -122,28 +123,5 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         doLayout()
-    }
-}
-
-
-
-private class DownloadImageTask(val callback: (Bitmap) -> Unit) : AsyncTask<String, Void, Bitmap>() {
-
-    override fun doInBackground(vararg urls: String): Bitmap {
-        val urldisplay = urls[0]
-        var bmp: Bitmap? = null
-        try {
-            val url = URL(urldisplay)
-            val stream = url.openConnection().getInputStream()
-            bmp = BitmapFactory.decodeStream(stream)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        return bmp!!
-    }
-
-    override fun onPostExecute(result: Bitmap) {
-        callback(result)
     }
 }
