@@ -17,6 +17,7 @@ import android.widget.TextView
 import java.net.URL
 import com.mymikemiller.gamegrumpsplayer.util.DownloadImageTask
 import me.grantland.widget.AutofitTextView
+import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 
 val testVideoID = "V82qSnN9eFE"
 
@@ -62,13 +63,18 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 episodeDescription.setText(details.description)
             }
 
+            // Don't fetch the thumbnail anymore
 //            val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
-
 //            DownloadImageTask(setBitmap).execute(details.thumbnail)
-
         } }
 
         Details.fetchDetails(testVideoID, populateDetails)
+
+        val displayChannelId: (String) -> Unit = {channelId -> run {
+            println(channelId)
+        }}
+
+        YouTubeAPI.FindChannelIdByChannelName("gamegrumps", displayChannelId)
     }
 
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
