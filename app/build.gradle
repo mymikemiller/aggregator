@@ -35,4 +35,5 @@ dependencies {
     compile('com.google.apis:google-api-services-youtube:v3-rev183-1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
+    compile 'me.grantland:autofittextview:0.2.+'
 }

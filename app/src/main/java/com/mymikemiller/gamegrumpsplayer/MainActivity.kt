@@ -16,6 +16,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import java.net.URL
 import com.mymikemiller.gamegrumpsplayer.util.DownloadImageTask
+import me.grantland.widget.AutofitTextView
 
 val testVideoID = "V82qSnN9eFE"
 
@@ -63,8 +64,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
             val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
 
-            DownloadImageTask(setBitmap)
-                    .execute(details.thumbnail)
+            DownloadImageTask(setBitmap).execute(details.thumbnail)
 
         } }
 

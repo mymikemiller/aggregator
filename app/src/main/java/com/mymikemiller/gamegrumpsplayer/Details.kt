@@ -1,5 +1,7 @@
 package com.mymikemiller.gamegrumpsplayer
 
+import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
+
 /**
 *   Contains detailed information about the video, e.g. the thumbnail image, title and description
 */
