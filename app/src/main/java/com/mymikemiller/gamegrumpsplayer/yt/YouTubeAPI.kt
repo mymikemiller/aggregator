@@ -52,9 +52,10 @@ class YouTubeAPI {
                     val video = searchResultList[0]
 
                     val details = Details(
-                            video.getSnippet().getTitle(),
-                            video.getSnippet().description,
-                            video.getSnippet().thumbnails.maxres.url)//video.getSnippet().thumbnails[0])
+                            video.id,
+                            video.snippet.title,
+                            video.snippet.description,
+                            video.snippet.thumbnails.maxres.url)
 
                     callback(details)
                 }
