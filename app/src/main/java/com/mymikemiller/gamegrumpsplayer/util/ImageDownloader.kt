@@ -7,7 +7,10 @@ import java.net.URL
 
 /**
  * This utility downloads a bitmap from a URL and provides a callback to be handled when the bitmap
- * is retrieved
+ * is retrieved Use as follows for an ImageView named "thumbnail"
+ *
+ * val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
+ * DownloadImageTask(setBitmap).execute(details.thumbnail)
  */
 class DownloadImageTask(val callback: (Bitmap) -> Unit) : AsyncTask<String, Void, Bitmap>() {
     override fun doInBackground(vararg urls: String): Bitmap {

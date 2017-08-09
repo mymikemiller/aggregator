@@ -1,6 +1,5 @@
 package com.mymikemiller.gamegrumpsplayer.yt
 
-
 import android.os.AsyncTask
 import com.google.api.services.youtube.YouTube
 import com.google.api.client.http.HttpRequestInitializer
@@ -9,8 +8,6 @@ import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.mymikemiller.gamegrumpsplayer.Details
 import com.mymikemiller.gamegrumpsplayer.DeveloperKey
-import com.mymikemiller.gamegrumpsplayer.testVideoID
-
 
 val HTTP_TRANSPORT = NetHttpTransport()
 val JSON_FACTORY: JsonFactory = JacksonFactory()
