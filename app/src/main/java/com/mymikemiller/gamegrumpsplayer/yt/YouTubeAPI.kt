@@ -35,8 +35,8 @@ class YouTubeAPI {
             FetchChannelIdFromChannelNameTask(channelName, callback).execute()
         }
 
-        fun fetchAllVideosByChannelId(channelId: String, callback: (videoIds: List<String>) -> Unit) {
-            FetchAllVideosByChannelIdTask(channelId, callback).execute()
+        fun fetchAllDetailsByChannelId(channelId: String, callback: (videoIds: List<Details>) -> Unit) {
+            FetchAllDetailsByChannelIdTask(channelId, callback).execute()
         }
 
 
@@ -89,7 +89,7 @@ class YouTubeAPI {
             }
         }
 
-        class FetchAllVideosByChannelIdTask(val channelId: String, val callback: (List<String>) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        class FetchAllDetailsByChannelIdTask(val channelId: String, val callback: (List<Details>) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByChannelIdRequest = youtube.PlaylistItems().list("snippet")
                 videosListByChannelIdRequest.playlistId = channelId
@@ -99,9 +99,14 @@ class YouTubeAPI {
                 val searchResponse = videosListByChannelIdRequest.execute()
                 val searchResultList = searchResponse.getItems()
                 if (searchResultList != null) {
-                    val results: MutableList<String> = mutableListOf()
+                    val results: MutableList<Details> = mutableListOf()
                     for (result in searchResultList) {
-                        results.add(result.snippet.resourceId.videoId)
+                        val d = Details(result.snippet.resourceId.videoId,
+                                result.snippet.title,
+                                result.snippet.description,
+                                result.snippet.thumbnails.standard.url)
+
+                        results.add(d)
                     }
                     callback(results)
                 }

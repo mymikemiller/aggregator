@@ -70,16 +70,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         YouTubeAPI.fetchDetailsForVideo(testVideoID, populateDetails)
 
-        val listVideos: (List<String>) -> Unit = { videoIds ->
+        val listVideos: (List<Details>) -> Unit = { detailsList ->
             run {
-                for (videoId in videoIds) {
-                    println(videoId)
+                for (details in detailsList) {
+                    println(details)
                 }
             }
         }
 
         YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
-            YouTubeAPI.fetchAllVideosByChannelId(channelId, listVideos)
+            YouTubeAPI.fetchAllDetailsByChannelId(channelId, listVideos)
         }})
     }
 
