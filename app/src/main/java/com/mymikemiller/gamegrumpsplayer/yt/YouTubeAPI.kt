@@ -9,6 +9,7 @@ import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.mymikemiller.gamegrumpsplayer.Details
 import com.mymikemiller.gamegrumpsplayer.DeveloperKey
+import com.mymikemiller.gamegrumpsplayer.testVideoID
 
 
 val HTTP_TRANSPORT = NetHttpTransport()
@@ -26,27 +27,29 @@ class YouTubeAPI {
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
                 HttpRequestInitializer { }).setApplicationName("game-grumps-player").build()
 
-        fun fetchDetails(id: String, callback: (Details) -> Unit) {
-
-            val parameters = HashMap<String, String>()
-            parameters.put("part", "snippet,contentDetails,statistics")
-            parameters.put("id", id)
-
-            val videosListByIdRequest = youtube.videos().list(parameters.get("part").toString())
-            if (parameters.containsKey("id") && parameters.get("id") !== "") {
-                videosListByIdRequest.id = parameters.get("id").toString()
-            }
-            videosListByIdRequest.setKey(DeveloperKey.DEVELOPER_KEY)
-            videosListByIdRequest.setMaxResults(1)
-
-            val searchTask = FindVideoByIdTask(videosListByIdRequest, callback)
-            searchTask.execute()
+        fun fetchDetailsForVideo(id: String, callback: (Details) -> Unit) {
+            FetchDetailsForVideoTask(id, callback).execute()
         }
 
-        class FindVideoByIdTask(val search: YouTube.Videos.List, val callback: (Details) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        fun fetchChannelIdFromChannelName(channelName: String, callback: (channelId: String) -> Unit) {
+            FetchChannelIdFromChannelNameTask(channelName, callback).execute()
+        }
+
+        fun fetchAllVideosByChannelId(channelId: String, callback: (videoIds: List<String>) -> Unit) {
+            FetchAllVideosByChannelIdTask(channelId, callback).execute()
+        }
+
+
+
+        private class FetchDetailsForVideoTask(val id: String, val callback: (Details) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
+                val videosListByIdRequest = youtube.videos().list("snippet,contentDetails,statistics")
+                videosListByIdRequest.id = id
+                videosListByIdRequest.key = DeveloperKey.DEVELOPER_KEY
+                videosListByIdRequest.maxResults = 1
+
                 // Call the API and print results.
-                val searchResponse = search.execute()
+                val searchResponse = videosListByIdRequest.execute()
                 val searchResultList = searchResponse.getItems()
                 if (searchResultList != null && searchResultList.size == 1) {
                     val video = searchResultList[0]
@@ -60,25 +63,17 @@ class YouTubeAPI {
                     callback(details)
                 }
             }
-
-            override fun onPostExecute(result: Unit?) {
-            }
         }
 
-        fun FindChannelIdByChannelName(channelName: String, callback: (channelId: String) -> Unit) {
-            val channelsListByUsernameRequest = youtube.channels().list("snippet,contentDetails,statistics")
-            channelsListByUsernameRequest.forUsername = channelName
-            channelsListByUsernameRequest.setKey(DeveloperKey.DEVELOPER_KEY)
-            channelsListByUsernameRequest.setMaxResults(1)
-
-            val searchTask = FindChannelIdByChannelNameTask(channelsListByUsernameRequest, callback)
-            searchTask.execute()
-        }
-
-        class FindChannelIdByChannelNameTask(val search: YouTube.Channels.List, val callback: (String) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        private class FetchChannelIdFromChannelNameTask(val channelName: String, val callback: (String) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
+                val channelsListByUsernameRequest = youtube.channels().list("snippet,contentDetails,statistics")
+                channelsListByUsernameRequest.forUsername = channelName
+                channelsListByUsernameRequest.setKey(DeveloperKey.DEVELOPER_KEY)
+                channelsListByUsernameRequest.setMaxResults(1)
+
                 // Call the API and print results.
-                val searchResponse = search.execute()
+                val searchResponse = channelsListByUsernameRequest.execute()
                 val searchResultList = searchResponse.getItems()
                 if (searchResultList != null && searchResultList.size == 1) {
                     val channelInfo = searchResultList[0]
@@ -90,48 +85,26 @@ class YouTubeAPI {
                     val actualChannelId = first + "U" + last
 
                     callback(actualChannelId)
-
-                    val listVideos: (List<String>) -> Unit = { videoIds ->
-                        run {
-                            for (videoId in videoIds) {
-                                println(videoId)
-                            }
-                        }
-                    }
-
-                    GetAllVideosByChannelId(actualChannelId, listVideos)
                 }
             }
-
-            override fun onPostExecute(result: Unit?) {
-            }
         }
 
-        fun GetAllVideosByChannelId(channelId: String, callback: (videoIds: List<String>) -> Unit) {
-            val videosListByChannelIdRequest = youtube.PlaylistItems().list("snippet")
-            videosListByChannelIdRequest.playlistId = channelId
-            videosListByChannelIdRequest.key = (DeveloperKey.DEVELOPER_KEY)
-            videosListByChannelIdRequest.setMaxResults(50)
-
-            val searchTask = FindAllVideosByChannelIdTask(videosListByChannelIdRequest, callback)
-            searchTask.execute()
-        }
-
-        class FindAllVideosByChannelIdTask(val search: YouTube.PlaylistItems.List, val callback: (List<String>) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        class FetchAllVideosByChannelIdTask(val channelId: String, val callback: (List<String>) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
-                val searchResponse = search.execute()
+                val videosListByChannelIdRequest = youtube.PlaylistItems().list("snippet")
+                videosListByChannelIdRequest.playlistId = channelId
+                videosListByChannelIdRequest.key = (DeveloperKey.DEVELOPER_KEY)
+                videosListByChannelIdRequest.setMaxResults(50)
+
+                val searchResponse = videosListByChannelIdRequest.execute()
                 val searchResultList = searchResponse.getItems()
                 if (searchResultList != null) {
                     val results: MutableList<String> = mutableListOf()
                     for (result in searchResultList) {
                         results.add(result.snippet.resourceId.videoId)
-                        println(result)
                     }
                     callback(results)
                 }
-            }
-
-            override fun onPostExecute(result: Unit?) {
             }
         }
     }

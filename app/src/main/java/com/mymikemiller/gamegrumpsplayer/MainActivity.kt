@@ -68,13 +68,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 //            DownloadImageTask(setBitmap).execute(details.thumbnail)
         } }
 
-        Details.fetchDetails(testVideoID, populateDetails)
+        YouTubeAPI.fetchDetailsForVideo(testVideoID, populateDetails)
 
-        val displayChannelId: (String) -> Unit = {channelId -> run {
-            println(channelId)
-        }}
+        val listVideos: (List<String>) -> Unit = { videoIds ->
+            run {
+                for (videoId in videoIds) {
+                    println(videoId)
+                }
+            }
+        }
 
-        YouTubeAPI.FindChannelIdByChannelName("gamegrumps", displayChannelId)
+        YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
+            YouTubeAPI.fetchAllVideosByChannelId(channelId, listVideos)
+        }})
     }
 
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,

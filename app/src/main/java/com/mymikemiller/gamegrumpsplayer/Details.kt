@@ -100,14 +100,5 @@ data class Details(val videoId: String,
     }
 
     companion object {
-        fun fetchDetails(id: String, callback: (Details) -> Unit) {
-            YouTubeAPI.fetchDetails(id, callback)
-        }
-        private fun getTitle(fullVideoTitle: String) : String {
-            return fullVideoTitle
-        }
-        private fun getGame(fullVideoTitle: String) : String {
-            return fullVideoTitle
-        }
     }
 }
