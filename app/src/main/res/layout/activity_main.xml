@@ -32,23 +32,23 @@
             android:padding="5dp"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/team"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+            <!--<TextView-->
+                <!--android:id="@+id/team"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content" />-->
 
-            <TextView
-                android:id="@+id/game"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+            <!--<TextView-->
+                <!--android:id="@+id/game"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content" />-->
 
             <me.grantland.widget.AutofitTextView
                 android:id="@+id/episodeTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
+                android:singleLine="false"
                 android:maxLines="2"
-                android:textSize="40sp"
+                android:textSize="30sp"
                 autofit:minTextSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/light_font"
@@ -59,22 +59,31 @@
                 android:textAlignment="center"
                 />
 
-            <TextView
-                android:id="@+id/episodePart"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+            <!--<TextView-->
+                <!--android:id="@+id/episodePart"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content" />-->
 
             <TextView
                 android:id="@+id/episodeDescription"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:singleLine="false"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/light_font"
+                android:shadowColor="@color/text_shadow"
+                android:shadowDx="10"
+                android:shadowDy="10"
+                android:shadowRadius="2"
+                android:textAlignment="center" />
 
-            <ImageView
-                android:id="@+id/thumbnail"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/thumbnail"
-                android:scaleType="fitCenter"/>
+            <!--<ImageView-->
+                <!--android:id="@+id/thumbnail"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:contentDescription="@string/thumbnail"-->
+                <!--android:scaleType="fitCenter"/>-->
 
 
 

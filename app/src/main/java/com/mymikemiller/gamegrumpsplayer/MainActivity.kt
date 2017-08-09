@@ -43,11 +43,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         baseLayout = findViewById<LinearLayout>(R.id.layout)
         playerView = findViewById<YouTubePlayerView>(R.id.player)
         otherViews = findViewById(R.id.other_views)
-        thumbnail = findViewById<ImageView>(R.id.thumbnail)
-        team = findViewById<TextView>(R.id.team)
-        game = findViewById<TextView>(R.id.game)
+//        thumbnail = findViewById<ImageView>(R.id.thumbnail)
+//        team = findViewById<TextView>(R.id.team)
+//        game = findViewById<TextView>(R.id.game)
         episodeTitle = findViewById<TextView>(R.id.episodeTitle)
-        episodePart = findViewById<TextView>(R.id.episodePart)
+//        episodePart = findViewById<TextView>(R.id.episodePart)
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
@@ -55,16 +55,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         val populateDetails: (Details) -> Unit = {details -> run {
             runOnUiThread {
-                team.setText(details.team)
-                game.setText(details.game)
+//                team.setText(details.team)
+//                game.setText(details.game)
                 episodeTitle.setText(details.title)
-                episodePart.setText(details.part)
+//                episodePart.setText(details.part)
                 episodeDescription.setText(details.description)
             }
 
-            val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
+//            val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
 
-            DownloadImageTask(setBitmap).execute(details.thumbnail)
+//            DownloadImageTask(setBitmap).execute(details.thumbnail)
 
         } }
 
