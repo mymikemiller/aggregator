@@ -105,9 +105,6 @@ class YouTubeAPI {
                          callbackWhenDone: (detailsList: List<Details>) -> Unit
         ) -> Unit = { channelId, detailsList, nextPageToken, callbackWhenDone ->
             run {
-                if (nextPageToken == "CNAoEAA") {
-                    println("Hello")
-                }
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
                 FetchNextDetailsByChannelIdTask(channelId, nextPageToken, accumulate, callbackWhenDone ).execute()
@@ -140,7 +137,6 @@ class YouTubeAPI {
                         results.add(d)
                     }
                     if (searchResponse.nextPageToken == null) {
-                        println("hi") // add a callbackWhenDone here?
                         callbackWhenDone(allDetails)
                         return
                     }
