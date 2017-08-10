@@ -41,6 +41,32 @@
                 <!--android:id="@+id/game"-->
                 <!--android:layout_width="match_parent"-->
                 <!--android:layout_height="wrap_content" />-->
+            <LinearLayout
+                android:id="@+id/fetchVideosProgressSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/fetching"
+                    android:textColor="@color/light_font"
+                    android:shadowColor="@color/text_shadow"
+                    android:shadowDx="10"
+                    android:shadowDy="10"
+                    android:shadowRadius="2"
+                    android:textAlignment="center"/>
+
+                <ProgressBar
+                    android:id="@+id/fetchVideosProgressBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="false"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                />
+            </LinearLayout>
 
             <me.grantland.widget.AutofitTextView
                 android:id="@+id/episodeTitle"

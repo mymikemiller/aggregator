@@ -39,8 +39,14 @@ class YouTubeAPI {
             }
         }
 
-        fun fetchAllDetailsByChannelId(channelId: String, callback: (details: List<Details>) -> Unit) {
-            FetchNextDetailsByChannelIdTask(channelId, "", accumulate, callback).execute()
+        fun fetchAllDetailsByChannelId(channelId: String,
+                                       setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
+                                       callback: (details: List<Details>) -> Unit) {
+            FetchNextDetailsByChannelIdTask(channelId,
+                    "",
+                    accumulate,
+                    setPercentageCallback,
+                    callback).execute()
         }
 
 
@@ -102,18 +108,33 @@ class YouTubeAPI {
         val accumulate: (channelId: String,
                          detailsList: List<Details>,
                          nextPageToken: String,
+                         setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                          callbackWhenDone: (detailsList: List<Details>) -> Unit
-        ) -> Unit = { channelId, detailsList, nextPageToken, callbackWhenDone ->
+        ) -> Unit = { channelId,
+                      detailsList,
+                      nextPageToken,
+                      setPercentageCallback,
+                      callbackWhenDone ->
             run {
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
-                FetchNextDetailsByChannelIdTask(channelId, nextPageToken, accumulate, callbackWhenDone ).execute()
+                FetchNextDetailsByChannelIdTask(channelId,
+                        nextPageToken,
+                        accumulate,
+                        setPercentageCallback,
+                        callbackWhenDone).execute()
             }
         }
 
         class FetchNextDetailsByChannelIdTask(val channelId: String,
                                               var pageToken: String,
-                                              val callback: (channelId: String, detailsList: List<Details>, nextPageToken: String, callbackWhenDone: (detailsList: List<Details>) -> Unit) -> Unit,
+                                              val callback: (channelId: String,
+                                                             detailsList: List<Details>,
+                                                             nextPageToken: String,
+                                                             setPercentageCallback: (kotlin.Int, kotlin.Int) -> Unit,
+                                                             callbackWhenDone: (detailsList: List<Details>) -> Unit) -> Unit,
+                                              val setPercentageCallback: (totalVideos: kotlin.Int,
+                                                                          currentVideoNumber: kotlin.Int) -> Unit,
                                               val callbackWhenDone: (detailsList: List<Details>) -> Unit
                                               ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
@@ -124,6 +145,7 @@ class YouTubeAPI {
                 videosListByChannelIdRequest.pageToken = pageToken
 
                 val searchResponse = videosListByChannelIdRequest.execute()
+
                 val searchResultList = searchResponse.getItems()
                 if (searchResultList != null) {
                     val results: MutableList<Details> = mutableListOf()
@@ -136,11 +158,17 @@ class YouTubeAPI {
 
                         results.add(d)
                     }
+
+                    // Let the caller know how close we are to being done
+                    val overallTotalResults = searchResponse.pageInfo.totalResults
+                    // We have to add searchResultList.size instead of just allDetails.size because allDetails won't be added to until the callback is called below
+                    setPercentageCallback(Integer.valueOf(overallTotalResults), Integer.valueOf(allDetails.size + searchResultList.size))
+
                     if (searchResponse.nextPageToken == null) {
                         callbackWhenDone(allDetails)
                         return
                     }
-                    callback(channelId, results, searchResponse.nextPageToken, callbackWhenDone)
+                    callback(channelId, results, searchResponse.nextPageToken, setPercentageCallback, callbackWhenDone)
                 }
             }
         }

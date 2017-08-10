@@ -5,13 +5,11 @@ import com.google.android.youtube.player.YouTubePlayerView
 
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.AsyncTask
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 
@@ -23,6 +21,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var playerView: YouTubePlayerView
     private lateinit var player: YouTubePlayer
     private lateinit var otherViews: View
+    private lateinit var fetchVideosProgressSection: LinearLayout
+    private lateinit var fetchVideosProgresBar: ProgressBar
     private lateinit var episodeTitle: TextView
     private lateinit var episodeDescription: TextView
     private var fullscreen: Boolean = false
@@ -34,6 +34,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         baseLayout = findViewById<LinearLayout>(R.id.layout)
         playerView = findViewById<YouTubePlayerView>(R.id.player)
         otherViews = findViewById(R.id.other_views)
+        fetchVideosProgressSection = findViewById(R.id.fetchVideosProgressSection)
+        fetchVideosProgresBar = findViewById(R.id.fetchVideosProgressBar)
         episodeTitle = findViewById<TextView>(R.id.episodeTitle)
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
 
@@ -42,13 +44,23 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         val setRandomVideo: (List<Details>) -> Unit = { detailsList ->
             run {
+                runOnUiThread {
+                    fetchVideosProgressSection.visibility=View.GONE
+                }
                 val rand = Math.floor(Math.random() * detailsList.size).toInt()
                 setVideo(detailsList[rand])
             }
         }
+        val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
+            run {
+                fetchVideosProgresBar.max = totalVideos.toInt()
+                fetchVideosProgresBar.setProgress(currentVideoNumber.toInt());
+            }
+        }
         // channelId for gamegrumps: UU9CuvdOVfMPvKCiwdGKL3cQ
+        fetchVideosProgressSection.visibility=View.VISIBLE
         YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
-            YouTubeAPI.fetchAllDetailsByChannelId(channelId, setRandomVideo)
+            YouTubeAPI.fetchAllDetailsByChannelId(channelId, setVideoFetchPercentageComplete, setRandomVideo)
         }})
     }
 
