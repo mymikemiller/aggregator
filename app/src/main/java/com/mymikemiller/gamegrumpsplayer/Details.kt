@@ -96,6 +96,9 @@ data class Details(val videoId: String,
     }
     val description: String by lazy {
         val firstNewline = fullVideoDescription.indexOf('\n')
+        if (firstNewline == -1) {
+            println("Failed finding description in $fullVideoDescription")
+        }
         fullVideoDescription.substring(0, firstNewline)
     }
 

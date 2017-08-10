@@ -89,20 +89,23 @@ class YouTubeAPI {
         val allDetails = mutableListOf<Details>()
         var prevNextPageToken = ""
 
-        val accumulate: (detailsList: List<Details>, nextPageToken: String) -> Unit = { detailsList, nextPageToken ->
+        val accumulate: (detailsList: List<Details>,
+                         nextPageToken: String,
+                         callbackWhenDone: (detailsList: List<Details>) -> Unit
+        ) -> Unit = { detailsList, nextPageToken, callbackWhenDone ->
             run {
                 if (nextPageToken == "CNAoEAA") {
                     println("Hello")
                 }
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
-                FetchNextDetailsByChannelIdTask("UU9CuvdOVfMPvKCiwdGKL3cQ", nextPageToken, accumulate).execute()
+                FetchNextDetailsByChannelIdTask("UU9CuvdOVfMPvKCiwdGKL3cQ", nextPageToken, accumulate, callbackWhenDone ).execute()
             }
         }
 
         private fun fetchAllDetailsByChannelIdOuter(channelId: String, callback: (details: List<Details>) -> Unit) {
             //accumulate(allDetails, "") // beginning lastPageToken: "", last pageToken: CIIpEAA, second to last: CNAoEAA, third to last: CJ4oEAA
-            FetchNextDetailsByChannelIdTask(channelId, "CJ4oEAA", accumulate).execute()
+            FetchNextDetailsByChannelIdTask(channelId, "CJ4oEAA", accumulate, callback).execute()
 
             //callback(allDetails)
 
@@ -113,7 +116,9 @@ class YouTubeAPI {
         }
         class FetchNextDetailsByChannelIdTask(val channelId: String,
                                               var pageToken: String,
-                                              val callback: (detailsList: List<Details>, nextPageToken: String) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+                                              val callback: (detailsList: List<Details>, nextPageToken: String, callbackWhenDone: (detailsList: List<Details>) -> Unit) -> Unit,
+                                              val callbackWhenDone: (detailsList: List<Details>) -> Unit
+                                              ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByChannelIdRequest = youtube.PlaylistItems().list("snippet")
                 videosListByChannelIdRequest.playlistId = channelId
@@ -126,7 +131,7 @@ class YouTubeAPI {
                 if (searchResultList != null) {
                     val results: MutableList<Details> = mutableListOf()
                     for (result in searchResultList) {
-                        var thumbnail = if (result.snippet.thumbnails.standard != null) result.snippet.thumbnails.standard.url else result.snippet.thumbnails.high.url
+                        val thumbnail = if (result.snippet.thumbnails.standard != null) result.snippet.thumbnails.standard.url else result.snippet.thumbnails.high.url
                         val d = Details(result.snippet.resourceId.videoId,
                                 result.snippet.title,
                                 result.snippet.description,
@@ -136,9 +141,10 @@ class YouTubeAPI {
                     }
                     if (searchResponse.nextPageToken == null) {
                         println("hi") // add a callbackWhenDone here?
+                        callbackWhenDone(allDetails)
                         return
                     }
-                    callback(results, searchResponse.nextPageToken)
+                    callback(results, searchResponse.nextPageToken, callbackWhenDone)
                 }
             }
         }
