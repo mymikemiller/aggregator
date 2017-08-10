@@ -24,16 +24,23 @@ class YouTubeAPI {
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
                 HttpRequestInitializer { }).setApplicationName("game-grumps-player").build()
 
+        private var mChannelName = ""
+        private var mChannelId = ""
+
         fun fetchDetailsForVideo(id: String, callback: (Details) -> Unit) {
             FetchDetailsForVideoTask(id, callback).execute()
         }
 
         fun fetchChannelIdFromChannelName(channelName: String, callback: (channelId: String) -> Unit) {
-            FetchChannelIdFromChannelNameTask(channelName, callback).execute()
+            if (mChannelName == "" || mChannelId == "") {
+                FetchChannelIdFromChannelNameTask(channelName, callback).execute()
+            } else {
+                callback(mChannelId)
+            }
         }
 
         fun fetchAllDetailsByChannelId(channelId: String, callback: (details: List<Details>) -> Unit) {
-            fetchAllDetailsByChannelIdOuter(channelId, callback)
+            FetchNextDetailsByChannelIdTask(channelId, "", accumulate, callback).execute()
         }
 
 
@@ -81,6 +88,9 @@ class YouTubeAPI {
                     val last = channelId.substring(2, channelId.length)
                     val actualChannelId = first + "U" + last
 
+                    // Cache the channelId so we don't have to find it again
+                    mChannelName = channelName
+                    mChannelId = actualChannelId
                     callback(actualChannelId)
                 }
             }
@@ -89,34 +99,24 @@ class YouTubeAPI {
         val allDetails = mutableListOf<Details>()
         var prevNextPageToken = ""
 
-        val accumulate: (detailsList: List<Details>,
+        val accumulate: (channelId: String,
+                         detailsList: List<Details>,
                          nextPageToken: String,
                          callbackWhenDone: (detailsList: List<Details>) -> Unit
-        ) -> Unit = { detailsList, nextPageToken, callbackWhenDone ->
+        ) -> Unit = { channelId, detailsList, nextPageToken, callbackWhenDone ->
             run {
                 if (nextPageToken == "CNAoEAA") {
                     println("Hello")
                 }
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
-                FetchNextDetailsByChannelIdTask("UU9CuvdOVfMPvKCiwdGKL3cQ", nextPageToken, accumulate, callbackWhenDone ).execute()
+                FetchNextDetailsByChannelIdTask(channelId, nextPageToken, accumulate, callbackWhenDone ).execute()
             }
         }
 
-        private fun fetchAllDetailsByChannelIdOuter(channelId: String, callback: (details: List<Details>) -> Unit) {
-            //accumulate(allDetails, "") // beginning lastPageToken: "", last pageToken: CIIpEAA, second to last: CNAoEAA, third to last: CJ4oEAA
-            FetchNextDetailsByChannelIdTask(channelId, "CJ4oEAA", accumulate, callback).execute()
-
-            //callback(allDetails)
-
-//            while(nextPageToken != "") {
-//                val nextPageTokenToUse = if (nextPageToken == null) "" else nextPageToken
-//                FetchNextDetailsByChannelIdTask(channelId, nextPageTokenToUse!!, accumulate).execute()
-//            }
-        }
         class FetchNextDetailsByChannelIdTask(val channelId: String,
                                               var pageToken: String,
-                                              val callback: (detailsList: List<Details>, nextPageToken: String, callbackWhenDone: (detailsList: List<Details>) -> Unit) -> Unit,
+                                              val callback: (channelId: String, detailsList: List<Details>, nextPageToken: String, callbackWhenDone: (detailsList: List<Details>) -> Unit) -> Unit,
                                               val callbackWhenDone: (detailsList: List<Details>) -> Unit
                                               ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
@@ -144,7 +144,7 @@ class YouTubeAPI {
                         callbackWhenDone(allDetails)
                         return
                     }
-                    callback(results, searchResponse.nextPageToken, callbackWhenDone)
+                    callback(channelId, results, searchResponse.nextPageToken, callbackWhenDone)
                 }
             }
         }
