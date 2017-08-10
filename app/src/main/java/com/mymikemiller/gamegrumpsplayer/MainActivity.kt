@@ -40,16 +40,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
 
-        val listVideos: (List<Details>) -> Unit = { detailsList ->
+        val setRandomVideo: (List<Details>) -> Unit = { detailsList ->
             run {
                 val rand = Math.floor(Math.random() * 50).toInt()
                 setVideo(detailsList[rand])
             }
         }
-
-        YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
-            YouTubeAPI.fetchAllDetailsByChannelId(channelId, listVideos)
-        }})
+        // channelId for gamegrumps: UU9CuvdOVfMPvKCiwdGKL3cQ
+        //YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
+            YouTubeAPI.fetchAllDetailsByChannelId("UU9CuvdOVfMPvKCiwdGKL3cQ", setRandomVideo)
+        //}})
     }
 
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,

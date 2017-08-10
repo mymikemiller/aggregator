@@ -32,13 +32,13 @@ class YouTubeAPI {
             FetchChannelIdFromChannelNameTask(channelName, callback).execute()
         }
 
-        fun fetchAllDetailsByChannelId(channelId: String, callback: (videoIds: List<Details>) -> Unit) {
-            FetchAllDetailsByChannelIdTask(channelId, callback).execute()
+        fun fetchAllDetailsByChannelId(channelId: String, callback: (details: List<Details>) -> Unit) {
+            fetchAllDetailsByChannelIdOuter(channelId, callback)
         }
 
 
 
-        private class FetchDetailsForVideoTask(val id: String, val callback: (Details) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        private class FetchDetailsForVideoTask(val id: String, val callback: (details: Details) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByIdRequest = youtube.videos().list("snippet,contentDetails,statistics")
                 videosListByIdRequest.id = id
@@ -62,7 +62,7 @@ class YouTubeAPI {
             }
         }
 
-        private class FetchChannelIdFromChannelNameTask(val channelName: String, val callback: (String) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        private class FetchChannelIdFromChannelNameTask(val channelName: String, val callback: (channelId: String) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val channelsListByUsernameRequest = youtube.channels().list("snippet,contentDetails,statistics")
                 channelsListByUsernameRequest.forUsername = channelName
@@ -86,26 +86,59 @@ class YouTubeAPI {
             }
         }
 
-        class FetchAllDetailsByChannelIdTask(val channelId: String, val callback: (List<Details>) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        val allDetails = mutableListOf<Details>()
+        var prevNextPageToken = ""
+
+        val accumulate: (detailsList: List<Details>, nextPageToken: String) -> Unit = { detailsList, nextPageToken ->
+            run {
+                if (nextPageToken == "CNAoEAA") {
+                    println("Hello")
+                }
+                prevNextPageToken = nextPageToken
+                allDetails.addAll(detailsList)
+                FetchNextDetailsByChannelIdTask("UU9CuvdOVfMPvKCiwdGKL3cQ", nextPageToken, accumulate).execute()
+            }
+        }
+
+        private fun fetchAllDetailsByChannelIdOuter(channelId: String, callback: (details: List<Details>) -> Unit) {
+            //accumulate(allDetails, "") // beginning lastPageToken: "", last pageToken: CIIpEAA, second to last: CNAoEAA, third to last: CJ4oEAA
+            FetchNextDetailsByChannelIdTask(channelId, "CJ4oEAA", accumulate).execute()
+
+            //callback(allDetails)
+
+//            while(nextPageToken != "") {
+//                val nextPageTokenToUse = if (nextPageToken == null) "" else nextPageToken
+//                FetchNextDetailsByChannelIdTask(channelId, nextPageTokenToUse!!, accumulate).execute()
+//            }
+        }
+        class FetchNextDetailsByChannelIdTask(val channelId: String,
+                                              var pageToken: String,
+                                              val callback: (detailsList: List<Details>, nextPageToken: String) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByChannelIdRequest = youtube.PlaylistItems().list("snippet")
                 videosListByChannelIdRequest.playlistId = channelId
                 videosListByChannelIdRequest.key = (DeveloperKey.DEVELOPER_KEY)
                 videosListByChannelIdRequest.setMaxResults(50)
+                videosListByChannelIdRequest.pageToken = pageToken
 
                 val searchResponse = videosListByChannelIdRequest.execute()
                 val searchResultList = searchResponse.getItems()
                 if (searchResultList != null) {
                     val results: MutableList<Details> = mutableListOf()
                     for (result in searchResultList) {
+                        var thumbnail = if (result.snippet.thumbnails.standard != null) result.snippet.thumbnails.standard.url else result.snippet.thumbnails.high.url
                         val d = Details(result.snippet.resourceId.videoId,
                                 result.snippet.title,
                                 result.snippet.description,
-                                result.snippet.thumbnails.standard.url)
+                                thumbnail)
 
                         results.add(d)
                     }
-                    callback(results)
+                    if (searchResponse.nextPageToken == null) {
+                        println("hi") // add a callbackWhenDone here?
+                        return
+                    }
+                    callback(results, searchResponse.nextPageToken)
                 }
             }
         }
