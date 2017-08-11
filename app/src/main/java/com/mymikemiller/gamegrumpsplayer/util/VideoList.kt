@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.content.ContentValues.TAG
 import android.content.ContentValues
 import android.util.Log
+import com.google.api.client.util.DateTime
 
 /**
  * VideoList stores video Detail in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
@@ -15,7 +16,7 @@ import android.util.Log
 
 class VideoList {
     companion object {
-        val DATABASE_VERSION: Int = 13 // Increment this when the table definition changes
+        val DATABASE_VERSION: Int = 15 // Increment this when the table definition changes
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -24,6 +25,7 @@ class VideoList {
         val KEY_TITLE: String = "Title"
         val KEY_DESCRIPTION: String = "Description"
         val KEY_THUMBNAIL: String = "Thumbnail"
+        val KEY_DATE_UPLOADED: String = "Date Uploaded"
 
         private val DETAILS_TABLE_CREATE =
                 "CREATE TABLE " + DETAILS_TABLE_NAME + " (" +
@@ -39,7 +41,7 @@ class VideoList {
             val dbHelper = DetailsOpenHelper(context.applicationContext)
 
             // Get all posts from database
-            val allDetails = dbHelper.getAllDetails()
+            val allDetails = dbHelper.getAllDetailsFromDb()
 
             // Figure out which Detail we can stop at when we fetch from youtube
             val lastDetail = if (allDetails.isNotEmpty()) allDetails[allDetails.size - 1] else null
@@ -53,6 +55,8 @@ class VideoList {
                     dbHelper.addDetails(details)
 
                     allDetails.addAll(details)
+
+                    val detailsSorted = allDetails.sorted() //.sortedWith(compareBy({ it.dateUploaded }))
 
                     // Return to the original callback the combined list of all Details
                     callback(allDetails)
@@ -91,6 +95,7 @@ class VideoList {
                     values.put(KEY_TITLE, detail.fullVideoTitle)
                     values.put(KEY_DESCRIPTION, detail.fullVideoDescription)
                     values.put(KEY_THUMBNAIL, detail.thumbnail)
+                    values.put(KEY_DATE_UPLOADED, detail.dateUploaded.toStringRfc3339())
 
                     // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
                     db.insertOrThrow(DETAILS_TABLE_NAME, null, values)
@@ -103,7 +108,7 @@ class VideoList {
             }
         }
 
-        fun getAllDetails(): MutableList<Detail> {
+        fun getAllDetailsFromDb(): MutableList<Detail> {
             val allDetails = mutableListOf<Detail>()
 
             // SELECT * FROM DETAILS
@@ -120,8 +125,11 @@ class VideoList {
                         val title = cursor.getString(cursor.getColumnIndex(KEY_TITLE))
                         val description = cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION))
                         val thumbnail = cursor.getString(cursor.getColumnIndex(KEY_THUMBNAIL))
+                        val dateUploaded = cursor.getString(cursor.getColumnIndex(KEY_DATE_UPLOADED))
 
-                        val newDetail = Detail(videoId, title, description, thumbnail)
+                        val dateRfc3339 = DateTime.parseRfc3339(dateUploaded)
+
+                        val newDetail = Detail(videoId, title, description, thumbnail, dateRfc3339)
                         allDetails.add(newDetail)
                     } while (cursor.moveToNext())
                 }

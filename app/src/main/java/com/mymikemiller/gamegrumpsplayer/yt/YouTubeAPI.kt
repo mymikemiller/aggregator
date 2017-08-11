@@ -70,7 +70,8 @@ class YouTubeAPI {
                             video.id,
                             video.snippet.title,
                             video.snippet.description,
-                            video.snippet.thumbnails.maxres.url)
+                            video.snippet.thumbnails.maxres.url,
+                            video.snippet.publishedAt)
 
                     callback(detail)
                 }
@@ -158,10 +159,13 @@ class YouTubeAPI {
                     val results: MutableList<Detail> = mutableListOf()
                     for (result in searchResultList) {
                         val thumbnail = if (result.snippet.thumbnails.standard != null) result.snippet.thumbnails.standard.url else result.snippet.thumbnails.high.url
+
                         val d = Detail(result.snippet.resourceId.videoId,
                                 result.snippet.title,
                                 result.snippet.description,
-                                thumbnail)
+                                thumbnail,
+                                result.snippet.publishedAt)
+                                // TODO: Fix this. Use publishedAt
 
                         results.add(d)
                     }

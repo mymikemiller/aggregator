@@ -1,6 +1,9 @@
 package com.mymikemiller.gamegrumpsplayer
 
+import com.google.api.client.util.DateTime
+import java.util.Date
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
+import java.text.SimpleDateFormat
 
 /**
 *   Contains detailed information about the video, e.g. the thumbnail image, title and description
@@ -8,14 +11,28 @@ import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 data class Detail(val videoId: String,
                   val fullVideoTitle: String,
                   val fullVideoDescription: String,
-                  val thumbnail: String) {
+                  val thumbnail: String,
+                  val dateUploaded: DateTime) : Comparable<Detail> {
+
     val team: String by lazy {
         val lastDashIndex = fullVideoTitle.lastIndexOf(" - ")
-        fullVideoTitle.substring(lastDashIndex + 3, fullVideoTitle.length)
+        val team: String
+        if (lastDashIndex == -1) {
+            // No dashes found. Return the whole title.
+            team = fullVideoTitle
+        } else {
+            team = fullVideoTitle.substring(lastDashIndex + 3, fullVideoTitle.length)
+        }
+        team
     }
-    private val gameAndTitleAndPart: String by lazy {
+    val gameAndTitleAndPart: String by lazy {
+        // If no part found. Return the full video title
+        var gameAndTitleAndPart = fullVideoTitle
         val lastDashIndex = fullVideoTitle.lastIndexOf(" - ")
-        fullVideoTitle.substring(0, lastDashIndex)
+        if (lastDashIndex != -1) {
+            gameAndTitleAndPart = fullVideoTitle.substring(0, lastDashIndex)
+        }
+        gameAndTitleAndPart
     }
     private val gameAndTitle: String by lazy {
         // There are 3 possible cases for gameTitleAndPart:
@@ -38,9 +55,8 @@ data class Detail(val videoId: String,
                 gameAndTitle = gameAndTitleAndPart
             }
         } else {
-            // Case 2 (two dashes)
+            // Case 2 (two or no dashes)
             val lastSeparatorDashIndex = gameAndTitleAndPart.lastIndexOf(" - ")
-            println("lastSeperatorDashIndex: $lastSeparatorDashIndex");
             if (lastSeparatorDashIndex == -1) {
                 // No separators found. Just return the whole thing as the gameAndTitle.
                 gameAndTitle = gameAndTitleAndPart
@@ -57,7 +73,12 @@ data class Detail(val videoId: String,
         val game: String
         if (firstDashIndex == -1) {
             val lastColonIndex = gameAndTitle.lastIndexOf(": ")
-            game = gameAndTitle.substring(0, lastColonIndex)
+            if (lastColonIndex == -1) {
+                // No dash and no colon found. We'll just have the game be the whole string.
+                game = gameAndTitle
+            } else {
+                game = gameAndTitle.substring(0, lastColonIndex)
+            }
         } else {
             game = gameAndTitle.substring(0, firstDashIndex)
         }
@@ -68,7 +89,12 @@ data class Detail(val videoId: String,
         val firstDashIndex = gameAndTitle.indexOf(" - ")
         if (firstDashIndex == -1) {
             val firstColonIndex = gameAndTitle.indexOf(": ")
-            title = gameAndTitle.substring(firstColonIndex + 2, gameAndTitle.length)
+            if (firstColonIndex == -1) {
+                // No colon and no dash found. Just return the full game and title.
+                title = gameAndTitle
+            } else {
+                title = gameAndTitle.substring(firstColonIndex + 2, gameAndTitle.length)
+            }
         } else {
             title = gameAndTitle.substring(firstDashIndex + 3, gameAndTitle.length)
         }
@@ -110,6 +136,9 @@ data class Detail(val videoId: String,
 
     override fun toString(): String {
         return "$game: $title ($videoId)"
+    }
+    override fun compareTo(other: Detail): Int {
+        return (dateUploaded.value - other.dateUploaded.value).toInt()
     }
 
     companion object {
