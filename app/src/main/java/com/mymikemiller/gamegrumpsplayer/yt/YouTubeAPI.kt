@@ -126,7 +126,7 @@ class YouTubeAPI {
             }
         }
 
-        class FetchNextDetailsByChannelIdTask(val channelId: String,
+        private class FetchNextDetailsByChannelIdTask(val channelId: String,
                                               var pageToken: String,
                                               val callback: (channelId: String,
                                                              detailsList: List<Details>,

@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.mymikemiller.gamegrumpsplayer.util.VideoList
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 
 /**
@@ -53,14 +54,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
         val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
             run {
-                fetchVideosProgresBar.max = totalVideos.toInt()
-                fetchVideosProgresBar.setProgress(currentVideoNumber.toInt());
+                fetchVideosProgresBar.max = totalVideos
+                fetchVideosProgresBar.setProgress(currentVideoNumber)
             }
         }
         // channelId for gamegrumps: UU9CuvdOVfMPvKCiwdGKL3cQ
         fetchVideosProgressSection.visibility=View.VISIBLE
         YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
-            YouTubeAPI.fetchAllDetailsByChannelId(channelId, setVideoFetchPercentageComplete, setRandomVideo)
+            VideoList.fetchAllDetailsByChannelId(this, channelId, setVideoFetchPercentageComplete, setRandomVideo)
         }})
     }
 
