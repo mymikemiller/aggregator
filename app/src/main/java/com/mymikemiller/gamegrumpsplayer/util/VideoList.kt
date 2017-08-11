@@ -29,14 +29,16 @@ class VideoList {
                         KEY_TITLE + " TEXT, " +
                         KEY_DESCRIPTION + " TEXT);"
 
+
         fun fetchAllDetailsByChannelId(context: Context,
                                        channelId: String,
+                                       stopAtDetails: Details?,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                                        callback: (details: List<Details>) -> Unit) {
             val openHelper = DetailsOpenHelper(context.applicationContext)
 
             //TODO: move this to a background process because this may be creating a table, which is expensive
-            val writableDatabase = openHelper.writableDatabase
+//            val writableDatabase = openHelper.writableDatabase
 
             // Create sample data
             val sampleDetails = Details("TestId", "testTitle", "testDescription", "testThumbnail")
@@ -50,7 +52,10 @@ class VideoList {
                 println("details from database: $details")
             }
 
-            YouTubeAPI.fetchAllDetailsByChannelId(channelId, setPercentageCallback, callback)
+            // Figure out which Detail we can stop at when we fetch from youtube
+            val lastDetails = if (allDetails.isNotEmpty()) allDetails[allDetails.size - 1] else null
+
+            YouTubeAPI.fetchAllDetailsByChannelId(channelId, lastDetails, setPercentageCallback, callback)
         }
     }
 

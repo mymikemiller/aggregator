@@ -61,7 +61,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         // channelId for gamegrumps: UU9CuvdOVfMPvKCiwdGKL3cQ
         fetchVideosProgressSection.visibility=View.VISIBLE
         YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
-            VideoList.fetchAllDetailsByChannelId(this, channelId, setVideoFetchPercentageComplete, setRandomVideo)
+            VideoList.fetchAllDetailsByChannelId(this, channelId, null, setVideoFetchPercentageComplete, setRandomVideo)
         }})
     }
 

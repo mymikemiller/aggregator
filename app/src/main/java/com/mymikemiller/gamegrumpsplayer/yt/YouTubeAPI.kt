@@ -40,9 +40,11 @@ class YouTubeAPI {
         }
 
         fun fetchAllDetailsByChannelId(channelId: String,
+                                       stopAtDetails: Details?,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                                        callback: (details: List<Details>) -> Unit) {
             FetchNextDetailsByChannelIdTask(channelId,
+                    stopAtDetails,
                     "",
                     accumulate,
                     setPercentageCallback,
@@ -106,11 +108,13 @@ class YouTubeAPI {
         var prevNextPageToken = ""
 
         val accumulate: (channelId: String,
+                         stopAtDetails: Details?,
                          detailsList: List<Details>,
                          nextPageToken: String,
                          setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                          callbackWhenDone: (detailsList: List<Details>) -> Unit
         ) -> Unit = { channelId,
+                      stopAtDetails,
                       detailsList,
                       nextPageToken,
                       setPercentageCallback,
@@ -119,6 +123,7 @@ class YouTubeAPI {
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
                 FetchNextDetailsByChannelIdTask(channelId,
+                        stopAtDetails,
                         nextPageToken,
                         accumulate,
                         setPercentageCallback,
@@ -127,8 +132,10 @@ class YouTubeAPI {
         }
 
         private class FetchNextDetailsByChannelIdTask(val channelId: String,
+                                                      val stopAtDetails: Details?,
                                               var pageToken: String,
                                               val callback: (channelId: String,
+                                                             stopAtDetails: Details?,
                                                              detailsList: List<Details>,
                                                              nextPageToken: String,
                                                              setPercentageCallback: (kotlin.Int, kotlin.Int) -> Unit,
@@ -168,7 +175,7 @@ class YouTubeAPI {
                         callbackWhenDone(allDetails)
                         return
                     }
-                    callback(channelId, results, searchResponse.nextPageToken, setPercentageCallback, callbackWhenDone)
+                    callback(channelId, stopAtDetails, results, searchResponse.nextPageToken, setPercentageCallback, callbackWhenDone)
                 }
             }
         }
