@@ -40,7 +40,13 @@ data class Detail(val videoId: String,
         } else {
             // Case 2 (two dashes)
             val lastSeparatorDashIndex = gameAndTitleAndPart.lastIndexOf(" - ")
-            gameAndTitle = gameAndTitleAndPart.substring(0, lastSeparatorDashIndex)
+            println("lastSeperatorDashIndex: $lastSeparatorDashIndex");
+            if (lastSeparatorDashIndex == -1) {
+                // No separators found. Just return the whole thing as the gameAndTitle.
+                gameAndTitle = gameAndTitleAndPart
+            } else {
+                gameAndTitle = gameAndTitleAndPart.substring(0, lastSeparatorDashIndex)
+            }
         }
 
         gameAndTitle
@@ -100,6 +106,10 @@ data class Detail(val videoId: String,
             println("Failed finding description in $fullVideoDescription")
         }
         fullVideoDescription.substring(0, firstNewline)
+    }
+
+    override fun toString(): String {
+        return "$game: $title ($videoId)"
     }
 
     companion object {

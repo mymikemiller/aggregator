@@ -15,7 +15,7 @@ import android.util.Log
 
 class VideoList {
     companion object {
-        val DATABASE_VERSION: Int = 11 // Increment this when the table definition changes
+        val DATABASE_VERSION: Int = 13 // Increment this when the table definition changes
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -27,7 +27,7 @@ class VideoList {
 
         private val DETAILS_TABLE_CREATE =
                 "CREATE TABLE " + DETAILS_TABLE_NAME + " (" +
-                        KEY_VIDEOID + " TEXT, " +
+                        KEY_VIDEOID + " TEXT NOT NULL UNIQUE, " +
                         KEY_TITLE + " TEXT, " +
                         KEY_DESCRIPTION + " TEXT, " +
                         KEY_THUMBNAIL + " TEXT);"
@@ -36,10 +36,10 @@ class VideoList {
                                        channelId: String,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                                        callback: (details: List<Detail>) -> Unit) {
-            val openHelper = DetailsOpenHelper(context.applicationContext)
+            val dbHelper = DetailsOpenHelper(context.applicationContext)
 
             // Get all posts from database
-            val allDetails = openHelper.getAllDetails()
+            val allDetails = dbHelper.getAllDetails()
 
             // Figure out which Detail we can stop at when we fetch from youtube
             val lastDetail = if (allDetails.isNotEmpty()) allDetails[allDetails.size - 1] else null
@@ -50,7 +50,7 @@ class VideoList {
                     println(details)
 
                     // We got all the new Details from YouTube, so append them to the database
-                    openHelper.addDetails(details)
+                    dbHelper.addDetails(details)
 
                     allDetails.addAll(details)
 

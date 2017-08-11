@@ -45,7 +45,7 @@ class YouTubeAPI {
                                        callback: (details: List<Detail>) -> Unit) {
             FetchNextDetailByChannelIdTask(channelId,
                     stopAtDetail,
-                    "", // first :"", last: CIIpEAA, second to last: CNAoEAA
+                    "CNAoEAA", // first :"", last: CIIpEAA, second to last: CNAoEAA
                     accumulate,
                     setPercentageCallback,
                     callback).execute()
