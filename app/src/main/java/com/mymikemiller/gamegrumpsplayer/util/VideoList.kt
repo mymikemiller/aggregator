@@ -16,23 +16,25 @@ import android.util.Log
 
 class VideoList {
     companion object {
-        val DATABASE_VERSION: Int = 4 // Increment this when the table definition changes
+        val DATABASE_VERSION: Int = 9 // Increment this when the table definition changes
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
         // VideoList columns
+        val KEY_VIDEOID: String="Video_Id"
         val KEY_TITLE: String = "Title"
         val KEY_DESCRIPTION: String = "Description"
+        val KEY_THUMBNAIL: String = "Thumbnail"
 
         private val DETAILS_TABLE_CREATE =
                 "CREATE TABLE " + DETAILS_TABLE_NAME + " (" +
+                        KEY_VIDEOID + " TEXT, " +
                         KEY_TITLE + " TEXT, " +
-                        KEY_DESCRIPTION + " TEXT);"
-
+                        KEY_DESCRIPTION + " TEXT, " +
+                        KEY_THUMBNAIL + " TEXT);"
 
         fun fetchAllDetailsByChannelId(context: Context,
                                        channelId: String,
-                                       stopAtDetail: Detail?,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                                        callback: (details: List<Detail>) -> Unit) {
             val openHelper = DetailsOpenHelper(context.applicationContext)
@@ -41,21 +43,55 @@ class VideoList {
 //            val writableDatabase = openHelper.writableDatabase
 
             // Create sample data
-            val sampleDetails = Detail("TestId", "testTitle", "testDescription", "testThumbnail")
+            val sampleDetail = Detail("TestId", "testTitle", "testDescription", "testThumbnail")
 
             // Add sample post to the database
-            openHelper.addDetails(sampleDetails)
+
+            // Create and/or open the database for writing
+            val db = openHelper.writableDatabase
+
+            // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
+            // consistency of the database.
+            db.beginTransaction()
+            openHelper.addDetail(db, sampleDetail)
+            db.endTransaction()
 
             // Get all posts from database
             val allDetails = openHelper.getAllDetails()
-            for (details in allDetails) {
-                println("details from database: $details")
+            for (detail in allDetails) {
+                println("detail from database: $detail")
             }
 
             // Figure out which Detail we can stop at when we fetch from youtube
-            val lastDetails = if (allDetails.isNotEmpty()) allDetails[allDetails.size - 1] else null
+            val lastDetail = if (allDetails.isNotEmpty()) allDetails[allDetails.size - 1] else null
 
-            YouTubeAPI.fetchAllDetailsByChannelId(channelId, lastDetails, setPercentageCallback, callback)
+            // Now that we have all details from the database, append the ones we find from YouTube
+            YouTubeAPI.fetchAllDetailsByChannelId(channelId, lastDetail, setPercentageCallback, {details: List<Detail> ->
+                run {
+                    println(details)
+
+                    // We got all the new Details from YouTube, so append them to the database
+
+                    // Create and/or open the database for writing
+                    val db = openHelper.writableDatabase
+
+                    // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
+                    // consistency of the database.
+                    db.beginTransaction()
+
+                    for (detail in details) {
+                        println("a detail from youtube: $detail")
+                        openHelper.addDetail(db, detail)
+                    }
+
+                    db.endTransaction()
+
+                    allDetails.addAll(details)
+
+                    // Return to the original callback the combined list of all Details
+                    callback(allDetails)
+                }
+            })
         }
     }
 
@@ -72,18 +108,14 @@ class VideoList {
             db.execSQL(DETAILS_TABLE_CREATE)
         }
 
-        // Insert a post into the database
-        fun addDetails(detail: Detail) {
-            // Create and/or open the database for writing
-            val db = writableDatabase
-
-            // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
-            // consistency of the database.
-            db.beginTransaction()
+        // Insert a Detail into the database
+        fun addDetail(db: SQLiteDatabase, detail: Detail) {
             try {
                 val values = ContentValues()
+                values.put(KEY_VIDEOID, detail.videoId)
                 values.put(KEY_TITLE, detail.fullVideoTitle)
                 values.put(KEY_DESCRIPTION, detail.fullVideoDescription)
+                values.put(KEY_THUMBNAIL, detail.thumbnail)
 
                 // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
                 db.insertOrThrow(DETAILS_TABLE_NAME, null, values)
@@ -91,10 +123,12 @@ class VideoList {
             } catch (e: Exception) {
                 Log.d(TAG, "Error while trying to add post to database")
             } finally {
-                db.endTransaction()
+                val allDetails = getAllDetails()
+                println(allDetails)
             }
         }
-        fun getAllDetails(): List<Detail> {
+
+        fun getAllDetails(): MutableList<Detail> {
             val allDetails = mutableListOf<Detail>()
 
             // SELECT * FROM DETAILS
@@ -107,11 +141,13 @@ class VideoList {
             try {
                 if (cursor.moveToFirst()) {
                     do {
+                        val videoId = cursor.getString(cursor.getColumnIndex(KEY_VIDEOID))
                         val title = cursor.getString(cursor.getColumnIndex(KEY_TITLE))
                         val description = cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION))
+                        val thumbnail = cursor.getString(cursor.getColumnIndex(KEY_THUMBNAIL))
 
-                        val newDetails = Detail(title, description, "", "")
-                        allDetails.add(newDetails)
+                        val newDetail = Detail(videoId, title, description, thumbnail)
+                        allDetails.add(newDetail)
                     } while (cursor.moveToNext())
                 }
             } catch (e: Exception) {
