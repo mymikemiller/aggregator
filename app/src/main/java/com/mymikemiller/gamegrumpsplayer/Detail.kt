@@ -135,10 +135,10 @@ data class Detail(val videoId: String,
     }
 
     override fun toString(): String {
-        return "$game: $title ($videoId)"
+        return "$game: $title $part ($videoId)"
     }
     override fun compareTo(other: Detail): Int {
-        return (dateUploaded.value - other.dateUploaded.value).toInt()
+        return (other.dateUploaded.value - dateUploaded.value).toInt()
     }
 
     companion object {

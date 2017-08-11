@@ -176,6 +176,8 @@ class YouTubeAPI {
                     setPercentageCallback(Integer.valueOf(overallTotalResults), Integer.valueOf(allDetails.size + searchResultList.size))
 
                     if (searchResponse.nextPageToken == null) {
+                        // This is the last page of results. Add them to allResults and call the final callback.
+                        allDetails.addAll(results)
                         callbackWhenDone(allDetails)
                         return
                     }

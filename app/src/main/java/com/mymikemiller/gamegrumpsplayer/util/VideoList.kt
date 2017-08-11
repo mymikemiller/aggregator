@@ -58,8 +58,8 @@ class VideoList {
 
                     val detailsSorted = allDetails.sorted() //.sortedWith(compareBy({ it.dateUploaded }))
 
-                    // Return to the original callback the combined list of all Details
-                    callback(allDetails)
+                    // Return to the original callback the combined list of all Details, sorted by date
+                    callback(detailsSorted)
                 }
             })
         }
