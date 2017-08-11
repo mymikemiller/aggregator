@@ -45,7 +45,7 @@ class YouTubeAPI {
                                        callback: (details: List<Detail>) -> Unit) {
             FetchNextDetailByChannelIdTask(channelId,
                     stopAtDetail,
-                    "",
+                    "", // first :"", last: CIIpEAA, second to last: CNAoEAA
                     accumulate,
                     setPercentageCallback,
                     callback).execute()
@@ -148,7 +148,7 @@ class YouTubeAPI {
                 val videosListByChannelIdRequest = youtube.PlaylistItems().list("snippet")
                 videosListByChannelIdRequest.playlistId = channelId
                 videosListByChannelIdRequest.key = (DeveloperKey.DEVELOPER_KEY)
-                videosListByChannelIdRequest.setMaxResults(50)
+                videosListByChannelIdRequest.maxResults = 50
                 videosListByChannelIdRequest.pageToken = pageToken
 
                 val searchResponse = videosListByChannelIdRequest.execute()

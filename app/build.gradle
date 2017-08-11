@@ -36,4 +36,5 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
     }
     compile 'me.grantland:autofittextview:0.2.+'
+    debugCompile 'com.amitshekhar.android:debug-db:1.0.0'
 }

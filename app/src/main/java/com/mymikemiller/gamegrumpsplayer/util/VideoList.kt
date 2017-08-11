@@ -9,14 +9,13 @@ import android.content.ContentValues.TAG
 import android.content.ContentValues
 import android.util.Log
 
-
 /**
  * VideoList stores video Detail in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
  */
 
 class VideoList {
     companion object {
-        val DATABASE_VERSION: Int = 9 // Increment this when the table definition changes
+        val DATABASE_VERSION: Int = 11 // Increment this when the table definition changes
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -39,28 +38,8 @@ class VideoList {
                                        callback: (details: List<Detail>) -> Unit) {
             val openHelper = DetailsOpenHelper(context.applicationContext)
 
-            //TODO: move this to a background process because this may be creating a table, which is expensive
-//            val writableDatabase = openHelper.writableDatabase
-
-            // Create sample data
-            val sampleDetail = Detail("TestId", "testTitle", "testDescription", "testThumbnail")
-
-            // Add sample post to the database
-
-            // Create and/or open the database for writing
-            val db = openHelper.writableDatabase
-
-            // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
-            // consistency of the database.
-            db.beginTransaction()
-            openHelper.addDetail(db, sampleDetail)
-            db.endTransaction()
-
             // Get all posts from database
             val allDetails = openHelper.getAllDetails()
-            for (detail in allDetails) {
-                println("detail from database: $detail")
-            }
 
             // Figure out which Detail we can stop at when we fetch from youtube
             val lastDetail = if (allDetails.isNotEmpty()) allDetails[allDetails.size - 1] else null
@@ -71,20 +50,7 @@ class VideoList {
                     println(details)
 
                     // We got all the new Details from YouTube, so append them to the database
-
-                    // Create and/or open the database for writing
-                    val db = openHelper.writableDatabase
-
-                    // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
-                    // consistency of the database.
-                    db.beginTransaction()
-
-                    for (detail in details) {
-                        println("a detail from youtube: $detail")
-                        openHelper.addDetail(db, detail)
-                    }
-
-                    db.endTransaction()
+                    openHelper.addDetails(details)
 
                     allDetails.addAll(details)
 
@@ -109,22 +75,31 @@ class VideoList {
         }
 
         // Insert a Detail into the database
-        fun addDetail(db: SQLiteDatabase, detail: Detail) {
-            try {
-                val values = ContentValues()
-                values.put(KEY_VIDEOID, detail.videoId)
-                values.put(KEY_TITLE, detail.fullVideoTitle)
-                values.put(KEY_DESCRIPTION, detail.fullVideoDescription)
-                values.put(KEY_THUMBNAIL, detail.thumbnail)
+        fun addDetails(details: List<Detail>) {
 
-                // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
-                db.insertOrThrow(DETAILS_TABLE_NAME, null, values)
+            // Create and/or open the database for writing
+            val db = writableDatabase
+
+            // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
+            // consistency of the database.
+            db.beginTransaction()
+
+            try {
+                for(detail in details) {
+                    val values = ContentValues()
+                    values.put(KEY_VIDEOID, detail.videoId)
+                    values.put(KEY_TITLE, detail.fullVideoTitle)
+                    values.put(KEY_DESCRIPTION, detail.fullVideoDescription)
+                    values.put(KEY_THUMBNAIL, detail.thumbnail)
+
+                    // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
+                    db.insertOrThrow(DETAILS_TABLE_NAME, null, values)
+                }
                 db.setTransactionSuccessful()
             } catch (e: Exception) {
                 Log.d(TAG, "Error while trying to add post to database")
             } finally {
-                val allDetails = getAllDetails()
-                println(allDetails)
+                db.endTransaction()
             }
         }
 
