@@ -6,7 +6,7 @@ import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
-import com.mymikemiller.gamegrumpsplayer.Details
+import com.mymikemiller.gamegrumpsplayer.Detail
 import com.mymikemiller.gamegrumpsplayer.DeveloperKey
 
 val HTTP_TRANSPORT = NetHttpTransport()
@@ -27,8 +27,8 @@ class YouTubeAPI {
         private var mChannelName = ""
         private var mChannelId = ""
 
-        fun fetchDetailsForVideo(id: String, callback: (Details) -> Unit) {
-            FetchDetailsForVideoTask(id, callback).execute()
+        fun fetchDetailForVideo(id: String, callback: (Detail) -> Unit) {
+            FetchDetailForVideoTask(id, callback).execute()
         }
 
         fun fetchChannelIdFromChannelName(channelName: String, callback: (channelId: String) -> Unit) {
@@ -40,11 +40,11 @@ class YouTubeAPI {
         }
 
         fun fetchAllDetailsByChannelId(channelId: String,
-                                       stopAtDetails: Details?,
+                                       stopAtDetail: Detail?,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                                       callback: (details: List<Details>) -> Unit) {
-            FetchNextDetailsByChannelIdTask(channelId,
-                    stopAtDetails,
+                                       callback: (details: List<Detail>) -> Unit) {
+            FetchNextDetailByChannelIdTask(channelId,
+                    stopAtDetail,
                     "",
                     accumulate,
                     setPercentageCallback,
@@ -53,7 +53,7 @@ class YouTubeAPI {
 
 
 
-        private class FetchDetailsForVideoTask(val id: String, val callback: (details: Details) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        private class FetchDetailForVideoTask(val id: String, val callback: (detail: Detail) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByIdRequest = youtube.videos().list("snippet,contentDetails,statistics")
                 videosListByIdRequest.id = id
@@ -66,13 +66,13 @@ class YouTubeAPI {
                 if (searchResultList != null && searchResultList.size == 1) {
                     val video = searchResultList[0]
 
-                    val details = Details(
+                    val detail = Detail(
                             video.id,
                             video.snippet.title,
                             video.snippet.description,
                             video.snippet.thumbnails.maxres.url)
 
-                    callback(details)
+                    callback(detail)
                 }
             }
         }
@@ -104,15 +104,15 @@ class YouTubeAPI {
             }
         }
 
-        val allDetails = mutableListOf<Details>()
+        val allDetails = mutableListOf<Detail>()
         var prevNextPageToken = ""
 
         val accumulate: (channelId: String,
-                         stopAtDetails: Details?,
-                         detailsList: List<Details>,
+                         stopAtDetail: Detail?,
+                         detailList: List<Detail>,
                          nextPageToken: String,
                          setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                         callbackWhenDone: (detailsList: List<Details>) -> Unit
+                         callbackWhenDone: (detailList: List<Detail>) -> Unit
         ) -> Unit = { channelId,
                       stopAtDetails,
                       detailsList,
@@ -122,7 +122,7 @@ class YouTubeAPI {
             run {
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
-                FetchNextDetailsByChannelIdTask(channelId,
+                FetchNextDetailByChannelIdTask(channelId,
                         stopAtDetails,
                         nextPageToken,
                         accumulate,
@@ -131,18 +131,18 @@ class YouTubeAPI {
             }
         }
 
-        private class FetchNextDetailsByChannelIdTask(val channelId: String,
-                                                      val stopAtDetails: Details?,
-                                              var pageToken: String,
-                                              val callback: (channelId: String,
-                                                             stopAtDetails: Details?,
-                                                             detailsList: List<Details>,
-                                                             nextPageToken: String,
-                                                             setPercentageCallback: (kotlin.Int, kotlin.Int) -> Unit,
-                                                             callbackWhenDone: (detailsList: List<Details>) -> Unit) -> Unit,
-                                              val setPercentageCallback: (totalVideos: kotlin.Int,
+        private class FetchNextDetailByChannelIdTask(val channelId: String,
+                                                      val stopAtDetail: Detail?,
+                                                      var pageToken: String,
+                                                      val callback: (channelId: String,
+                                                                     stopAtDetail: Detail?,
+                                                                     detailList: List<Detail>,
+                                                                     nextPageToken: String,
+                                                                     setPercentageCallback: (kotlin.Int, kotlin.Int) -> Unit,
+                                                                     callbackWhenDone: (detailList: List<Detail>) -> Unit) -> Unit,
+                                                      val setPercentageCallback: (totalVideos: kotlin.Int,
                                                                           currentVideoNumber: kotlin.Int) -> Unit,
-                                              val callbackWhenDone: (detailsList: List<Details>) -> Unit
+                                                      val callbackWhenDone: (detailList: List<Detail>) -> Unit
                                               ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByChannelIdRequest = youtube.PlaylistItems().list("snippet")
@@ -155,10 +155,10 @@ class YouTubeAPI {
 
                 val searchResultList = searchResponse.getItems()
                 if (searchResultList != null) {
-                    val results: MutableList<Details> = mutableListOf()
+                    val results: MutableList<Detail> = mutableListOf()
                     for (result in searchResultList) {
                         val thumbnail = if (result.snippet.thumbnails.standard != null) result.snippet.thumbnails.standard.url else result.snippet.thumbnails.high.url
-                        val d = Details(result.snippet.resourceId.videoId,
+                        val d = Detail(result.snippet.resourceId.videoId,
                                 result.snippet.title,
                                 result.snippet.description,
                                 thumbnail)
@@ -175,7 +175,7 @@ class YouTubeAPI {
                         callbackWhenDone(allDetails)
                         return
                     }
-                    callback(channelId, stopAtDetails, results, searchResponse.nextPageToken, setPercentageCallback, callbackWhenDone)
+                    callback(channelId, stopAtDetail, results, searchResponse.nextPageToken, setPercentageCallback, callbackWhenDone)
                 }
             }
         }

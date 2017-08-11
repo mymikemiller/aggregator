@@ -1,6 +1,5 @@
 package com.mymikemiller.gamegrumpsplayer
 
-import com.mymikemiller.gamegrumpsplayer.Details
 import org.junit.Test
 
 import org.junit.Assert.*

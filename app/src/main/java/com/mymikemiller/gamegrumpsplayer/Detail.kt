@@ -5,10 +5,10 @@ import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 /**
 *   Contains detailed information about the video, e.g. the thumbnail image, title and description
 */
-data class Details(val videoId: String,
-                   val fullVideoTitle: String,
-                   val fullVideoDescription: String,
-                   val thumbnail: String) {
+data class Detail(val videoId: String,
+                  val fullVideoTitle: String,
+                  val fullVideoDescription: String,
+                  val thumbnail: String) {
     val team: String by lazy {
         val lastDashIndex = fullVideoTitle.lastIndexOf(" - ")
         fullVideoTitle.substring(lastDashIndex + 3, fullVideoTitle.length)

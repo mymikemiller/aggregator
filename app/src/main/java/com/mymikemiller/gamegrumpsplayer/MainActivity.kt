@@ -43,7 +43,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
 
-        val setRandomVideo: (List<Details>) -> Unit = { detailsList ->
+        val setRandomVideo: (List<Detail>) -> Unit = { detailsList ->
             run {
                 runOnUiThread {
                     fetchVideosProgressSection.visibility=View.GONE
@@ -115,11 +115,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     }
 
 
-    fun setVideo(details: Details) {
+    fun setVideo(detail: Detail) {
         runOnUiThread {
-            episodeTitle.setText(details.title)
-            episodeDescription.setText(details.description)
-            player.cueVideo(details.videoId)
+            episodeTitle.setText(detail.title)
+            episodeDescription.setText(detail.description)
+            player.cueVideo(detail.videoId)
         }
     }
 }

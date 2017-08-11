@@ -1,7 +1,7 @@
 package com.mymikemiller.gamegrumpsplayer.util
 
 import android.content.Context
-import com.mymikemiller.gamegrumpsplayer.Details
+import com.mymikemiller.gamegrumpsplayer.Detail
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
@@ -11,12 +11,12 @@ import android.util.Log
 
 
 /**
- * VideoList stores video Details in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
+ * VideoList stores video Detail in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
  */
 
 class VideoList {
     companion object {
-        val DATABASE_VERSION: Int = 3 // Increment this when the table definition changes
+        val DATABASE_VERSION: Int = 4 // Increment this when the table definition changes
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -32,16 +32,16 @@ class VideoList {
 
         fun fetchAllDetailsByChannelId(context: Context,
                                        channelId: String,
-                                       stopAtDetails: Details?,
+                                       stopAtDetail: Detail?,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                                       callback: (details: List<Details>) -> Unit) {
+                                       callback: (details: List<Detail>) -> Unit) {
             val openHelper = DetailsOpenHelper(context.applicationContext)
 
             //TODO: move this to a background process because this may be creating a table, which is expensive
 //            val writableDatabase = openHelper.writableDatabase
 
             // Create sample data
-            val sampleDetails = Details("TestId", "testTitle", "testDescription", "testThumbnail")
+            val sampleDetails = Detail("TestId", "testTitle", "testDescription", "testThumbnail")
 
             // Add sample post to the database
             openHelper.addDetails(sampleDetails)
@@ -73,7 +73,7 @@ class VideoList {
         }
 
         // Insert a post into the database
-        fun addDetails(details: Details) {
+        fun addDetails(detail: Detail) {
             // Create and/or open the database for writing
             val db = writableDatabase
 
@@ -82,8 +82,8 @@ class VideoList {
             db.beginTransaction()
             try {
                 val values = ContentValues()
-                values.put(KEY_TITLE, details.fullVideoTitle)
-                values.put(KEY_DESCRIPTION, details.fullVideoDescription)
+                values.put(KEY_TITLE, detail.fullVideoTitle)
+                values.put(KEY_DESCRIPTION, detail.fullVideoDescription)
 
                 // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
                 db.insertOrThrow(DETAILS_TABLE_NAME, null, values)
@@ -94,8 +94,8 @@ class VideoList {
                 db.endTransaction()
             }
         }
-        fun getAllDetails(): List<Details> {
-            val allDetails = mutableListOf<Details>()
+        fun getAllDetails(): List<Detail> {
+            val allDetails = mutableListOf<Detail>()
 
             // SELECT * FROM DETAILS
             val POSTS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME"
@@ -110,7 +110,7 @@ class VideoList {
                         val title = cursor.getString(cursor.getColumnIndex(KEY_TITLE))
                         val description = cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION))
 
-                        val newDetails = Details(title, description, "", "")
+                        val newDetails = Detail(title, description, "", "")
                         allDetails.add(newDetails)
                     } while (cursor.moveToNext())
                 }
@@ -124,16 +124,16 @@ class VideoList {
             return allDetails
         }
 
-        // Update a Details. We probably won't use this. If we need to update other columns we'll have to create more methods like this.
-        fun updateTitle(details: Details): Int {
+        // Update a Detail. We probably won't use this. If we need to update other columns we'll have to create more methods like this.
+        fun updateTitle(detail: Detail): Int {
             val db = this.writableDatabase
 
             val values = ContentValues()
-            values.put(KEY_TITLE, details.title)
+            values.put(KEY_TITLE, detail.title)
 
             // Updating profile picture url for user with that userName
             return db.update(DETAILS_TABLE_NAME, values, KEY_TITLE + " = ?",
-                    arrayOf(details.title))
+                    arrayOf(detail.title))
         }
 
 

@@ -10,7 +10,7 @@ import java.net.URL
  * is retrieved Use as follows for an ImageView named "thumbnail"
  *
  * val setBitmap: (Bitmap) -> Unit = {bitmap -> thumbnail.setImageBitmap(bitmap) }
- * DownloadImageTask(setBitmap).execute(details.thumbnail)
+ * DownloadImageTask(setBitmap).execute(detail.thumbnail)
  */
 class DownloadImageTask(val callback: (Bitmap) -> Unit) : AsyncTask<String, Void, Bitmap>() {
     override fun doInBackground(vararg urls: String): Bitmap {
