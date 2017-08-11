@@ -16,7 +16,7 @@ import com.google.api.client.util.DateTime
 
 class VideoList {
     companion object {
-        val DATABASE_VERSION: Int = 15 // Increment this when the table definition changes
+        val DATABASE_VERSION: Int = 17 // Increment this when the table definition changes
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -25,14 +25,15 @@ class VideoList {
         val KEY_TITLE: String = "Title"
         val KEY_DESCRIPTION: String = "Description"
         val KEY_THUMBNAIL: String = "Thumbnail"
-        val KEY_DATE_UPLOADED: String = "Date Uploaded"
+        val KEY_DATE_UPLOADED: String = "Date_Uploaded"
 
         private val DETAILS_TABLE_CREATE =
                 "CREATE TABLE " + DETAILS_TABLE_NAME + " (" +
                         KEY_VIDEOID + " TEXT NOT NULL UNIQUE, " +
                         KEY_TITLE + " TEXT, " +
                         KEY_DESCRIPTION + " TEXT, " +
-                        KEY_THUMBNAIL + " TEXT);"
+                        KEY_THUMBNAIL + " TEXT, " +
+                        KEY_DATE_UPLOADED + " TEXT);"
 
         fun fetchAllDetailsByChannelId(context: Context,
                                        channelId: String,
@@ -140,7 +141,10 @@ class VideoList {
                     cursor.close()
                 }
             }
-            return allDetails
+
+            val detailsSorted: List<Detail> = allDetails.sorted()
+
+            return detailsSorted.toMutableList()
         }
 
         // Update a Detail. We probably won't use this. If we need to update other columns we'll have to create more methods like this.
