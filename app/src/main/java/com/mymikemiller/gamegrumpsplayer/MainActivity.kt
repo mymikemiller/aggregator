@@ -1,5 +1,6 @@
 package com.mymikemiller.gamegrumpsplayer
 
+import android.content.Context
 import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
 
@@ -43,25 +44,45 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
 
-        val setRandomVideo: (List<Detail>) -> Unit = { detailsList ->
+        val setRandomVideo: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
             run {
                 runOnUiThread {
                     fetchVideosProgressSection.visibility=View.GONE
                 }
                 val rand = Math.floor(Math.random() * detailsList.size).toInt()
                 setVideo(detailsList[rand])
+
+                // save the finalPageToken in SharedPreferences so we can start at that page next time we fetch the videos from YouTube
+                val preferences = getPreferences(Context.MODE_PRIVATE)
+                val editor = preferences.edit()
+                editor.putString(getString(R.string.finalPageToken), finalPageToken)
+                editor.commit()
             }
         }
         val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
             run {
-                fetchVideosProgresBar.max = totalVideos
+                val numDetailsInDatabase = VideoList.getNumDetailsInDatabase(this, {})
+                fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
                 fetchVideosProgresBar.setProgress(currentVideoNumber)
             }
+        }
+        val deleteSharedPreference: () -> Unit = {
+            val sharedPref = getPreferences(Context.MODE_PRIVATE)
+            val editor = sharedPref.edit()
+            editor.remove(getString(R.string.finalPageToken))
+            editor.commit()
+            println("deleted")
         }
         // channelId for gamegrumps: UU9CuvdOVfMPvKCiwdGKL3cQ
         fetchVideosProgressSection.visibility=View.VISIBLE
         YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
-            VideoList.fetchAllDetailsByChannelId(this, channelId, setVideoFetchPercentageComplete, setRandomVideo)
+            // Force an upgrade if necessary
+            VideoList.getNumDetailsInDatabase(this, deleteSharedPreference)
+
+            val sharedPref = getPreferences(Context.MODE_PRIVATE)
+            val previousFinalPageToken = sharedPref.getString(getString(R.string.finalPageToken), "").toString()
+
+            VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreference, channelId, previousFinalPageToken, setVideoFetchPercentageComplete, setRandomVideo)
         }})
     }
 

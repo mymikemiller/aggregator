@@ -16,7 +16,8 @@ import com.google.api.client.util.DateTime
 
 class VideoList {
     companion object {
-        val DATABASE_VERSION: Int = 17 // Increment this when the table definition changes
+        // Increment this when the table definition changes
+        val DATABASE_VERSION: Int = 52
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -35,43 +36,60 @@ class VideoList {
                         KEY_THUMBNAIL + " TEXT, " +
                         KEY_DATE_UPLOADED + " TEXT);"
 
+        fun getNumDetailsInDatabase(context: Context, databaseUpgradedCallback: () -> Unit) : Int {
+            val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
+            return dbHelper.getAllDetailsFromDb().size
+        }
+
         fun fetchAllDetailsByChannelId(context: Context,
+                                       databaseUpgradedCallback: () -> Unit,
                                        channelId: String,
+                                       startPageToken: String,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                                       callback: (details: List<Detail>) -> Unit) {
-            val dbHelper = DetailsOpenHelper(context.applicationContext)
+                                       callback: (details: List<Detail>, finalPageToken: String) -> Unit) {
 
-            // Get all posts from database
-            val allDetails = dbHelper.getAllDetailsFromDb()
-
-            // Figure out which Detail we can stop at when we fetch from youtube
-            val lastDetail = if (allDetails.isNotEmpty()) allDetails[allDetails.size - 1] else null
 
             // Now that we have all details from the database, append the ones we find from YouTube
-            YouTubeAPI.fetchAllDetailsByChannelId(channelId, lastDetail, setPercentageCallback, {details: List<Detail> ->
+            YouTubeAPI.fetchAllDetailsByChannelId(channelId, startPageToken, setPercentageCallback, {newDetails: List<Detail>, finalPageToken: String ->
                 run {
-                    println(details)
+                    val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
 
-                    // We got all the new Details from YouTube, so append them to the database
-                    dbHelper.addDetails(details)
+                    // Get all posts from database
+                    val detailsFromDb = dbHelper.getAllDetailsFromDb()
 
-                    allDetails.addAll(details)
+                    // We got all the new Details from YouTube, so append them to the database. Remove duplicates before adding to the database.
+                    val newDetailsMutable = newDetails.toMutableList()
+                    for (detail in newDetails) {
+                        if (detailsFromDb.contains(detail)) {
+                            newDetailsMutable.remove(detail)
+                        }
+                    }
 
-                    val detailsSorted = allDetails.sorted() //.sortedWith(compareBy({ it.dateUploaded }))
+                    // Append to the database
+                    dbHelper.addDetails(newDetailsMutable)
+
+                    detailsFromDb.addAll(newDetailsMutable)
+
+                    // Get back the full list of Details, sorted
+                    val allDetails = dbHelper.getAllDetailsFromDb()
+                    allDetails.sort()
 
                     // Return to the original callback the combined list of all Details, sorted by date
-                    callback(detailsSorted)
+                    callback(allDetails, finalPageToken)
                 }
             })
         }
     }
 
-    class DetailsOpenHelper internal constructor(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+    class DetailsOpenHelper internal constructor(context: Context, databaseUpgradedCallback: () -> Unit) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+        val databaseUpgradedCallback = databaseUpgradedCallback
+
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
             if (oldVersion != newVersion) {
                 // Simplest implementation is to drop all old tables and recreate them
                 db.execSQL("DROP TABLE IF EXISTS " + DETAILS_TABLE_NAME)
                 onCreate(db)
+                databaseUpgradedCallback()
             }
         }
 
@@ -115,7 +133,7 @@ class VideoList {
             // SELECT * FROM DETAILS
             val POSTS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME"
 
-            // "getReadableDatabase()" and "getWriteableDatabase()" return the same object (except under low
+
             // disk space scenarios)
             val db = readableDatabase
             val cursor = db.rawQuery(POSTS_SELECT_QUERY, null)
@@ -127,6 +145,8 @@ class VideoList {
                         val description = cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION))
                         val thumbnail = cursor.getString(cursor.getColumnIndex(KEY_THUMBNAIL))
                         val dateUploaded = cursor.getString(cursor.getColumnIndex(KEY_DATE_UPLOADED))
+
+
 
                         val dateRfc3339 = DateTime.parseRfc3339(dateUploaded)
 

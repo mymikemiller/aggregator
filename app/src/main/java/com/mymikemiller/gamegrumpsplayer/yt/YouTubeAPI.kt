@@ -6,8 +6,10 @@ import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.client.util.DateTime
 import com.mymikemiller.gamegrumpsplayer.Detail
 import com.mymikemiller.gamegrumpsplayer.DeveloperKey
+import java.util.*
 
 val HTTP_TRANSPORT = NetHttpTransport()
 val JSON_FACTORY: JsonFactory = JacksonFactory()
@@ -40,12 +42,11 @@ class YouTubeAPI {
         }
 
         fun fetchAllDetailsByChannelId(channelId: String,
-                                       stopAtDetail: Detail?,
+                                       startPageToken: String,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                                       callback: (details: List<Detail>) -> Unit) {
+                                       callback: (details: List<Detail>, finalPageToken: String) -> Unit) {
             FetchNextDetailByChannelIdTask(channelId,
-                    stopAtDetail,
-                    "CNAoEAA", // first :"", last: CIIpEAA, second to last: CNAoEAA
+                    startPageToken, // first :"", last: CIIpEAA, second to last: CNAoEAA
                     accumulate,
                     setPercentageCallback,
                     callback).execute()
@@ -109,13 +110,11 @@ class YouTubeAPI {
         var prevNextPageToken = ""
 
         val accumulate: (channelId: String,
-                         stopAtDetail: Detail?,
                          detailList: List<Detail>,
                          nextPageToken: String,
                          setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                         callbackWhenDone: (detailList: List<Detail>) -> Unit
+                         callbackWhenDone: (detailList: List<Detail>, finalPageToken: String) -> Unit
         ) -> Unit = { channelId,
-                      stopAtDetails,
                       detailsList,
                       nextPageToken,
                       setPercentageCallback,
@@ -124,7 +123,6 @@ class YouTubeAPI {
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
                 FetchNextDetailByChannelIdTask(channelId,
-                        stopAtDetails,
                         nextPageToken,
                         accumulate,
                         setPercentageCallback,
@@ -133,17 +131,15 @@ class YouTubeAPI {
         }
 
         private class FetchNextDetailByChannelIdTask(val channelId: String,
-                                                      val stopAtDetail: Detail?,
                                                       var pageToken: String,
                                                       val callback: (channelId: String,
-                                                                     stopAtDetail: Detail?,
                                                                      detailList: List<Detail>,
                                                                      nextPageToken: String,
                                                                      setPercentageCallback: (kotlin.Int, kotlin.Int) -> Unit,
-                                                                     callbackWhenDone: (detailList: List<Detail>) -> Unit) -> Unit,
+                                                                     callbackWhenDone: (detailList: List<Detail>, finalPageToken: String) -> Unit) -> Unit,
                                                       val setPercentageCallback: (totalVideos: kotlin.Int,
                                                                           currentVideoNumber: kotlin.Int) -> Unit,
-                                                      val callbackWhenDone: (detailList: List<Detail>) -> Unit
+                                                      val callbackWhenDone: (detailList: List<Detail>, finalPageToken: String) -> Unit
                                               ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByChannelIdRequest = youtube.PlaylistItems().list("snippet")
@@ -175,13 +171,23 @@ class YouTubeAPI {
                     // We have to add searchResultList.size instead of just allDetails.size because allDetails won't be added to until the callback is called below
                     setPercentageCallback(Integer.valueOf(overallTotalResults), Integer.valueOf(allDetails.size + searchResultList.size))
 
-                    if (searchResponse.nextPageToken == null) {
-                        // This is the last page of results. Add them to allResults and call the final callback.
+                    // Find a Detail with the right name so we stop at the right page for testing purposes
+                    var testReturn = false
+//                    for(d in allDetails) {
+//                        if (d.title == "Ice Cream and Bagels") {
+//                            testReturn = true;
+//                        }
+//                    }
+
+                    if (searchResponse.nextPageToken == null || testReturn) {
+                        // This is the last page of results.
+                        // Send the previous pageToken so we can cache the last pageToken to start on that page next time.
+                        // Add them to allResults and call the final callback.
                         allDetails.addAll(results)
-                        callbackWhenDone(allDetails)
+                        callbackWhenDone(allDetails, searchResponse.prevPageToken)
                         return
                     }
-                    callback(channelId, stopAtDetail, results, searchResponse.nextPageToken, setPercentageCallback, callbackWhenDone)
+                    callback(channelId, results, searchResponse.nextPageToken, setPercentageCallback, callbackWhenDone)
                 }
             }
         }
