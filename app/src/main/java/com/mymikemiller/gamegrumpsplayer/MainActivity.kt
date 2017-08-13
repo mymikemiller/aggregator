@@ -8,7 +8,6 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -28,6 +27,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var episodeTitle: TextView
     private lateinit var episodeDescription: TextView
     private var fullscreen: Boolean = false
+    private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
+    private var playingVideoDetail: Detail? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,17 +41,31 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         fetchVideosProgresBar = findViewById(R.id.fetchVideosProgressBar)
         episodeTitle = findViewById<TextView>(R.id.episodeTitle)
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
+        playerStateChangeListener = MyPlayerStateChangeListener(onVideoEnd)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
 
-        val setRandomVideo: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
+        val startPlayingNext: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
             run {
                 runOnUiThread {
-                    fetchVideosProgressSection.visibility=View.GONE
+                    fetchVideosProgressSection.visibility = View.GONE
                 }
-                val rand = Math.floor(Math.random() * detailsList.size).toInt()
-                setVideo(detailsList[rand])
+
+                // Get the default first video (the channel's first video)
+                val firstDetail = detailsList[0]
+
+                // Get the last video we were playing (which will be the next video in the playlist if it was queued at the end of the last watch session if it had time to try to load)
+                val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
+
+                var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
+                if (detailToPlay == null) {
+                    // If we couldn't find a video to play, play the first video of the channel
+                    detailToPlay = VideoList.getAllDetailsFromDatabase(this)[0]
+                }
+
+                playVideo(detailToPlay)
 
                 // save the finalPageToken in SharedPreferences so we can start at that page next time we fetch the videos from YouTube
                 val preferences = getPreferences(Context.MODE_PRIVATE)
@@ -70,6 +85,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             val sharedPref = getPreferences(Context.MODE_PRIVATE)
             val editor = sharedPref.edit()
             editor.remove(getString(R.string.finalPageToken))
+            editor.remove(getString(R.string.currentVideoId))
             editor.commit()
             println("deleted")
         }
@@ -82,13 +98,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             val sharedPref = getPreferences(Context.MODE_PRIVATE)
             val previousFinalPageToken = sharedPref.getString(getString(R.string.finalPageToken), "").toString()
 
-            VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreference, channelId, previousFinalPageToken, setVideoFetchPercentageComplete, setRandomVideo)
+            VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreference, channelId,
+                    previousFinalPageToken, setVideoFetchPercentageComplete, startPlayingNext)
         }})
     }
 
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
                                          wasRestored: Boolean) {
         this.player = player
+        player.setPlayerStateChangeListener(playerStateChangeListener)
 
         // Specify that we want to handle fullscreen behavior ourselves.
         player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT)
@@ -99,29 +117,64 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
         player.fullscreenControlFlags = controlFlags
     }
+    private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
+        override fun onAdStarted() {
+            println("Ad Started")
+        }
+
+        override fun onLoading() {
+        }
+
+        override fun onVideoStarted() {
+        }
+
+        override fun onLoaded(p0: String?) {
+        }
+
+        override fun onError(p0: YouTubePlayer.ErrorReason?) {
+            println("Error")
+        }
+
+        override fun onVideoEnded() {
+            videoEndCallback()
+        }
+    }
+
+    private val onVideoEnd: () -> Unit = {
+        // Queue up the next video
+        val nextVideoDetail: Detail? = getNextVideo()
+        if (nextVideoDetail != null) {
+            episodeTitle.setText(nextVideoDetail.title)
+            episodeDescription.setText(nextVideoDetail.description)
+            playVideo(nextVideoDetail)
+        }
+    }
+
+    private fun getNextVideo() : Detail? {
+        val details = VideoList.getAllDetailsFromDatabase(this)
+        var found = false
+        for(detail in details) {
+            if (found) {
+                return detail
+            }
+            if (playingVideoDetail != null && detail == playingVideoDetail) {
+                found = true
+            }
+        }
+        return null
+    }
 
     override val youTubePlayerProvider: YouTubePlayer.Provider
         get() = playerView
 
     private fun doLayout() {
-        val playerParams = playerView.layoutParams as LinearLayout.LayoutParams
         if (fullscreen) {
             // When in fullscreen, the visibility of all other views than the player should be set to
             // GONE and the player should be laid out across the whole screen.
-            playerParams.width = LinearLayout.LayoutParams.MATCH_PARENT
-            playerParams.height = LinearLayout.LayoutParams.MATCH_PARENT
-
             otherViews.visibility = View.GONE
         } else {
             // vertically stacked boxes in portrait, horizontally stacked in landscape.
             otherViews.visibility = View.VISIBLE
-            val otherViewsParams = otherViews.layoutParams
-            otherViewsParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-            playerParams.width = otherViewsParams.width
-            playerParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
-            playerParams.weight = 0f
-            otherViewsParams.height = 0
-            baseLayout.orientation = LinearLayout.VERTICAL
         }
     }
 
@@ -136,11 +189,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     }
 
 
-    fun setVideo(detail: Detail) {
-        runOnUiThread {
-            episodeTitle.setText(detail.title)
-            episodeDescription.setText(detail.description)
-            player.cueVideo(detail.videoId)
+    fun playVideo(detail: Detail?) {
+        if (detail != null) {
+            runOnUiThread {
+                episodeTitle.setText(detail.title)
+                episodeDescription.setText(detail.description)
+                player.loadVideo(detail.videoId)
+                playingVideoDetail = detail
+            }
+
+            // Save the Detail to SharedPreference so we can start there next time
+            val preferences = getPreferences(Context.MODE_PRIVATE)
+            val editor = preferences.edit()
+            editor.putString(getString(R.string.currentVideoId), detail.videoId)
+            editor.commit()
         }
     }
 }

@@ -17,7 +17,7 @@ import com.google.api.client.util.DateTime
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 52
+        val DATABASE_VERSION: Int = 55
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -39,6 +39,11 @@ class VideoList {
         fun getNumDetailsInDatabase(context: Context, databaseUpgradedCallback: () -> Unit) : Int {
             val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
             return dbHelper.getAllDetailsFromDb().size
+        }
+
+        fun getAllDetailsFromDatabase (context: Context): List<Detail>{
+            val dbHelper = DetailsOpenHelper(context.applicationContext, {})
+            return dbHelper.getAllDetailsFromDb()
         }
 
         fun fetchAllDetailsByChannelId(context: Context,
@@ -79,10 +84,19 @@ class VideoList {
                 }
             })
         }
+
+        fun getDetailFromVideoId(context: Context, videoId: String) : Detail? {
+            val details = getAllDetailsFromDatabase(context)
+
+            var returnDetail:Detail? = null
+            for(detail in details) {
+                if (detail.videoId == videoId) returnDetail = detail
+            }
+            return returnDetail
+        }
     }
 
-    class DetailsOpenHelper internal constructor(context: Context, databaseUpgradedCallback: () -> Unit) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
-        val databaseUpgradedCallback = databaseUpgradedCallback
+    class DetailsOpenHelper internal constructor(context: Context, val databaseUpgradedCallback: () -> Unit) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
             if (oldVersion != newVersion) {
@@ -133,8 +147,6 @@ class VideoList {
             // SELECT * FROM DETAILS
             val POSTS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME"
 
-
-            // disk space scenarios)
             val db = readableDatabase
             val cursor = db.rawQuery(POSTS_SELECT_QUERY, null)
             try {
@@ -145,8 +157,6 @@ class VideoList {
                         val description = cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION))
                         val thumbnail = cursor.getString(cursor.getColumnIndex(KEY_THUMBNAIL))
                         val dateUploaded = cursor.getString(cursor.getColumnIndex(KEY_DATE_UPLOADED))
-
-
 
                         val dateRfc3339 = DateTime.parseRfc3339(dateUploaded)
 
