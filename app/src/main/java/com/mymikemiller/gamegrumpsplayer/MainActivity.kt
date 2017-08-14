@@ -75,7 +75,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 val preferences = getPreferences(Context.MODE_PRIVATE)
                 val editor = preferences.edit()
                 editor.putString(getString(R.string.finalPageToken), finalPageToken)
-                editor.commit()
+                editor.apply()
             }
         }
         val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
@@ -90,7 +90,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             val editor = sharedPref.edit()
             editor.remove(getString(R.string.finalPageToken))
             editor.remove(getString(R.string.currentVideoId))
-            editor.commit()
+            editor.apply()
             println("deleted")
         }
         // channelId for gamegrumps: UU9CuvdOVfMPvKCiwdGKL3cQ
@@ -236,7 +236,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             val preferences = getPreferences(Context.MODE_PRIVATE)
             val editor = preferences.edit()
             editor.putString(getString(R.string.currentVideoId), detail.videoId)
-            editor.commit()
+            editor.apply()
         }
     }
 }
