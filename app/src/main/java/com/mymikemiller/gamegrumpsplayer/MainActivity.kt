@@ -28,6 +28,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var episodeDescription: TextView
     private var fullscreen: Boolean = false
     private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
+    private lateinit var playbackEventListener: MyPlaybackEventListener
     private var playingVideoDetail: Detail? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +43,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodeTitle = findViewById<TextView>(R.id.episodeTitle)
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
+        playbackEventListener = MyPlaybackEventListener(recordPauseTime)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
@@ -58,6 +60,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 // Get the last video we were playing (which will be the next video in the playlist if it was queued at the end of the last watch session if it had time to try to load)
                 val sharedPref = getPreferences(Context.MODE_PRIVATE)
                 val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
+                val videoTimeToPlayMillis = sharedPref.getInt(getString(R.string.currentVideoTimeMillis), 0)
+
 
                 var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
                 if (detailToPlay == null) {
@@ -65,7 +69,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                     detailToPlay = VideoList.getAllDetailsFromDatabase(this)[0]
                 }
 
-                playVideo(detailToPlay)
+                playVideo(detailToPlay, videoTimeToPlayMillis)
 
                 // save the finalPageToken in SharedPreferences so we can start at that page next time we fetch the videos from YouTube
                 val preferences = getPreferences(Context.MODE_PRIVATE)
@@ -107,6 +111,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                                          wasRestored: Boolean) {
         this.player = player
         player.setPlayerStateChangeListener(playerStateChangeListener)
+        player.setPlaybackEventListener(playbackEventListener)
 
         // Specify that we want to handle fullscreen behavior ourselves.
         player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT)
@@ -127,7 +132,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         override fun onVideoStarted() {
             println("started")
-            
         }
 
         override fun onLoaded(p0: String?) {
@@ -143,6 +147,25 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
     }
 
+    private class MyPlaybackEventListener(val pausedCallback: () -> Unit) : YouTubePlayer.PlaybackEventListener {
+        override fun onPlaying() {
+        }
+
+        override fun onBuffering(isBuffering: Boolean) {
+        }
+
+        override fun onStopped() {
+        }
+
+        override fun onPaused() {
+            pausedCallback()
+        }
+
+        override fun onSeekTo(endPositionMillis: Int) {
+        }
+    }
+
+
     private val playNextVideo: () -> Unit = {
         // Cue up the next video
         val nextVideoDetail: Detail? = getNextVideo()
@@ -151,6 +174,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             episodeDescription.setText(nextVideoDetail.description)
             playVideo(nextVideoDetail)
         }
+    }
+
+    private val recordPauseTime: () -> Unit = {
+        // The video was paused (or minimized or otherwise caused to pause playback)
+        // Record the time we paused at so we can restore it when the app reloads
+        val preferences = getPreferences(Context.MODE_PRIVATE)
+        val editor = preferences.edit()
+        editor.putInt(getString(R.string.currentVideoTimeMillis), player.currentTimeMillis)
+        editor.commit()
     }
 
     private fun getNextVideo() : Detail? {
@@ -191,13 +223,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         doLayout()
     }
 
-
-    fun playVideo(detail: Detail?) {
+    fun playVideo(detail: Detail?, startTimeMillis: Int = 0) {
         if (detail != null) {
             runOnUiThread {
                 episodeTitle.setText(detail.title)
                 episodeDescription.setText(detail.description)
-                player.loadVideo(detail.videoId)
+                player.loadVideo(detail.videoId, startTimeMillis)
                 playingVideoDetail = detail
             }
 
