@@ -140,7 +140,7 @@ data class Detail(val videoId: String,
     override fun compareTo(other: Detail): Int {
         if (other.dateUploaded.value == dateUploaded.value) {
             //Todo: This is weird and shouldn't happen. Maybe we're getting the wrong dateUploaded
-            println("equal")
+            //println("equal")
         }
         return dateUploaded.value.compareTo(other.dateUploaded.value)
     }

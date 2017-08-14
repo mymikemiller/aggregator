@@ -11,13 +11,12 @@ import android.util.Log
 import com.google.api.client.util.DateTime
 
 /**
- * VideoList stores video Detail in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
+ * VideoList stores video Details in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
  */
-
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 55
+        val DATABASE_VERSION: Int = 56
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -135,7 +134,7 @@ class VideoList {
                 }
                 db.setTransactionSuccessful()
             } catch (e: Exception) {
-                Log.d(TAG, "Error while trying to add post to database")
+                Log.d(TAG, "Error while trying to add Detail to database")
             } finally {
                 db.endTransaction()
             }
