@@ -41,7 +41,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         fetchVideosProgresBar = findViewById(R.id.fetchVideosProgressBar)
         episodeTitle = findViewById<TextView>(R.id.episodeTitle)
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
-        playerStateChangeListener = MyPlayerStateChangeListener(onVideoEnd)
+        playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
@@ -126,6 +126,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
 
         override fun onVideoStarted() {
+            println("started")
+            
         }
 
         override fun onLoaded(p0: String?) {
@@ -136,12 +138,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
 
         override fun onVideoEnded() {
+            println("ended")
             videoEndCallback()
         }
     }
 
-    private val onVideoEnd: () -> Unit = {
-        // Queue up the next video
+    private val playNextVideo: () -> Unit = {
+        // Cue up the next video
         val nextVideoDetail: Detail? = getNextVideo()
         if (nextVideoDetail != null) {
             episodeTitle.setText(nextVideoDetail.title)
