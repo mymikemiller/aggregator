@@ -234,6 +234,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 episodeDescription.setText(detail.description)
                 player.loadVideo(detail.videoId, startTimeMillis)
                 playingVideoDetail = detail
+                // test change
+                // test 2
             }
 
             // Save the Detail to SharedPreference so we can start there next time
