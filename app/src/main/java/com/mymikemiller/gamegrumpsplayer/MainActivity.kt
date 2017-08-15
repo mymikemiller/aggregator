@@ -6,6 +6,7 @@ import com.google.android.youtube.player.YouTubePlayerView
 
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
@@ -44,6 +45,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
         playbackEventListener = MyPlaybackEventListener(recordPauseTime)
+
+        val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
+        episodeTitle.setTypeface(typeface)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
