@@ -126,6 +126,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
         player.fullscreenControlFlags = controlFlags
     }
+
+    override fun onPause() {
+        super.onPause()
+        //recordPauseTime()
+    }
+
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
         override fun onAdStarted() {
             println("Ad Started")
@@ -234,8 +240,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 episodeDescription.setText(detail.description)
                 player.loadVideo(detail.videoId, startTimeMillis)
                 playingVideoDetail = detail
-                // test change
-                // test 2
             }
 
             // Save the Detail to SharedPreference so we can start there next time

@@ -1,158 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.design.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:autofit="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main_content"
+    android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/layout"
+    <com.google.android.youtube.player.YouTubePlayerView
+        android:id="@+id/player"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"/>
 
-        <com.google.android.youtube.player.YouTubePlayerView
-            android:id="@+id/player"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <RelativeLayout
-            android:id="@+id/other_views"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
-
-            <!--This is the orange dot background image in an ImageView to get the scaling right-->
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/background"
-                android:src="@drawable/background_image"
-                android:scaleType="centerCrop" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="5dp"
-                android:orientation="vertical">
-
-                <!--<TextView-->
-                    <!--android:id="@+id/team"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content" />-->
-
-                <!--<TextView-->
-                    <!--android:id="@+id/game"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content" />-->
-                <LinearLayout
-                    android:id="@+id/fetchVideosProgressSection"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/fetching"
-                        android:textColor="@color/light_font"
-                        android:shadowColor="@color/text_shadow"
-                        android:shadowDx="10"
-                        android:shadowDy="10"
-                        android:shadowRadius="2"
-                        android:textAlignment="center"/>
-
-                    <ProgressBar
-                        android:id="@+id/fetchVideosProgressBar"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:indeterminate="false"
-                        style="@android:style/Widget.ProgressBar.Horizontal"
-                    />
-                </LinearLayout>
-
-                <me.grantland.widget.AutofitTextView
-                    android:id="@+id/episodeTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:singleLine="false"
-                    android:textSize="30sp"
-                    autofit:minTextSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/light_font"
-                    android:shadowColor="@color/text_shadow"
-                    android:shadowDx="10"
-                    android:shadowDy="10"
-                    android:shadowRadius="2"
-                    android:textAlignment="center"
-                    />
-
-                <!--<TextView-->
-                    <!--android:id="@+id/episodePart"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content" />-->
-
-                <TextView
-                    android:id="@+id/episodeDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:singleLine="false"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/light_font"
-                    android:shadowColor="@color/text_shadow"
-                    android:shadowDx="10"
-                    android:shadowDy="10"
-                    android:shadowRadius="2"
-                    android:textAlignment="center" />
-
-                <!--<ImageView-->
-                    <!--android:id="@+id/thumbnail"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="match_parent"-->
-                    <!--android:contentDescription="@string/thumbnail"-->
-                    <!--android:scaleType="fitCenter"/>-->
-
-
-
-            </LinearLayout>
-        </RelativeLayout>
-    </LinearLayout>
-
-
-    <android.support.v4.widget.NestedScrollView
-        android:id="@+id/bottom_sheet"
+    <RelativeLayout
+        android:id="@+id/other_views"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:behavior_hideable="false"
-        app:behavior_peekHeight="50dp"
-        android:clipToPadding="true"
-        android:background="@color/text_shadow"
-        android:elevation="4dp"
-        app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!--This is the orange dot background image in an ImageView to get the scaling right-->
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/background"
+            android:src="@drawable/background_image"
+            android:scaleType="centerCrop" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:padding="5dp"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/button_telegram"
-                android:text="telegram.me/androidcourse"
-                android:textAllCaps="false"
-                android:layout_gravity="center"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent" />
+            <!--<TextView-->
+                <!--android:id="@+id/team"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content" />-->
+
+            <!--<TextView-->
+                <!--android:id="@+id/game"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content" />-->
+            <LinearLayout
+                android:id="@+id/fetchVideosProgressSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/fetching"
+                    android:textColor="@color/light_font"
+                    android:shadowColor="@color/text_shadow"
+                    android:shadowDx="10"
+                    android:shadowDy="10"
+                    android:shadowRadius="2"
+                    android:textAlignment="center"/>
+
+                <ProgressBar
+                    android:id="@+id/fetchVideosProgressBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="false"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                />
+            </LinearLayout>
+
+            <me.grantland.widget.AutofitTextView
+                android:id="@+id/episodeTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="false"
+                android:textSize="30sp"
+                autofit:minTextSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/light_font"
+                android:shadowColor="@color/text_shadow"
+                android:shadowDx="10"
+                android:shadowDy="10"
+                android:shadowRadius="2"
+                android:textAlignment="center"
+                />
+
+            <!--<TextView-->
+                <!--android:id="@+id/episodePart"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content" />-->
+
+            <TextView
+                android:id="@+id/episodeDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="false"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/light_font"
+                android:shadowColor="@color/text_shadow"
+                android:shadowDx="10"
+                android:shadowDy="10"
+                android:shadowRadius="2"
+                android:textAlignment="center" />
+
+            <!--<ImageView-->
+                <!--android:id="@+id/thumbnail"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:contentDescription="@string/thumbnail"-->
+                <!--android:scaleType="fitCenter"/>-->
+
 
 
         </LinearLayout>
 
-    </android.support.v4.widget.NestedScrollView>
+    </RelativeLayout>
 
 
-</android.support.design.widget.CoordinatorLayout>
+
+</LinearLayout>
