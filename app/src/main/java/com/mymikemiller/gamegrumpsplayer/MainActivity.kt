@@ -9,9 +9,8 @@ import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.view.ViewGroup
+import android.widget.*
 import com.mymikemiller.gamegrumpsplayer.util.VideoList
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 
@@ -19,6 +18,8 @@ import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
  */
 class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener {
+    private val PLAYLIST_PEEK_Y = 200f
+
     private lateinit var baseLayout: LinearLayout
     private lateinit var playerView: YouTubePlayerView
     private lateinit var player: YouTubePlayer
@@ -31,6 +32,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
     private lateinit var playbackEventListener: MyPlaybackEventListener
     private var playingVideoDetail: Detail? = null
+    private lateinit var playlistView: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,12 +47,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
         playbackEventListener = MyPlaybackEventListener(recordPauseTime)
+        playlistView = findViewById(R.id.playlistView)
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
+
+        // We have to wait until otherViews is layed out so we can access its height
+        otherViews.post({
+            playlistView.setLayoutParams(RelativeLayout.LayoutParams(playlistView.width, otherViews.height))
+            playlistView.translationY = otherViews.height - PLAYLIST_PEEK_Y
+        })
 
         val startPlayingNext: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
             run {
@@ -125,11 +134,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
         player.fullscreenControlFlags = controlFlags
+
+        //val p:RelativeLayout.LayoutParams = playlistView.layoutParams as RelativeLayout.LayoutParams
+        //p.topMargin = otherViews.height - 200;
+        //playlistView.layoutParams = p
+
+        playlistView.setOnClickListener {
+            val finalTranslateY:Float = if (playlistView.translationY == 0f) otherViews   .height - PLAYLIST_PEEK_Y else 0f
+            playlistView.animate().translationY(finalTranslateY);
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        //recordPauseTime()
+        recordPauseTime()
     }
 
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {

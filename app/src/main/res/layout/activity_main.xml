@@ -111,7 +111,15 @@
                 <!--android:scaleType="fitCenter"/>-->
 
 
+        </LinearLayout>
 
+        <LinearLayout
+            android:id = "@+id/playlistView"
+            android:orientation="vertical"
+            android:layout_height="100dp"
+            android:layout_width="match_parent"
+            android:background="@color/dark_gray"
+            android:top = "300px" >
         </LinearLayout>
 
     </RelativeLayout>
