@@ -113,14 +113,24 @@
 
         </LinearLayout>
 
-        <LinearLayout
+        <RelativeLayout
             android:id = "@+id/playlistView"
             android:orientation="vertical"
             android:layout_height="100dp"
             android:layout_width="match_parent"
-            android:background="@color/dark_gray"
-            android:top = "300px" >
-        </LinearLayout>
+            android:background="@color/dark_gray" >
+
+            <ImageButton
+                android:id = "@+id/arrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/down_arrow"
+                android:background="@null"
+                android:scaleY="-1"
+                android:layout_alignParentEnd="true"
+                android:contentDescription="Up and Down Arrow"/>
+
+        </RelativeLayout>
 
     </RelativeLayout>
 

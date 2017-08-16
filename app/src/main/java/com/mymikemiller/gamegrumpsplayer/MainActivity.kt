@@ -32,7 +32,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
     private lateinit var playbackEventListener: MyPlaybackEventListener
     private var playingVideoDetail: Detail? = null
-    private lateinit var playlistView: LinearLayout
+    private lateinit var playlistView: RelativeLayout
+    private lateinit var arrow: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +49,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
         playbackEventListener = MyPlaybackEventListener(recordPauseTime)
         playlistView = findViewById(R.id.playlistView)
+        arrow = findViewById(R.id.arrow)
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
@@ -139,9 +141,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         //p.topMargin = otherViews.height - 200;
         //playlistView.layoutParams = p
 
-        playlistView.setOnClickListener {
-            val finalTranslateY:Float = if (playlistView.translationY == 0f) otherViews   .height - PLAYLIST_PEEK_Y else 0f
-            playlistView.animate().translationY(finalTranslateY);
+        arrow.setOnClickListener {
+            var finalTranslationY = 0f
+            var finalScaleY = 1f // up
+            if (playlistView.translationY == 0f) {
+                finalTranslationY = otherViews.height  - PLAYLIST_PEEK_Y
+                finalScaleY = -1f // down
+            }
+            playlistView.animate().translationY(finalTranslationY)
+            arrow.animate().scaleY(finalScaleY)
         }
     }
 
