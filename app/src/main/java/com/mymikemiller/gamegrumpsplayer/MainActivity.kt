@@ -12,10 +12,7 @@ import android.view.View
 import android.widget.*
 import com.mymikemiller.gamegrumpsplayer.util.VideoList
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
-import java.util.*
 import android.os.Handler
-import android.util.Log
-import com.google.api.services.youtube.YouTube
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
@@ -38,6 +35,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private var playingVideoDetail: Detail? = null
     private lateinit var playlistView: RelativeLayout
     private lateinit var arrow: ImageButton
+    val recordCurrentTimeHandler: Handler = Handler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +49,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodeTitle = findViewById<TextView>(R.id.episodeTitle)
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
-        playbackEventListener = MyPlaybackEventListener(recordCurrentTime)
+        playbackEventListener = MyPlaybackEventListener(recordCurrentTime, recordCurrentTimeHandler)
         playlistView = findViewById(R.id.playlistView)
         arrow = findViewById(R.id.arrow)
 
@@ -188,28 +186,35 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
     }
 
-    private class MyPlaybackEventListener(val recordCurrentTimeCallback: () -> Unit) : YouTubePlayer.PlaybackEventListener {
+    private class MyPlaybackEventListener(val recordCurrentTimeCallback: () -> Unit, val recordCurrentTimeHandler: Handler) : YouTubePlayer.PlaybackEventListener {
         override fun onPlaying() {
             println("onPlaying")
 
-            val handler: Handler = Handler()
+            // This runnable happens every 5 seconds and records the current play time to
+            // SharedPreferences, until recordCurrentTimeHandler.removeCallbacksAndMessages(null)
+            // is called
             val backupCurrentTime = object: Runnable {
                 override fun run() {
                     recordCurrentTimeCallback()
-                    handler.postDelayed(this, 1000)
+                    recordCurrentTimeHandler.postDelayed(this, 5000)
                 }
             }
-            handler.post(backupCurrentTime)
+            recordCurrentTimeHandler.post(backupCurrentTime)
         }
 
         override fun onBuffering(isBuffering: Boolean) {
         }
 
         override fun onStopped() {
+            // Prevent the current time caching from happening every 5 seconds when we're paused
+            recordCurrentTimeHandler.removeCallbacksAndMessages(null)
         }
 
         override fun onPaused() {
             recordCurrentTimeCallback()
+
+            // Prevent the current time caching from happening every 5 seconds when we're paused
+            recordCurrentTimeHandler.removeCallbacksAndMessages(null)
         }
 
         override fun onSeekTo(endPositionMillis: Int) {
