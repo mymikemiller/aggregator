@@ -9,16 +9,20 @@ import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.*
 import com.mymikemiller.gamegrumpsplayer.util.VideoList
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
+import java.util.*
+import android.os.Handler
+import android.util.Log
+import com.google.api.services.youtube.YouTube
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
  */
 class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener {
     private val PLAYLIST_PEEK_Y = 200f
+    private val CHANNEL_NAME = "gamegrumps"
 
     private lateinit var baseLayout: LinearLayout
     private lateinit var playerView: YouTubePlayerView
@@ -47,7 +51,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodeTitle = findViewById<TextView>(R.id.episodeTitle)
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
-        playbackEventListener = MyPlaybackEventListener(recordPauseTime)
+        playbackEventListener = MyPlaybackEventListener(recordCurrentTime)
         playlistView = findViewById(R.id.playlistView)
         arrow = findViewById(R.id.arrow)
 
@@ -72,11 +76,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 // Get the default first video (the channel's first video)
                 val firstDetail = detailsList[0]
 
-                // Get the last video we were playing (which will be the next video in the playlist if it was queued at the end of the last watch session if it had time to try to load)
+                // Get the last video we were playing (which will be the next video in the playlist
+                // if it was queued at the end of the last watch session if it had time to try to load)
                 val sharedPref = getPreferences(Context.MODE_PRIVATE)
                 val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
                 val videoTimeToPlayMillis = sharedPref.getInt(getString(R.string.currentVideoTimeMillis), 0)
-
 
                 var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
                 if (detailToPlay == null) {
@@ -108,10 +112,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             editor.apply()
             println("deleted")
         }
-        // channelId for gamegrumps: UU9CuvdOVfMPvKCiwdGKL3cQ
+
         fetchVideosProgressSection.visibility=View.VISIBLE
-        YouTubeAPI.fetchChannelIdFromChannelName("gamegrumps", {channelId -> run {
-            // Force an upgrade if necessary
+        YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
+            // Force an upgrade if necessary, which will call the deleteSharedPreferences call if
+            // necessary
             VideoList.getNumDetailsInDatabase(this, deleteSharedPreference)
 
             val sharedPref = getPreferences(Context.MODE_PRIVATE)
@@ -155,7 +160,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
     override fun onPause() {
         super.onPause()
-        recordPauseTime()
+        recordCurrentTime()
     }
 
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
@@ -167,7 +172,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
 
         override fun onVideoStarted() {
-            println("started")
+            println("onVideoStarted")
         }
 
         override fun onLoaded(p0: String?) {
@@ -183,8 +188,18 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
     }
 
-    private class MyPlaybackEventListener(val pausedCallback: () -> Unit) : YouTubePlayer.PlaybackEventListener {
+    private class MyPlaybackEventListener(val recordCurrentTimeCallback: () -> Unit) : YouTubePlayer.PlaybackEventListener {
         override fun onPlaying() {
+            println("onPlaying")
+
+            val handler: Handler = Handler()
+            val backupCurrentTime = object: Runnable {
+                override fun run() {
+                    recordCurrentTimeCallback()
+                    handler.postDelayed(this, 1000)
+                }
+            }
+            handler.post(backupCurrentTime)
         }
 
         override fun onBuffering(isBuffering: Boolean) {
@@ -194,7 +209,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
 
         override fun onPaused() {
-            pausedCallback()
+            recordCurrentTimeCallback()
         }
 
         override fun onSeekTo(endPositionMillis: Int) {
@@ -212,7 +227,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
     }
 
-    private val recordPauseTime: () -> Unit = {
+    private val recordCurrentTime: () -> Unit = {
         // The video was paused (or minimized or otherwise caused to pause playback)
         // Record the time we paused at so we can restore it when the app reloads
         val preferences = getPreferences(Context.MODE_PRIVATE)

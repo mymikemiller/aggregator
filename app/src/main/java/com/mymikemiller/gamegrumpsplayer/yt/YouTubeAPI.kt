@@ -26,15 +26,15 @@ class YouTubeAPI {
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
                 HttpRequestInitializer { }).setApplicationName("game-grumps-player").build()
 
-        private var mChannelName = ""
-        private var mChannelId = ""
+        // Hardcode Game Grumps values so we don't have to fetch them
+        private var mChannelId = "UU9CuvdOVfMPvKCiwdGKL3cQ"
 
         fun fetchDetailForVideo(id: String, callback: (Detail) -> Unit) {
             FetchDetailForVideoTask(id, callback).execute()
         }
 
         fun fetchChannelIdFromChannelName(channelName: String, callback: (channelId: String) -> Unit) {
-            if (mChannelName == "" || mChannelId == "") {
+            if (mChannelId == "") {
                 FetchChannelIdFromChannelNameTask(channelName, callback).execute()
             } else {
                 callback(mChannelId)
@@ -99,7 +99,6 @@ class YouTubeAPI {
                     val actualChannelId = first + "U" + last
 
                     // Cache the channelId so we don't have to find it again
-                    mChannelName = channelName
                     mChannelId = actualChannelId
                     callback(actualChannelId)
                 }
@@ -161,7 +160,7 @@ class YouTubeAPI {
                                 result.snippet.description,
                                 thumbnail,
                                 result.snippet.publishedAt)
-                                // TODO: Fix this. Use publishedAt
+                                // TODO: Fix this, maybe. Use publishedAt
 
                         results.add(d)
                     }
@@ -172,7 +171,7 @@ class YouTubeAPI {
                     setPercentageCallback(Integer.valueOf(overallTotalResults), Integer.valueOf(allDetails.size + searchResultList.size))
 
                     // Find a Detail with the right name so we stop at the right page for testing purposes
-                    var testReturn = false
+//                    var testReturn = false
 //                    for(d in allDetails) {
 //                        if (d.title == "Ice Cream and Bagels") {
 //                            testReturn = true;

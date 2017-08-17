@@ -35,6 +35,9 @@ class VideoList {
                         KEY_THUMBNAIL + " TEXT, " +
                         KEY_DATE_UPLOADED + " TEXT);"
 
+        // This will return the number of Details currently in the database, and will call
+        // the databaseUpgradeCllback if the database had to be upgraded to a new version by
+        // incrementing the DATABASE_VERSION above
         fun getNumDetailsInDatabase(context: Context, databaseUpgradedCallback: () -> Unit) : Int {
             val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
             return dbHelper.getAllDetailsFromDb().size
@@ -58,10 +61,11 @@ class VideoList {
                 run {
                     val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
 
-                    // Get all posts from database
+                    // Get all Details from database
                     val detailsFromDb = dbHelper.getAllDetailsFromDb()
 
-                    // We got all the new Details from YouTube, so append them to the database. Remove duplicates before adding to the database.
+                    // We got all the new Details from YouTube, so append them to the database.
+                    // Remove duplicates before adding to the database.
                     val newDetailsMutable = newDetails.toMutableList()
                     for (detail in newDetails) {
                         if (detailsFromDb.contains(detail)) {
