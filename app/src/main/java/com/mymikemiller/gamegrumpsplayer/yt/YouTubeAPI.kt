@@ -171,7 +171,7 @@ class YouTubeAPI {
                     setPercentageCallback(Integer.valueOf(overallTotalResults), Integer.valueOf(allDetails.size + searchResultList.size))
 
                     // Find a Detail with the right name so we stop at the right page for testing purposes
-//                    var testReturn = false
+                    var testReturn = false
 //                    for(d in allDetails) {
 //                        if (d.title == "Ice Cream and Bagels") {
 //                            testReturn = true;
