@@ -24,11 +24,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var baseLayout: LinearLayout
     private lateinit var playerView: YouTubePlayerView
     private lateinit var player: YouTubePlayer
-    private lateinit var otherViews: View
-    private lateinit var fetchVideosProgressSection: LinearLayout
-    private lateinit var fetchVideosProgresBar: ProgressBar
-    private lateinit var episodeTitle: TextView
-    private lateinit var episodeDescription: TextView
+//    private lateinit var otherViews: View
+//    private lateinit var fetchVideosProgressSection: LinearLayout
+//    private lateinit var fetchVideosProgresBar: ProgressBar
+//    private lateinit var episodeTitle: TextView
+//    private lateinit var episodeDescription: TextView
     private var fullscreen: Boolean = false
     private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
     private lateinit var playbackEventListener: MyPlaybackEventListener
@@ -41,16 +41,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         setContentView(R.layout.activity_main)
         baseLayout = findViewById<LinearLayout>(R.id.layout)
         playerView = findViewById<YouTubePlayerView>(R.id.player)
-        otherViews = findViewById(R.id.other_views)
-        fetchVideosProgressSection = findViewById(R.id.fetchVideosProgressSection)
-        fetchVideosProgresBar = findViewById(R.id.fetchVideosProgressBar)
-        episodeTitle = findViewById<TextView>(R.id.episodeTitle)
-        episodeDescription = findViewById<TextView>(R.id.episodeDescription)
+//        otherViews = findViewById(R.id.other_views)
+//        fetchVideosProgressSection = findViewById(R.id.fetchVideosProgressSection)
+//        fetchVideosProgresBar = findViewById(R.id.fetchVideosProgressBar)
+//        episodeTitle = findViewById<TextView>(R.id.episodeTitle)
+//        episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
         playbackEventListener = MyPlaybackEventListener(recordCurrentTime, recordCurrentTimeHandler)
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
-        episodeTitle.setTypeface(typeface)
+//        episodeTitle.setTypeface(typeface)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
@@ -58,7 +58,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val startPlayingNext: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
             run {
                 runOnUiThread {
-                    fetchVideosProgressSection.visibility = View.GONE
+//                    fetchVideosProgressSection.visibility = View.GONE
                 }
 
                 // Get the default first video (the channel's first video)
@@ -88,8 +88,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
             run {
                 val numDetailsInDatabase = VideoList.getNumDetailsInDatabase(this, {})
-                fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
-                fetchVideosProgresBar.setProgress(currentVideoNumber)
+//                fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
+//                fetchVideosProgresBar.setProgress(currentVideoNumber)
             }
         }
         val deleteSharedPreference: () -> Unit = {
@@ -101,7 +101,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             println("deleted")
         }
 
-        fetchVideosProgressSection.visibility=View.VISIBLE
+//        fetchVideosProgressSection.visibility=View.VISIBLE
         YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
             // Force an upgrade if necessary, which will call the deleteSharedPreferences call if
             // necessary
@@ -201,8 +201,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         // Cue up the next video
         val nextVideoDetail: Detail? = getNextVideo()
         if (nextVideoDetail != null) {
-            episodeTitle.setText(nextVideoDetail.title)
-            episodeDescription.setText(nextVideoDetail.description)
+//            episodeTitle.setText(nextVideoDetail.title)
+//            episodeDescription.setText(nextVideoDetail.description)
             playVideo(nextVideoDetail)
         }
     }
@@ -237,10 +237,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         if (fullscreen) {
             // When in fullscreen, the visibility of all other views than the player should be set to
             // GONE and the player should be laid out across the whole screen.
-            otherViews.visibility = View.GONE
+//            otherViews.visibility = View.GONE
         } else {
             // vertically stacked boxes in portrait, horizontally stacked in landscape.
-            otherViews.visibility = View.VISIBLE
+//            otherViews.visibility = View.VISIBLE
         }
     }
 
@@ -257,8 +257,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     fun playVideo(detail: Detail?, startTimeMillis: Int = 0) {
         if (detail != null) {
             runOnUiThread {
-                episodeTitle.setText(detail.title)
-                episodeDescription.setText(detail.description)
+//                episodeTitle.setText(detail.title)
+//                episodeDescription.setText(detail.description)
                 player.loadVideo(detail.videoId, startTimeMillis)
                 playingVideoDetail = detail
             }

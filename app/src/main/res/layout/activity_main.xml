@@ -12,87 +12,118 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <RelativeLayout
-        android:id="@+id/other_views"
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        xmlns:sothree="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/sliding_layout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        sothree:umanoPanelHeight="68dp"
+        sothree:umanoShadowHeight="4dp">
 
-        <!--This is the orange dot background image in an ImageView to get the scaling right-->
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/background"
-            android:src="@drawable/background_image"
-            android:scaleType="centerCrop" />
-
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="5dp"
-            android:orientation="vertical">
+            android:gravity="center"
+            android:text="Main Content"
+            android:textSize="16sp" />
 
-            <LinearLayout
-                android:id="@+id/fetchVideosProgressSection"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center|top"
+            android:text="The Awesome Sliding Up Panel"
+            android:textSize="16sp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/fetching"
-                    android:textColor="@color/light_font"
-                    android:shadowColor="@color/text_shadow"
-                    android:shadowDx="10"
-                    android:shadowDy="10"
-                    android:shadowRadius="2"
-                    android:textAlignment="center"/>
+        <!--<RelativeLayout-->
+            <!--android:id="@+id/other_views"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="0dp"-->
+            <!--android:layout_weight="1">-->
 
-                <ProgressBar
-                    android:id="@+id/fetchVideosProgressBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:indeterminate="false"
-                    style="@android:style/Widget.ProgressBar.Horizontal"
-                />
-            </LinearLayout>
+            <!--&lt;!&ndash;This is the orange dot background image in an ImageView to get the scaling right&ndash;&gt;-->
+            <!--<ImageView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:contentDescription="@string/background"-->
+                <!--android:src="@drawable/background_image"-->
+                <!--android:scaleType="centerCrop" />-->
 
-            <me.grantland.widget.AutofitTextView
-                android:id="@+id/episodeTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="false"
-                android:textSize="30sp"
-                autofit:minTextSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/light_font"
-                android:shadowColor="@color/text_shadow"
-                android:shadowDx="10"
-                android:shadowDy="10"
-                android:shadowRadius="2"
-                android:textAlignment="center"
-                />
+            <!--<LinearLayout-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:padding="5dp"-->
+                <!--android:orientation="vertical">-->
 
-            <TextView
-                android:id="@+id/episodeDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:singleLine="false"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/light_font"
-                android:shadowColor="@color/text_shadow"
-                android:shadowDx="10"
-                android:shadowDy="10"
-                android:shadowRadius="2"
-                android:textAlignment="center" />
+                <!--<LinearLayout-->
+                    <!--android:id="@+id/fetchVideosProgressSection"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:orientation="vertical"-->
+                    <!--android:visibility="gone">-->
 
-        </LinearLayout>
+                    <!--<TextView-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:text="@string/fetching"-->
+                        <!--android:textColor="@color/light_font"-->
+                        <!--android:shadowColor="@color/text_shadow"-->
+                        <!--android:shadowDx="10"-->
+                        <!--android:shadowDy="10"-->
+                        <!--android:shadowRadius="2"-->
+                        <!--android:textAlignment="center"/>-->
 
-    </RelativeLayout>
+                    <!--<ProgressBar-->
+                        <!--android:id="@+id/fetchVideosProgressBar"-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:indeterminate="false"-->
+                        <!--style="@android:style/Widget.ProgressBar.Horizontal"-->
+                    <!--/>-->
+                <!--</LinearLayout>-->
 
+                <!--<me.grantland.widget.AutofitTextView-->
+                    <!--android:id="@+id/episodeTitle"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:singleLine="false"-->
+                    <!--android:textSize="30sp"-->
+                    <!--autofit:minTextSize="16sp"-->
+                    <!--android:textStyle="bold"-->
+                    <!--android:textColor="@color/light_font"-->
+                    <!--android:shadowColor="@color/text_shadow"-->
+                    <!--android:shadowDx="10"-->
+                    <!--android:shadowDy="10"-->
+                    <!--android:shadowRadius="2"-->
+                    <!--android:textAlignment="center"-->
+                    <!--/>-->
+
+                <!--<TextView-->
+                    <!--android:id="@+id/episodeDescription"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:singleLine="false"-->
+                    <!--android:textSize="20sp"-->
+                    <!--android:textStyle="bold"-->
+                    <!--android:textColor="@color/light_font"-->
+                    <!--android:shadowColor="@color/text_shadow"-->
+                    <!--android:shadowDx="10"-->
+                    <!--android:shadowDy="10"-->
+                    <!--android:shadowRadius="2"-->
+                    <!--android:textAlignment="center" />-->
+
+            <!--</LinearLayout>-->
+
+        <!--</RelativeLayout>-->
+
+        <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="130px"-->
+            <!--android:background="@color/blue">-->
+
+        <!--</LinearLayout>-->
+
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
 
 </LinearLayout>
