@@ -32,15 +32,6 @@
             android:padding="5dp"
             android:orientation="vertical">
 
-            <!--<TextView-->
-                <!--android:id="@+id/team"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content" />-->
-
-            <!--<TextView-->
-                <!--android:id="@+id/game"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content" />-->
             <LinearLayout
                 android:id="@+id/fetchVideosProgressSection"
                 android:layout_width="match_parent"
@@ -84,11 +75,6 @@
                 android:textAlignment="center"
                 />
 
-            <!--<TextView-->
-                <!--android:id="@+id/episodePart"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content" />-->
-
             <TextView
                 android:id="@+id/episodeDescription"
                 android:layout_width="match_parent"
@@ -103,34 +89,7 @@
                 android:shadowRadius="2"
                 android:textAlignment="center" />
 
-            <!--<ImageView-->
-                <!--android:id="@+id/thumbnail"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="match_parent"-->
-                <!--android:contentDescription="@string/thumbnail"-->
-                <!--android:scaleType="fitCenter"/>-->
-
-
         </LinearLayout>
-
-        <RelativeLayout
-            android:id = "@+id/playlistView"
-            android:orientation="vertical"
-            android:layout_height="100dp"
-            android:layout_width="match_parent"
-            android:background="@color/dark_gray" >
-
-            <ImageButton
-                android:id = "@+id/arrow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/down_arrow"
-                android:background="@null"
-                android:scaleY="-1"
-                android:layout_alignParentEnd="true"
-                android:contentDescription="Up and Down Arrow"/>
-
-        </RelativeLayout>
 
     </RelativeLayout>
 

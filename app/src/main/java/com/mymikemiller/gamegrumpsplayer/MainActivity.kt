@@ -33,8 +33,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
     private lateinit var playbackEventListener: MyPlaybackEventListener
     private var playingVideoDetail: Detail? = null
-    private lateinit var playlistView: RelativeLayout
-    private lateinit var arrow: ImageButton
     val recordCurrentTimeHandler: Handler = Handler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,20 +48,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
         playbackEventListener = MyPlaybackEventListener(recordCurrentTime, recordCurrentTimeHandler)
-        playlistView = findViewById(R.id.playlistView)
-        arrow = findViewById(R.id.arrow)
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
-
-        // We have to wait until otherViews is layed out so we can access its height
-        otherViews.post({
-            playlistView.setLayoutParams(RelativeLayout.LayoutParams(playlistView.width, otherViews.height))
-            playlistView.translationY = otherViews.height - PLAYLIST_PEEK_Y
-        })
 
         val startPlayingNext: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
             run {
@@ -139,21 +129,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
         player.fullscreenControlFlags = controlFlags
-
-        //val p:RelativeLayout.LayoutParams = playlistView.layoutParams as RelativeLayout.LayoutParams
-        //p.topMargin = otherViews.height - 200;
-        //playlistView.layoutParams = p
-
-        arrow.setOnClickListener {
-            var finalTranslationY = 0f
-            var finalScaleY = 1f // up
-            if (playlistView.translationY == 0f) {
-                finalTranslationY = otherViews.height  - PLAYLIST_PEEK_Y
-                finalScaleY = -1f // down
-            }
-            playlistView.animate().translationY(finalTranslationY)
-            arrow.animate().scaleY(finalScaleY)
-        }
     }
 
     override fun onPause() {
