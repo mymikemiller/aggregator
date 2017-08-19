@@ -13,6 +13,10 @@ import android.widget.*
 import com.mymikemiller.gamegrumpsplayer.util.VideoList
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 import android.os.Handler
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.helper.ItemTouchHelper
+import java.io.IOException
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
@@ -34,6 +38,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var playbackEventListener: MyPlaybackEventListener
     private var playingVideoDetail: Detail? = null
     val recordCurrentTimeHandler: Handler = Handler()
+    var mDetailsList: MutableList<Detail> = mutableListOf()
+    private lateinit var mRecyclerView: RecyclerView
+    private lateinit var mLinearLayoutManager: LinearLayoutManager
+    private lateinit var mAdapter: RecyclerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,12 +60,26 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
 
+        mRecyclerView = findViewById<RecyclerView>(R.id.recyclerView) as RecyclerView
+        mLinearLayoutManager = LinearLayoutManager(this)
+        mRecyclerView.setLayoutManager(mLinearLayoutManager)
+
+        mAdapter = RecyclerAdapter(mDetailsList)
+        mRecyclerView.setAdapter(mAdapter)
+
+        setRecyclerViewScrollListener()
+        setRecyclerViewItemTouchListener()
+
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
 
-        val startPlayingNext: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
+        val detailsFetched: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
             run {
+
                 runOnUiThread {
+                    mDetailsList.addAll(detailsList)
+                    mAdapter.notifyItemRangeChanged(0, detailsList.size-1)
+
                     fetchVideosProgressSection.visibility = View.GONE
                 }
 
@@ -98,7 +120,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             editor.remove(getString(R.string.finalPageToken))
             editor.remove(getString(R.string.currentVideoId))
             editor.apply()
-            println("deleted")
         }
 
         fetchVideosProgressSection.visibility=View.VISIBLE
@@ -111,8 +132,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             val previousFinalPageToken = sharedPref.getString(getString(R.string.finalPageToken), "").toString()
 
             VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreference, channelId,
-                    previousFinalPageToken, setVideoFetchPercentageComplete, startPlayingNext)
+                    previousFinalPageToken, setVideoFetchPercentageComplete, detailsFetched)
         }})
+    }
+
+    override fun onStart() {
+        super.onStart()
+//        if (mPhotosList.size == 0) {
+//            requestPhoto()
+//        }
     }
 
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
@@ -138,33 +166,27 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
         override fun onAdStarted() {
-            println("Ad Started")
         }
 
         override fun onLoading() {
         }
 
         override fun onVideoStarted() {
-            println("onVideoStarted")
         }
 
         override fun onLoaded(p0: String?) {
         }
 
         override fun onError(p0: YouTubePlayer.ErrorReason?) {
-            println("Error")
         }
 
         override fun onVideoEnded() {
-            println("ended")
             videoEndCallback()
         }
     }
 
     private class MyPlaybackEventListener(val recordCurrentTimeCallback: () -> Unit, val recordCurrentTimeHandler: Handler) : YouTubePlayer.PlaybackEventListener {
         override fun onPlaying() {
-            println("onPlaying")
-
             // This runnable happens every 5 seconds and records the current play time to
             // SharedPreferences, until recordCurrentTimeHandler.removeCallbacksAndMessages(null)
             // is called
@@ -270,4 +292,61 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             editor.apply()
         }
     }
+
+    private fun setRecyclerViewScrollListener() {
+        mRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                val totalItemCount = mRecyclerView.layoutManager.itemCount
+//                if (!mImageRequester.isLoadingData() && totalItemCount == getLastVisibleItemPosition() + 1) {
+//                    requestPhoto()
+//                }
+            }
+        })
+    }
+
+    private fun setRecyclerViewItemTouchListener()
+    {
+        //1
+        val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, viewHolder1: RecyclerView.ViewHolder): Boolean {
+                //2
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, swipeDir: Int) {
+                //3
+                val position = viewHolder.adapterPosition
+                mDetailsList.removeAt(position)
+                mRecyclerView.adapter.notifyItemRemoved(position)
+            }
+        }
+
+        //4
+        val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
+        itemTouchHelper.attachToRecyclerView(mRecyclerView)
+    }
+
+    private fun getLastVisibleItemPosition(): Int {
+        return mLinearLayoutManager.findLastVisibleItemPosition()
+    }
+
+//    private fun requestPhoto() {
+//
+//        try {
+//            mImageRequester.getPhoto()
+//        } catch (e: IOException) {
+//            e.printStackTrace()
+//        }
+//
+//    }
+
+//    fun receivedNewPhoto(newPhoto: Photo) {
+//
+//        runOnUiThread {
+//            mPhotosList.add(newPhoto)
+//            mAdapter.notifyItemInserted(mPhotosList.size)
+//        }
+//    }
+
 }
