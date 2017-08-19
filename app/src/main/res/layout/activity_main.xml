@@ -12,13 +12,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:scrollbars="vertical"/>
-
     <com.sothree.slidinguppanel.SlidingUpPanelLayout
         xmlns:sothree="http://schemas.android.com/apk/res-auto"
         android:id="@+id/sliding_layout"
@@ -26,7 +19,8 @@
         android:layout_height="match_parent"
         android:gravity="bottom"
         sothree:umanoPanelHeight="68dp"
-        sothree:umanoShadowHeight="4dp">
+        sothree:umanoShadowHeight="4dp"
+        sothree:umanoDragView="@id/textView">
 
 
         <RelativeLayout
@@ -118,11 +112,18 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/textView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="200px"
                 android:gravity="center|top"
                 android:text="The Awesome Sliding Up Panel"
-                android:textSize="16sp" />
+                android:textSize="16sp"/>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="vertical"/>
 
         </LinearLayout>
 

@@ -100,6 +100,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
                 playVideo(detailToPlay, videoTimeToPlayMillis)
 
+                // Scroll the recyclerView to the playing video
+                val index = detailsList.indexOf(detailToPlay)
+                runOnUiThread{
+                    mRecyclerView.scrollToPosition(index)
+                }
+
                 // save the finalPageToken in SharedPreferences so we can start at that page next time we fetch the videos from YouTube
                 val preferences = getPreferences(Context.MODE_PRIVATE)
                 val editor = preferences.edit()
@@ -297,10 +303,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
-                val totalItemCount = mRecyclerView.layoutManager.itemCount
-//                if (!mImageRequester.isLoadingData() && totalItemCount == getLastVisibleItemPosition() + 1) {
-//                    requestPhoto()
-//                }
             }
         })
     }
@@ -330,23 +332,4 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private fun getLastVisibleItemPosition(): Int {
         return mLinearLayoutManager.findLastVisibleItemPosition()
     }
-
-//    private fun requestPhoto() {
-//
-//        try {
-//            mImageRequester.getPhoto()
-//        } catch (e: IOException) {
-//            e.printStackTrace()
-//        }
-//
-//    }
-
-//    fun receivedNewPhoto(newPhoto: Photo) {
-//
-//        runOnUiThread {
-//            mPhotosList.add(newPhoto)
-//            mAdapter.notifyItemInserted(mPhotosList.size)
-//        }
-//    }
-
 }
