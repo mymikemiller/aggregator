@@ -16,7 +16,6 @@ import android.os.Handler
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
-import java.io.IOException
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
@@ -36,12 +35,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private var fullscreen: Boolean = false
     private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
     private lateinit var playbackEventListener: MyPlaybackEventListener
-    private var playingVideoDetail: Detail? = null
+    private var mCurrentlyPlayingVideoDetail: Detail? = null
     val recordCurrentTimeHandler: Handler = Handler()
     var mDetailsList: MutableList<Detail> = mutableListOf()
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLinearLayoutManager: LinearLayoutManager
     private lateinit var mAdapter: RecyclerAdapter
+    private var mItemHeight = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +64,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mLinearLayoutManager = LinearLayoutManager(this)
         mRecyclerView.setLayoutManager(mLinearLayoutManager)
 
-        mAdapter = RecyclerAdapter(mDetailsList)
+        // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
+        val isSelected: (Detail) -> Boolean = {detail ->
+            run {
+                detail == mCurrentlyPlayingVideoDetail
+            }
+        }
+
+        mAdapter = RecyclerAdapter(mDetailsList, isSelected)
         mRecyclerView.setAdapter(mAdapter)
 
         setRecyclerViewScrollListener()
@@ -79,7 +86,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 runOnUiThread {
                     mDetailsList.addAll(detailsList)
                     mAdapter.notifyItemRangeChanged(0, detailsList.size-1)
-
                     fetchVideosProgressSection.visibility = View.GONE
                 }
 
@@ -100,11 +106,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
                 playVideo(detailToPlay, videoTimeToPlayMillis)
 
-                // Scroll the recyclerView to the playing video
-                val index = detailsList.indexOf(detailToPlay)
-                runOnUiThread{
-                    mRecyclerView.scrollToPosition(index)
-                }
+                scrollToCurrentlyPlayingVideo()
 
                 // save the finalPageToken in SharedPreferences so we can start at that page next time we fetch the videos from YouTube
                 val preferences = getPreferences(Context.MODE_PRIVATE)
@@ -140,13 +142,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreference, channelId,
                     previousFinalPageToken, setVideoFetchPercentageComplete, detailsFetched)
         }})
-    }
-
-    override fun onStart() {
-        super.onStart()
-//        if (mPhotosList.size == 0) {
-//            requestPhoto()
-//        }
     }
 
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
@@ -231,6 +226,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         if (nextVideoDetail != null) {
             episodeTitle.setText(nextVideoDetail.title)
             episodeDescription.setText(nextVideoDetail.description)
+            // Play the next video, but don't scroll to it in case the user is looking somewhere else in the playlist
             playVideo(nextVideoDetail)
         }
     }
@@ -251,11 +247,31 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             if (found) {
                 return detail
             }
-            if (playingVideoDetail != null && detail == playingVideoDetail) {
+            if (mCurrentlyPlayingVideoDetail != null && detail == mCurrentlyPlayingVideoDetail) {
                 found = true
             }
         }
         return null
+    }
+
+    // Scroll the recyclerView to the playing video
+    fun scrollToCurrentlyPlayingVideo() {
+        val index = mDetailsList.indexOf(mCurrentlyPlayingVideoDetail)
+        runOnUiThread {
+            // Scroll with an offset so that the selected video is one item down in the list
+            // This is a dumb way to find that offset, but it works.
+            if (mItemHeight == 0) {
+                for (i in 0..mDetailsList.size) {
+                    val detailHolder = mRecyclerView.findViewHolderForLayoutPosition(i)
+                    if (detailHolder != null) {
+                        mItemHeight = detailHolder.itemView.height
+                        break
+                    }
+                }
+            }
+
+            mLinearLayoutManager.scrollToPositionWithOffset(index, mItemHeight)
+        }
     }
 
     override val youTubePlayerProvider: YouTubePlayer.Provider
@@ -284,11 +300,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
     fun playVideo(detail: Detail?, startTimeMillis: Int = 0) {
         if (detail != null) {
+            mCurrentlyPlayingVideoDetail = detail
+
             runOnUiThread {
                 episodeTitle.setText(detail.title)
                 episodeDescription.setText(detail.description)
                 player.loadVideo(detail.videoId, startTimeMillis)
-                playingVideoDetail = detail
+
+                // Refresh the RecyclerAdapter to get the currently playing highlight right
+                mRecyclerView.adapter.notifyDataSetChanged()
             }
 
             // Save the Detail to SharedPreference so we can start there next time
@@ -296,6 +316,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             val editor = preferences.edit()
             editor.putString(getString(R.string.currentVideoId), detail.videoId)
             editor.apply()
+
+            scrollToCurrentlyPlayingVideo()
         }
     }
 

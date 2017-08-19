@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.api.client.util.DateTime
 
@@ -13,23 +14,20 @@ import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- *
- */
+class RecyclerAdapter(private val mDetails: MutableList<Detail>, private val isSelectedCallback: (detail: Detail) -> Boolean) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
 
-class RecyclerAdapter(private val mDetails: MutableList<Detail>) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
-
-    //1
-    class DetailHolder//4
+    class DetailHolder
     (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
-        //2
+        private val mRootLayout: LinearLayout
         private val mThumbnail: ImageView
         private val mGame: TextView
         private val mTitle: TextView
         private val mDate: TextView
-        private var mDetail: Detail? = null
+        private lateinit var mDetail: Detail
+        private lateinit var mIsSelectedCallback: (detail: Detail) -> Boolean;
 
         init {
+            mRootLayout = v.findViewById(R.id.rootLayout)
             mThumbnail = v.findViewById<ImageView>(R.id.thumbnail)
             mGame = v.findViewById<TextView>(R.id.game)
             mTitle = v.findViewById<TextView>(R.id.title)
@@ -37,7 +35,17 @@ class RecyclerAdapter(private val mDetails: MutableList<Detail>) : RecyclerView.
             v.setOnClickListener(this)
         }
 
-        //5
+        fun setIsSelectedCallback(callback: (detail: Detail) -> Boolean) {
+            mIsSelectedCallback = callback
+        }
+
+        fun highlight() {
+            mRootLayout.setBackgroundResource(R.color.orange)
+        }
+        fun unhighlight() {
+            mRootLayout.setBackgroundResource(R.color.light_font)
+        }
+
         override fun onClick(v: View) {
             // Play the current video
         }
@@ -55,11 +63,15 @@ class RecyclerAdapter(private val mDetails: MutableList<Detail>) : RecyclerView.
             val date = Date(detail.dateUploaded.value)
             val dateString = format.format(date)
             mDate.setText(dateString)
+
+            if (mIsSelectedCallback(mDetail)) {
+                highlight()
+            } else {
+                unhighlight()
+            }
         }
 
         companion object {
-
-            //3
             private val DETAIL_KEY = "DETAIL"
         }
     }
@@ -67,11 +79,13 @@ class RecyclerAdapter(private val mDetails: MutableList<Detail>) : RecyclerView.
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerAdapter.DetailHolder {
         val inflatedView = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recyclerview_item_row, parent, false)
+
         return DetailHolder(inflatedView)
     }
 
     override fun onBindViewHolder(holder: RecyclerAdapter.DetailHolder, position: Int) {
         val itemDetail = mDetails[position]
+        holder.setIsSelectedCallback(isSelectedCallback)
         holder.bindDetail(itemDetail)
     }
 

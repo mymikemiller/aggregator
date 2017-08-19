@@ -11,4 +11,6 @@
     <color name="light_font">#F9F9F9</color>
     <color name="text_shadow">#708ADF</color>
     <color name="dark_gray">#555</color>
+
+    <color name="orange">#ED933B</color>
 </resources>
