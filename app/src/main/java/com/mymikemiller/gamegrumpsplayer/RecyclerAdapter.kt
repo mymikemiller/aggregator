@@ -10,33 +10,30 @@ import android.widget.TextView
 import com.google.api.client.util.DateTime
 
 import com.squareup.picasso.Picasso
+import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  *
  */
 
-class RecyclerAdapter(private val mDetailsTemp: MutableList<Detail>) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
-
-    private val mDetails = mDetailsTemp
-    init {
-        mDetails.add(Detail("aoijoake", "hello", "Description", "test", DateTime(123456)))
-    }
+class RecyclerAdapter(private val mDetails: MutableList<Detail>) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
 
     //1
     class DetailHolder//4
     (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
         //2
-        private val mItemImage: ImageView
-        private val mItemDate: TextView
-        private val mItemDescription: TextView
+        private val mThumbnail: ImageView
+        private val mGame: TextView
+        private val mTitle: TextView
+        private val mDate: TextView
         private var mDetail: Detail? = null
 
         init {
-
-            mItemImage = v.findViewById<ImageView>(R.id.item_image) as ImageView
-            mItemDate = v.findViewById<TextView>(R.id.item_date) as TextView
-            mItemDescription = v.findViewById<TextView>(R.id.item_description) as TextView
+            mThumbnail = v.findViewById<ImageView>(R.id.thumbnail)
+            mGame = v.findViewById<TextView>(R.id.game)
+            mTitle = v.findViewById<TextView>(R.id.title)
+            mDate = v.findViewById<TextView>(R.id.date)
             v.setOnClickListener(this)
         }
 
@@ -47,9 +44,17 @@ class RecyclerAdapter(private val mDetailsTemp: MutableList<Detail>) : RecyclerV
 
         fun bindDetail(detail: Detail) {
             mDetail = detail
-            Picasso.with(mItemImage.context).load(detail.thumbnail).into(mItemImage)
-            //mItemDate.setText(detail.getHumanDate())
-            mItemDescription.setText(detail.description)
+            Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
+
+            val part = if (detail.part.length > 0) " (" + detail.part + ")" else ""
+            val fullTitle = detail.game + part
+            mGame.setText(fullTitle)
+            mTitle.setText(detail.title)
+
+            val format = SimpleDateFormat("E MMM dd, yyyy", Locale.US)
+            val date = Date(detail.dateUploaded.value)
+            val dateString = format.format(date)
+            mDate.setText(dateString)
         }
 
         companion object {

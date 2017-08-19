@@ -17,8 +17,7 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:scrollbars="vertical"
-        android:background="@color/red"/>
+        android:scrollbars="vertical"/>
 
     <com.sothree.slidinguppanel.SlidingUpPanelLayout
         xmlns:sothree="http://schemas.android.com/apk/res-auto"

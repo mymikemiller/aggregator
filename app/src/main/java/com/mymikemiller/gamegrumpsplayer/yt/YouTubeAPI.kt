@@ -71,7 +71,7 @@ class YouTubeAPI {
                             video.id,
                             video.snippet.title,
                             video.snippet.description,
-                            video.snippet.thumbnails.maxres.url,
+                            video.snippet.thumbnails.default.url,
                             video.snippet.publishedAt)
 
                     callback(detail)
@@ -170,15 +170,7 @@ class YouTubeAPI {
                     // We have to add searchResultList.size instead of just allDetails.size because allDetails won't be added to until the callback is called below
                     setPercentageCallback(Integer.valueOf(overallTotalResults), Integer.valueOf(allDetails.size + searchResultList.size))
 
-                    // Find a Detail with the right name so we stop at the right page for testing purposes
-                    var testReturn = false
-//                    for(d in allDetails) {
-//                        if (d.title == "Ice Cream and Bagels") {
-//                            testReturn = true;
-//                        }
-//                    }
-
-                    if (searchResponse.nextPageToken == null || testReturn) {
+                    if (searchResponse.nextPageToken == null) {
                         // This is the last page of results.
                         // Send the previous pageToken so we can cache the last pageToken to start on that page next time.
                         // Add them to allResults and call the final callback.
