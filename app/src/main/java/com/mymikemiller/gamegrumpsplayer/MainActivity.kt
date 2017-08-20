@@ -87,7 +87,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
         val onItemClick: (Detail) -> Unit = {detail ->
             run {
-                playVideo(detail)
+                if (detail != mCurrentlyPlayingVideoDetail) {
+                    playVideo(detail)
+                }
             }
         }
 
