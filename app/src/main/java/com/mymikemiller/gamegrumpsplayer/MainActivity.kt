@@ -95,7 +95,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mRecyclerView.setAdapter(mAdapter)
 
         setRecyclerViewScrollListener()
-        setRecyclerViewItemTouchListener()
+        //setRecyclerViewItemTouchListener() // Enable this to enable left/right swiping
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
@@ -372,18 +372,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
     private fun setRecyclerViewItemTouchListener()
     {
-        //1
         val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, viewHolder1: RecyclerView.ViewHolder): Boolean {
-                //2
                 return false
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, swipeDir: Int) {
-                //3
-                val position = viewHolder.adapterPosition
-                mDetailsList.removeAt(position)
-                mRecyclerView.adapter.notifyItemRemoved(position)
+                // This shouldn't be called because we disabled the call to setRecyclerViewItemTouchListener
+//                val position = viewHolder.adapterPosition
+//                mDetailsList.removeAt(position)
+//                mRecyclerView.adapter.notifyItemRemoved(position)
             }
         }
 
