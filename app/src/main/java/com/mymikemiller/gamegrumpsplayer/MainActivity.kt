@@ -88,7 +88,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val onItemClick: (Detail) -> Unit = {detail ->
             run {
                 if (detail != mCurrentlyPlayingVideoDetail) {
-                    playVideo(detail)
+                    playVideo(detail, false)
                 }
             }
         }
@@ -131,7 +131,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                     detailToPlay = VideoList.getAllDetailsFromDatabase(this, {})[0]
                 }
 
-                playVideo(detailToPlay, videoTimeToPlayMillis)
+                playVideo(detailToPlay, true, videoTimeToPlayMillis)
 
                 scrollToCurrentlyPlayingVideo()
             }
@@ -341,7 +341,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         doLayout()
     }
 
-    fun playVideo(detail: Detail?, startTimeMillis: Int = 0) {
+    fun playVideo(detail: Detail?, centerPlaylistItem: Boolean = true, startTimeMillis: Int = 0) {
         if (detail != null) {
             mCurrentlyPlayingVideoDetail = detail
 
@@ -359,8 +359,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             val editor = preferences.edit()
             editor.putString(getString(R.string.currentVideoId), detail.videoId)
             editor.apply()
-
-            scrollToCurrentlyPlayingVideo()
+            if (centerPlaylistItem)
+                scrollToCurrentlyPlayingVideo()
         }
     }
 
