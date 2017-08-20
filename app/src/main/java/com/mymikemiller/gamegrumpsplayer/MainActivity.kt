@@ -101,11 +101,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         doLayout()
 
         // This isn't working for some reason...
-        bar.getViewTreeObserver().addOnGlobalLayoutListener(ViewTreeObserver.OnGlobalLayoutListener {
+        bar.getViewTreeObserver().addOnGlobalLayoutListener({
             bar.layoutParams = LinearLayout.LayoutParams(slidingLayout.width, bar.height)
         })
 
-        val detailsFetched: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
+        val detailsFetched: (List<Detail>) -> Unit = { detailsList ->
             run {
 
                 runOnUiThread {
@@ -126,18 +126,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
                 if (detailToPlay == null) {
                     // If we couldn't find a video to play, play the first video of the channel
-                    detailToPlay = VideoList.getAllDetailsFromDatabase(this)[0]
+                    detailToPlay = VideoList.getAllDetailsFromDatabase(this, {})[0]
                 }
 
                 playVideo(detailToPlay, videoTimeToPlayMillis)
 
                 scrollToCurrentlyPlayingVideo()
-
-                // save the finalPageToken in SharedPreferences so we can start at that page next time we fetch the videos from YouTube
-                val preferences = getPreferences(Context.MODE_PRIVATE)
-                val editor = preferences.edit()
-                editor.putString(getString(R.string.finalPageToken), finalPageToken)
-                editor.apply()
             }
         }
         val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
@@ -147,13 +141,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 fetchVideosProgresBar.setProgress(currentVideoNumber)
             }
         }
-        val deleteSharedPreference: () -> Unit = {
-            val sharedPref = getPreferences(Context.MODE_PRIVATE)
-            val editor = sharedPref.edit()
-            editor.remove(getString(R.string.finalPageToken))
-            editor.remove(getString(R.string.currentVideoId))
-            editor.apply()
-        }
+
         mUpButton.setOnClickListener {
             scrollToTop()
         }
@@ -168,14 +156,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
             // Force an upgrade if necessary, which will call the deleteSharedPreferences call if
             // necessary
-            VideoList.getNumDetailsInDatabase(this, deleteSharedPreference)
+            val existingDetails = VideoList.getAllDetailsFromDatabase(this, deleteSharedPreferences)
 
-            val sharedPref = getPreferences(Context.MODE_PRIVATE)
-            val previousFinalPageToken = sharedPref.getString(getString(R.string.finalPageToken), "").toString()
+            val stopAtDetail = if (existingDetails.size > 0) existingDetails[existingDetails.size - 1] else null
 
-            VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreference, channelId,
-                    previousFinalPageToken, setVideoFetchPercentageComplete, detailsFetched)
+            VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreferences, channelId,
+                    stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
         }})
+    }
+
+    val deleteSharedPreferences: () -> Unit = {
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.remove(getString(R.string.currentVideoId))
+        editor.apply()
     }
 
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
@@ -275,7 +269,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     }
 
     private fun getNextVideo() : Detail? {
-        val details = VideoList.getAllDetailsFromDatabase(this)
+        val details = VideoList.getAllDetailsFromDatabase(this, deleteSharedPreferences)
         var found = false
         for(detail in details) {
             if (found) {

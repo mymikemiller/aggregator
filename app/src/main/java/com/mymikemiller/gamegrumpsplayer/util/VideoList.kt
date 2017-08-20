@@ -16,7 +16,7 @@ import com.google.api.client.util.DateTime
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 56
+        val DATABASE_VERSION: Int = 58
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -36,28 +36,31 @@ class VideoList {
                         KEY_DATE_UPLOADED + " TEXT);"
 
         // This will return the number of Details currently in the database, and will call
-        // the databaseUpgradeCllback if the database had to be upgraded to a new version by
+        // the databaseUpgradeCallback if the database had to be upgraded to a new version by
         // incrementing the DATABASE_VERSION above
         fun getNumDetailsInDatabase(context: Context, databaseUpgradedCallback: () -> Unit) : Int {
             val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
             return dbHelper.getAllDetailsFromDb().size
         }
 
-        fun getAllDetailsFromDatabase (context: Context): List<Detail>{
-            val dbHelper = DetailsOpenHelper(context.applicationContext, {})
+        // This will return all the Details currently in the database, and will call
+        // the databaseUpgradeCallback if the database had to be upgraded to a new version by
+        // incrementing the DATABASE_VERSION above
+        fun getAllDetailsFromDatabase (context: Context, databaseUpgradedCallback: () -> Unit): List<Detail>{
+            val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
             return dbHelper.getAllDetailsFromDb()
         }
 
         fun fetchAllDetailsByChannelId(context: Context,
                                        databaseUpgradedCallback: () -> Unit,
                                        channelId: String,
-                                       startPageToken: String,
+                                       stopAtDetail: Detail?,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                                       callback: (details: List<Detail>, finalPageToken: String) -> Unit) {
+                                       callback: (details: List<Detail>) -> Unit) {
 
 
             // Now that we have all details from the database, append the ones we find from YouTube
-            YouTubeAPI.fetchAllDetailsByChannelId(channelId, startPageToken, setPercentageCallback, {newDetails: List<Detail>, finalPageToken: String ->
+            YouTubeAPI.fetchAllDetailsByChannelId(channelId, stopAtDetail, setPercentageCallback, {newDetails: List<Detail> ->
                 run {
                     val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
 
@@ -83,13 +86,13 @@ class VideoList {
                     allDetails.sort()
 
                     // Return to the original callback the combined list of all Details, sorted by date
-                    callback(allDetails, finalPageToken)
+                    callback(allDetails)
                 }
             })
         }
 
         fun getDetailFromVideoId(context: Context, videoId: String) : Detail? {
-            val details = getAllDetailsFromDatabase(context)
+            val details = getAllDetailsFromDatabase(context, {})
 
             var returnDetail:Detail? = null
             for(detail in details) {
@@ -160,7 +163,6 @@ class VideoList {
                         val description = cursor.getString(cursor.getColumnIndex(KEY_DESCRIPTION))
                         val thumbnail = cursor.getString(cursor.getColumnIndex(KEY_THUMBNAIL))
                         val dateUploaded = cursor.getString(cursor.getColumnIndex(KEY_DATE_UPLOADED))
-
                         val dateRfc3339 = DateTime.parseRfc3339(dateUploaded)
 
                         val newDetail = Detail(videoId, title, description, thumbnail, dateRfc3339)
