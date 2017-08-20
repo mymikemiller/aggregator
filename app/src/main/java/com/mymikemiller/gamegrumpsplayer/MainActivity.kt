@@ -16,6 +16,10 @@ import android.os.Handler
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
+import com.sothree.slidinguppanel.SlidingUpPanelLayout
+import android.view.ViewTreeObserver
+
+
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
@@ -25,6 +29,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private val CHANNEL_NAME = "gamegrumps"
 
     private lateinit var baseLayout: LinearLayout
+    private lateinit var bar: LinearLayout
+    private lateinit var slidingLayout: SlidingUpPanelLayout
     private lateinit var playerView: YouTubePlayerView
     private lateinit var player: YouTubePlayer
     private lateinit var otherViews: View
@@ -42,12 +48,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var mLinearLayoutManager: LinearLayoutManager
     private lateinit var mAdapter: RecyclerAdapter
     private var mItemHeight = 0
+    private lateinit var mUpButton: ImageView
+    private lateinit var mDownButton: ImageView
+    private lateinit var mTargetButton: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
         baseLayout = findViewById<LinearLayout>(R.id.layout)
+        bar = findViewById<LinearLayout>(R.id.bar)
+        slidingLayout = findViewById(R.id.sliding_layout)
         playerView = findViewById<YouTubePlayerView>(R.id.player)
         otherViews = findViewById(R.id.other_views)
         fetchVideosProgressSection = findViewById(R.id.fetchVideosProgressSection)
@@ -56,6 +67,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
         playbackEventListener = MyPlaybackEventListener(recordCurrentTime, recordCurrentTimeHandler)
+        mUpButton = findViewById(R.id.up_button)
+        mDownButton = findViewById(R.id.down_button)
+        mTargetButton = findViewById(R.id.target_button)
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
@@ -79,6 +93,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
+
+        // This isn't working for some reason...
+        bar.getViewTreeObserver().addOnGlobalLayoutListener(ViewTreeObserver.OnGlobalLayoutListener {
+            bar.layoutParams = LinearLayout.LayoutParams(slidingLayout.width, bar.height)
+        })
 
         val detailsFetched: (List<Detail>, String) -> Unit = { detailsList, finalPageToken ->
             run {
@@ -128,6 +147,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             editor.remove(getString(R.string.finalPageToken))
             editor.remove(getString(R.string.currentVideoId))
             editor.apply()
+        }
+        mUpButton.setOnClickListener {
+            scrollToTop()
+        }
+        mDownButton.setOnClickListener {
+            scrollToBottom()
+        }
+        mTargetButton.setOnClickListener {
+            scrollToCurrentlyPlayingVideo()
         }
 
         fetchVideosProgressSection.visibility=View.VISIBLE
@@ -270,6 +298,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 }
             }
 
+            mLinearLayoutManager.scrollToPositionWithOffset(index, mItemHeight)
+        }
+    }
+
+    fun scrollToTop() {
+        val index = 0
+        runOnUiThread {
+            mLinearLayoutManager.scrollToPositionWithOffset(index, 0)
+        }
+    }
+    fun scrollToBottom() {
+        val index = mDetailsList.indexOf(mDetailsList[mDetailsList.size - 1])
+        runOnUiThread {
             mLinearLayoutManager.scrollToPositionWithOffset(index, mItemHeight)
         }
     }

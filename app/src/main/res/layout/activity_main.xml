@@ -20,7 +20,7 @@
         android:gravity="bottom"
         sothree:umanoPanelHeight="68dp"
         sothree:umanoShadowHeight="4dp"
-        sothree:umanoDragView="@id/textView">
+        sothree:umanoDragView="@id/bar">
 
 
         <RelativeLayout
@@ -111,13 +111,38 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/textView"
+            <LinearLayout
+                android:id="@+id/bar"
                 android:layout_width="match_parent"
-                android:layout_height="200px"
-                android:gravity="center|top"
-                android:text="The Awesome Sliding Up Panel"
-                android:textSize="16sp"/>
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end">
+
+                <ImageView
+                    android:id="@+id/up_button"
+                    android:layout_width="@dimen/button_size"
+                    android:layout_height="@dimen/button_size"
+                    android:src="@drawable/arrow_up"
+                    android:background="@null"
+                    android:padding="@dimen/button_padding"/>
+
+                <ImageView
+                    android:id="@+id/down_button"
+                    android:layout_width="@dimen/button_size"
+                    android:layout_height="@dimen/button_size"
+                    android:src="@drawable/arrow_down"
+                    android:background="@null"
+                    android:padding="@dimen/button_padding"/>
+
+                <ImageView
+                    android:id="@+id/target_button"
+                    android:layout_width="@dimen/button_size"
+                    android:layout_height="@dimen/button_size"
+                    android:src="@drawable/target"
+                    android:background="@null"
+                    android:padding="@dimen/button_padding"/>
+
+            </LinearLayout>
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerView"
