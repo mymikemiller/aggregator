@@ -104,7 +104,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         // This isn't working for some reason...
         bar.getViewTreeObserver().addOnGlobalLayoutListener({
-            bar.layoutParams = LinearLayout.LayoutParams(slidingLayout.width, bar.height)
+            slidingLayout.panelHeight = bar.height
+            //bar.layoutParams = LinearLayout.LayoutParams(slidingLayout.width, bar.height)
         })
 
         val detailsFetched: (List<Detail>) -> Unit = { detailsList ->
@@ -145,12 +146,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
 
         mUpButton.setOnClickListener {
+            openPlaylist()
             scrollToTop()
         }
         mDownButton.setOnClickListener {
+            openPlaylist()
             scrollToBottom()
         }
         mTargetButton.setOnClickListener {
+            openPlaylist()
             scrollToCurrentlyPlayingVideo()
         }
 
@@ -165,6 +169,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreferences, channelId,
                     stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
         }})
+    }
+
+    fun openPlaylist() {
+        slidingLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
     }
 
     val deleteSharedPreferences: () -> Unit = {
