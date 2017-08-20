@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
 
-class RecyclerAdapter(private val mDetails: MutableList<Detail>, private val isSelectedCallback: (detail: Detail) -> Boolean) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
+class RecyclerAdapter(private val mDetails: MutableList<Detail>, private val isSelectedCallback: (detail: Detail) -> Boolean, private val onItemClickCallback: (detail: Detail) -> Unit) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
 
     class DetailHolder
     (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
@@ -24,7 +24,8 @@ class RecyclerAdapter(private val mDetails: MutableList<Detail>, private val isS
         private val mTitle: TextView
         private val mDate: TextView
         private lateinit var mDetail: Detail
-        private lateinit var mIsSelectedCallback: (detail: Detail) -> Boolean;
+        private lateinit var mIsSelectedCallback: (detail: Detail) -> Boolean
+        private lateinit var mOnItemClickCallback: (detail: Detail) -> Unit
 
         init {
             mRootLayout = v.findViewById(R.id.rootLayout)
@@ -38,6 +39,9 @@ class RecyclerAdapter(private val mDetails: MutableList<Detail>, private val isS
         fun setIsSelectedCallback(callback: (detail: Detail) -> Boolean) {
             mIsSelectedCallback = callback
         }
+        fun setOnItemClickCallback(callback: (detail: Detail) -> Unit) {
+            mOnItemClickCallback = callback
+        }
 
         fun highlight() {
             mRootLayout.setBackgroundResource(R.color.orange)
@@ -47,7 +51,8 @@ class RecyclerAdapter(private val mDetails: MutableList<Detail>, private val isS
         }
 
         override fun onClick(v: View) {
-            // Play the current video
+            mOnItemClickCallback(mDetail)
+
         }
 
         fun bindDetail(detail: Detail) {
@@ -86,6 +91,7 @@ class RecyclerAdapter(private val mDetails: MutableList<Detail>, private val isS
     override fun onBindViewHolder(holder: RecyclerAdapter.DetailHolder, position: Int) {
         val itemDetail = mDetails[position]
         holder.setIsSelectedCallback(isSelectedCallback)
+        holder.setOnItemClickCallback(onItemClickCallback)
         holder.bindDetail(itemDetail)
     }
 
