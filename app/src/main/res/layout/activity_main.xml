@@ -115,6 +115,8 @@
                 android:id="@+id/bar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingTop="@dimen/bar_padding"
+                android:paddingBottom="@dimen/bar_padding"
                 android:orientation="horizontal"
                 android:gravity="end">
 
