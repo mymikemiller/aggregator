@@ -18,7 +18,10 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import android.view.ViewTreeObserver
-
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.WindowManager
+import kotlin.coroutines.experimental.CoroutineContext
 
 
 /**
@@ -50,6 +53,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var mUpButton: ImageView
     private lateinit var mDownButton: ImageView
     private lateinit var mTargetButton: ImageView
+    private lateinit var mSearchEditText: EditText
+    private var mInitialized: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +74,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mUpButton = findViewById(R.id.up_button)
         mDownButton = findViewById(R.id.down_button)
         mTargetButton = findViewById(R.id.target_button)
+        mSearchEditText = findViewById(R.id.searchEditText)
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
@@ -76,6 +82,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mRecyclerView = findViewById<RecyclerView>(R.id.recyclerView) as RecyclerView
         mLinearLayoutManager = LinearLayoutManager(this)
         mRecyclerView.setLayoutManager(mLinearLayoutManager)
+
+        mSearchEditText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(text: Editable?) {
+                filter(text.toString())
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+        })
+        //getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
         val isSelected: (Detail) -> Boolean = {detail ->
@@ -170,6 +189,23 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }})
     }
 
+    private fun filter(text: String?) {
+        //new array list that will hold the filtered data
+        val filteredNames = mutableListOf<Detail>()
+
+        //looping through existingss elements
+        for (detail in mDetailsList) {
+            //if the existing elements contains the search input
+            if (detail.title.toLowerCase().contains(text!!.toLowerCase())) {
+                //adding the element to filtered list
+                filteredNames.add(detail)
+            }
+        }
+
+        //calling a method of the adapter class and passing the filtered list
+        mAdapter.filterList(filteredNames)
+    }
+
     fun openPlaylist() {
         slidingLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
     }
@@ -184,6 +220,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
                                          wasRestored: Boolean) {
         this.player = player
+        mInitialized = true
         player.setPlayerStateChangeListener(playerStateChangeListener)
         player.setPlaybackEventListener(playbackEventListener)
 
@@ -199,7 +236,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
     override fun onPause() {
         super.onPause()
-        recordCurrentTime()
+        if (mInitialized)
+            recordCurrentTime()
     }
 
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
@@ -308,9 +346,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
     }
     fun scrollToBottom() {
-        val index = mDetailsList.indexOf(mDetailsList[mDetailsList.size - 1])
-        runOnUiThread {
-            mLinearLayoutManager.scrollToPosition(index)
+        val index = mRecyclerView.adapter.itemCount - 1
+        if (index > -1) {
+            runOnUiThread {
+                mLinearLayoutManager.scrollToPosition(index)
+            }
         }
     }
 

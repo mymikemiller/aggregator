@@ -120,6 +120,15 @@
                 android:orientation="horizontal"
                 android:gravity="end">
 
+
+                <EditText
+                    android:id="@+id/searchEditText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                </EditText>
+
                 <ImageView
                     android:id="@+id/up_button"
                     android:layout_width="@dimen/button_size"
