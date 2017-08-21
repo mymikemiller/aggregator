@@ -47,7 +47,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLinearLayoutManager: LinearLayoutManager
     private lateinit var mAdapter: RecyclerAdapter
-    private var mItemHeight = 0
     private lateinit var mUpButton: ImageView
     private lateinit var mDownButton: ImageView
     private lateinit var mTargetButton: ImageView
@@ -297,31 +296,21 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val index = mDetailsList.indexOf(mCurrentlyPlayingVideoDetail)
         runOnUiThread {
             // Scroll with an offset so that the selected video is one item down in the list
-            // This is a dumb way to find that offset, but it works.
-            if (mItemHeight == 0) {
-                for (i in 0..mDetailsList.size) {
-                    val detailHolder = mRecyclerView.findViewHolderForLayoutPosition(i)
-                    if (detailHolder != null) {
-                        mItemHeight = detailHolder.itemView.height
-                        break
-                    }
-                }
-            }
 
-            mLinearLayoutManager.scrollToPositionWithOffset(index, mItemHeight)
+            mLinearLayoutManager.scrollToPosition(index - 1)
         }
     }
 
     fun scrollToTop() {
         val index = 0
         runOnUiThread {
-            mLinearLayoutManager.scrollToPositionWithOffset(index, 0)
+            mLinearLayoutManager.scrollToPosition(index)
         }
     }
     fun scrollToBottom() {
         val index = mDetailsList.indexOf(mDetailsList[mDetailsList.size - 1])
         runOnUiThread {
-            mLinearLayoutManager.scrollToPositionWithOffset(index, mItemHeight)
+            mLinearLayoutManager.scrollToPosition(index)
         }
     }
 
