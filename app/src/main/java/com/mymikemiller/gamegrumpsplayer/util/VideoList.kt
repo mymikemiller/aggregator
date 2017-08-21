@@ -16,7 +16,7 @@ import com.google.api.client.util.DateTime
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 58
+        val DATABASE_VERSION: Int = 62
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 

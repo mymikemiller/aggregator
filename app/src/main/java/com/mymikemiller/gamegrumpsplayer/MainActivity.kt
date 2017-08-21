@@ -101,10 +101,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
         doLayout()
 
-        // This isn't working for some reason...
         bar.getViewTreeObserver().addOnGlobalLayoutListener({
-            slidingLayout.panelHeight = bar.height
-            //bar.layoutParams = LinearLayout.LayoutParams(slidingLayout.width, bar.height)
+            if (bar.height > 0) {
+                slidingLayout.panelHeight = bar.height
+            }
         })
 
         val detailsFetched: (List<Detail>) -> Unit = { detailsList ->
