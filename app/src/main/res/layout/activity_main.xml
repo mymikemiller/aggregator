@@ -137,7 +137,10 @@
                     android:layout_weight="1"
                     android:nextFocusUp="@id/searchEditText"
                     android:nextFocusLeft="@id/searchEditText"
-                    android:hint="@string/search">
+                    android:inputType="text"
+                    android:hint="@string/search"
+                    android:imeOptions="actionGo"
+                    android:maxLines="1">
 
                 </EditText>
 
