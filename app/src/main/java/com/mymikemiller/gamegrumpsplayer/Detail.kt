@@ -14,6 +14,14 @@ data class Detail(val videoId: String,
                   val thumbnail: String,
                   val dateUploaded: DateTime) : Comparable<Detail> {
 
+    override fun equals(other: Any?): Boolean {
+        if (other != null && other is Detail) {
+            val otherDetail = other as Detail
+            return videoId == otherDetail.videoId
+        }
+        return false
+    }
+
     val team: String by lazy {
         val lastDashIndex = fullVideoTitle.lastIndexOf(" - ")
         val team: String

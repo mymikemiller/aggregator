@@ -22,6 +22,7 @@ import android.text.TextWatcher
 import android.view.WindowManager
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.view.inputmethod.InputMethodManager
+import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 
 
 /**
@@ -122,7 +123,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val onItemClick: (Detail) -> Unit = {detail ->
             run {
                 if (detail != mCurrentlyPlayingVideoDetail) {
-                    playVideo(detail, false)
+                    val startTimeMillis = WatchedMillis.getWatchedMillis(this, detail)
+                    playVideo(detail, false, startTimeMillis)
                 }
                 // Hide the keyboard and collapse the slidingPanel if we click an item
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -161,7 +163,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 // if it was queued at the end of the last watch session if it had time to try to load)
                 val sharedPref = getPreferences(Context.MODE_PRIVATE)
                 val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
-                val videoTimeToPlayMillis = sharedPref.getInt(getString(R.string.currentVideoTimeMillis), 0)
 
                 var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
                 if (detailToPlay == null) {
@@ -169,6 +170,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                     detailToPlay = VideoList.getAllDetailsFromDatabase(this, {})[0]
                 }
 
+                val videoTimeToPlayMillis = WatchedMillis.getWatchedMillis(this, detailToPlay)
                 playVideo(detailToPlay, true, videoTimeToPlayMillis)
 
                 scrollToCurrentlyPlayingVideo()
@@ -330,18 +332,26 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         if (nextVideoDetail != null) {
             episodeTitle.setText(nextVideoDetail.title)
             episodeDescription.setText(nextVideoDetail.description)
+            // The start time is probably 0 because the video is probably not in the database yet,
+            // but if it is, continue playing where we left off
+            val startTimeMillis = WatchedMillis.getWatchedMillis(this, nextVideoDetail)
             // Play the next video, but don't scroll to it in case the user is looking somewhere else in the playlist
-            playVideo(nextVideoDetail)
+            playVideo(nextVideoDetail, false, startTimeMillis)
         }
     }
 
     private val recordCurrentTime: () -> Unit = {
         // The video was paused (or minimized or otherwise caused to pause playback)
         // Record the time we paused at so we can restore it when the app reloads
-        val preferences = getPreferences(Context.MODE_PRIVATE)
-        val editor = preferences.edit()
-        editor.putInt(getString(R.string.currentVideoTimeMillis), player.currentTimeMillis)
-        editor.commit()
+//        val preferences = getPreferences(Context.MODE_PRIVATE)
+//        val editor = preferences.edit()
+//        editor.putInt(getString(R.string.currentVideoTimeMillis), player.currentTimeMillis)
+//        editor.commit()
+
+        val d: Detail? = mCurrentlyPlayingVideoDetail
+        if (d != null) {
+            WatchedMillis.addOrUpdateWatchedMillis(this, d, player.currentTimeMillis)
+        }
     }
 
     private fun getNextVideo() : Detail? {

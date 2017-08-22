@@ -151,10 +151,10 @@ class VideoList {
             val allDetails = mutableListOf<Detail>()
 
             // SELECT * FROM DETAILS
-            val POSTS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME"
+            val DETAILS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME"
 
             val db = readableDatabase
-            val cursor = db.rawQuery(POSTS_SELECT_QUERY, null)
+            val cursor = db.rawQuery(DETAILS_SELECT_QUERY, null)
             try {
                 if (cursor.moveToFirst()) {
                     do {
@@ -170,7 +170,7 @@ class VideoList {
                     } while (cursor.moveToNext())
                 }
             } catch (e: Exception) {
-                Log.d(TAG, "Error while trying to get posts from database")
+                Log.d(TAG, "Error while trying to get details from database")
             } finally {
                 if (cursor != null && !cursor.isClosed) {
                     cursor.close()
