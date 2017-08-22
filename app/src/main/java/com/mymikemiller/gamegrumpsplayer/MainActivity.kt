@@ -96,7 +96,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
 
-        mRecyclerView = findViewById<RecyclerView>(R.id.recyclerView) as RecyclerView
+        mRecyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
         mRecyclerView.setLayoutManager(mLinearLayoutManager)
 
@@ -224,7 +224,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         //looping through existingss elements
         for (detail in mDetailsList) {
             //if the existing elements contains the search input
-            if (detail.title.toLowerCase().contains(text!!.toLowerCase())) {
+            if (detail.title.toLowerCase().contains(text!!.toLowerCase()) ||
+                    detail.game.toLowerCase().contains(text.toLowerCase())) {
                 //adding the element to filtered list
                 filteredNames.add(detail)
             }
