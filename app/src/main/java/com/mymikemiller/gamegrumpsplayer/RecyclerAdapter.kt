@@ -81,6 +81,10 @@ class RecyclerAdapter(private var mDetails: MutableList<Detail>, private val isS
         }
     }
 
+    fun getFilteredDetails() : List<Detail> {
+        return mDetails
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerAdapter.DetailHolder {
         val inflatedView = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recyclerview_item_row, parent, false)

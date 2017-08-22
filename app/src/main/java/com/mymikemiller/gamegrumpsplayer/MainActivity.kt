@@ -360,11 +360,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
     // Scroll the recyclerView to the playing video
     fun scrollToCurrentlyPlayingVideo() {
-        val index = mDetailsList.indexOf(mCurrentlyPlayingVideoDetail)
+        val index = mAdapter.getFilteredDetails().indexOf(mCurrentlyPlayingVideoDetail)
         runOnUiThread {
             // Scroll with an offset so that the selected video is one item down in the list
-
-            mLinearLayoutManager.scrollToPosition(index - 1)
+            mLinearLayoutManager.scrollToPositionWithOffset(index - 1, 0)
         }
     }
 
