@@ -17,11 +17,11 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
-import android.view.ViewTreeObserver
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.WindowManager
-import kotlin.coroutines.experimental.CoroutineContext
+import android.view.ViewTreeObserver.OnGlobalLayoutListener
+import android.view.inputmethod.InputMethodManager
 
 
 /**
@@ -76,6 +76,23 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mTargetButton = findViewById(R.id.target_button)
         mSearchEditText = findViewById(R.id.searchEditText)
 
+        // Respond to keyboard up/down events
+        val activityRootView = findViewById<LinearLayout>(R.id.layout)
+        activityRootView.getViewTreeObserver().addOnGlobalLayoutListener({
+            val heightDiff = activityRootView.getRootView().getHeight() - activityRootView.getHeight()
+
+            if (heightDiff > 100) {
+                // keyboard is up. Make the top half of screen go away to make room for the RecyclerView
+                findViewById<LinearLayout>(R.id.playerContainer).visibility = View.GONE
+                otherViews.visibility = View.GONE
+                slidingLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+            } else {
+                // keyboard is down. Bring the top half of the screen back.
+                findViewById<LinearLayout>(R.id.playerContainer).visibility = View.VISIBLE
+                otherViews.visibility = View.VISIBLE
+            }
+        })
+
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
 
@@ -94,7 +111,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
             }
         })
-        //getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
         val isSelected: (Detail) -> Boolean = {detail ->
@@ -108,6 +124,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 if (detail != mCurrentlyPlayingVideoDetail) {
                     playVideo(detail, false)
                 }
+                // Hide the keyboard and collapse the slidingPanel if we click an item
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(mSearchEditText.getWindowToken(), 0)
+                slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
             }
         }
 
@@ -118,7 +138,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         //setRecyclerViewItemTouchListener() // Enable this to enable left/right swiping
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
-        doLayout()
 
         bar.getViewTreeObserver().addOnGlobalLayoutListener({
             if (bar.height > 0) {
@@ -187,6 +206,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreferences, channelId,
                     stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
         }})
+    }
+
+    // If we press back when the sliding panel is visible, minimize it
+    override fun onBackPressed() {
+        if (slidingLayout.panelState != SlidingUpPanelLayout.PanelState.COLLAPSED) {
+            slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+        } else {
+            super.onBackPressed()
+        }
     }
 
     private fun filter(text: String?) {
@@ -357,25 +385,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     override val youTubePlayerProvider: YouTubePlayer.Provider
         get() = playerView
 
-    private fun doLayout() {
-        if (fullscreen) {
-            // When in fullscreen, the visibility of all other views than the player should be set to
-            // GONE and the player should be laid out across the whole screen.
-//            otherViews.visibility = View.GONE
-        } else {
-            // vertically stacked boxes in portrait, horizontally stacked in landscape.
-//            otherViews.visibility = View.VISIBLE
-        }
-    }
-
     override fun onFullscreen(isFullscreen: Boolean) {
         fullscreen = isFullscreen
-        doLayout()
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        doLayout()
     }
 
     fun playVideo(detail: Detail?, centerPlaylistItem: Boolean = true, startTimeMillis: Int = 0) {

@@ -7,5 +7,9 @@
     <string name="finalPageToken">FINAL_PAGE_TOKEN</string>
     <string name="currentVideoId">CURRENT_VIDEO_ID</string>
     <string name="currentVideoTimeMillis">CURRENT_VIDEO_TIME_MILLIS</string>
+    <string name="search">Search by Title</string>
+    <string name="up_button">Move to top</string>
+    <string name="down_button">Move to bottom</string>
+    <string name="target_button">Show Currently Playing</string>
 
 </resources>
