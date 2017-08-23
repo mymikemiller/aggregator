@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+
+    <!--<ListPreference-->
+        <!--android:dependency="pref_playlistOrder"-->
+        <!--android:key="pref_playlistDisplayType"-->
+        <!--android:title="@string/pref_playlistOrder"-->
+        <!--android:dialogTitle="@string/pref_playlistOrder"-->
+        <!--android:entries="@array/pref_playlistOrder_entries"-->
+        <!--android:entryValues="@array/pref_playlistOrder_values"-->
+        <!--android:defaultValue="@string/pref_playlistOrder_chronological" />-->
+
+
+    <ListPreference
+        android:title="Playlist Order"
+        android:summary="How should the playlist be ordered"
+        android:key="playlistOrder"
+        android:defaultValue="@string/pref_playlistOrder_chronological"
+        android:entries="@array/pref_playlistOrder_entries"
+        android:entryValues="@array/pref_playlistOrder_values" />
+
+</PreferenceScreen>

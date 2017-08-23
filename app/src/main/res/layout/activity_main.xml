@@ -226,13 +226,13 @@
 
                 <!-- Settings button -->
                 <ImageView
-                    android:id="@+id/settings_button"
+                    android:id="@+id/preferences_button"
                     android:layout_width="@dimen/button_size"
                     android:layout_height="@dimen/button_size"
                     android:src="@drawable/ic_settings_black_24dp"
                     android:background="@null"
                     android:padding="@dimen/button_padding"
-                    android:contentDescription="@string/settings_button"
+                    android:contentDescription="@string/preferences_button"
                     android:layout_alignParentBottom="true"/>
 
             </RelativeLayout>

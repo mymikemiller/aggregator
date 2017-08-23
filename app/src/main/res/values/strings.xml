@@ -10,8 +10,13 @@
     <string name="search">Search by Title</string>
     <string name="up_button">Move to top</string>
     <string name="down_button">Move to bottom</string>
-    <string name="settings_button">Settings</string>
+    <string name="preferences_button">Preferences</string>
     <string name="target_button">Show Currently Playing</string>
     <string name="ignoreGame">Unsubscribe from series</string>
+    <string name="pref_playlistOrder">Playlist Order</string>
+    <string name="pref_playlistOrderKey">playlistOrder</string>
+
+    <string name="pref_playlistOrder_chronological">chronological</string>
+    <string name="pref_playlistOrder_byGame">byGame</string>
 
 </resources>

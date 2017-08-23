@@ -1,6 +1,7 @@
 package com.mymikemiller.gamegrumpsplayer
 
 import android.content.Context
+import android.content.Intent
 import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
 
@@ -13,6 +14,7 @@ import android.widget.*
 import com.mymikemiller.gamegrumpsplayer.util.VideoList
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 import android.os.Handler
+import android.preference.PreferenceManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -25,9 +27,7 @@ import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 import kotlinx.android.synthetic.main.activity_main.*
 import com.google.android.youtube.player.internal.i
-
-
-
+import android.content.SharedPreferences
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
@@ -59,6 +59,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var mTargetButton: ImageView
     private lateinit var mSearchEditText: EditText
     private lateinit var mExpandButton: ImageView
+    private lateinit var mPreferencesButton: ImageView
     private var mInitialized: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +82,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mTargetButton = findViewById(R.id.target_button)
         mSearchEditText = findViewById(R.id.searchEditText)
         mExpandButton = findViewById(R.id.expand_button)
+        mPreferencesButton = findViewById(R.id.preferences_button)
+
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
 
         // Respond to keyboard up/down events
         val activityRootView = findViewById<LinearLayout>(R.id.layout)
@@ -120,6 +124,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 }
             }
         })
+
+        mPreferencesButton.setOnClickListener {
+
+            // Move this to the place where I need to access the preference
+//            val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
+//            val playlistOrderPref = sharedPref.getString(PreferencesActivity.KEY_PREF_SYNC_CONN, "")
+
+            val SP = PreferenceManager.getDefaultSharedPreferences(baseContext)
+            val playlistOrder = SP.getString(getString(R.string.pref_playlistOrderKey), getString(R.string.pref_playlistOrder_chronological))
+
+            // Display the fragment as the main content.
+            val i = Intent(this, PreferencesActivity::class.java)
+            startActivity(i)
+        }
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
