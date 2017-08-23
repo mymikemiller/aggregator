@@ -12,7 +12,9 @@ import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
 
-class RecyclerAdapter(var details: MutableList<Detail>, private val isSelectedCallback: (detail: Detail) -> Boolean, private val onItemClickCallback: (detail: Detail) -> Unit) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
+class RecyclerAdapter(private val allDetails: List<Detail>, private val isSelectedCallback: (detail: Detail) -> Boolean, private val onItemClickCallback: (detail: Detail) -> Unit) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
+
+    var details = allDetails.toMutableList()
 
     class DetailHolder
     (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
@@ -77,10 +79,6 @@ class RecyclerAdapter(var details: MutableList<Detail>, private val isSelectedCa
         companion object {
             private val DETAIL_KEY = "DETAIL"
         }
-    }
-
-    fun getFilteredDetails() : List<Detail> {
-        return details
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerAdapter.DetailHolder {

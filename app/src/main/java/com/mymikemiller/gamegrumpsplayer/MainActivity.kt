@@ -6,7 +6,6 @@ import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
 
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
@@ -21,18 +20,24 @@ import android.support.v7.widget.helper.ItemTouchHelper
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.WindowManager
-import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
-import kotlinx.android.synthetic.main.activity_main.*
-import com.google.android.youtube.player.internal.i
 import android.content.SharedPreferences
+import com.google.android.youtube.player.internal.e
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import android.preference.Preference
+
 
 /**
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
  */
-class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener {
+class MainActivity : YouTubeFailureRecoveryActivity(),
+        YouTubePlayer.OnFullscreenListener,
+        SharedPreferences.OnSharedPreferenceChangeListener {
+    override fun onSharedPreferenceChanged(p0: SharedPreferences?, p1: String?) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     private val CHANNEL_NAME = "gamegrumps"
 
     private lateinit var baseLayout: LinearLayout
@@ -88,6 +93,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mRecyclerView.setLayoutManager(mLinearLayoutManager)
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
+
+        val listener = OnSharedPreferenceChangeListener { sf, key ->
+            println("setting changed")
+        }
+        val sp = this.getSharedPreferences(getString(R.string.pref_playlistOrderKey), Context.MODE_PRIVATE)
+        sp.registerOnSharedPreferenceChangeListener(listener)
 
         // Respond to keyboard up/down events
         val activityRootView = findViewById<LinearLayout>(R.id.layout)
@@ -183,33 +194,37 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         // This happens once the details are fetched from YouTube. detailsList contains all the details, including those from the database.
         val detailsFetched: (List<Detail>) -> Unit = { detailsList ->
             run {
-
+                //TODO: we probably shouldn't be doing all this on the UI thread
                 runOnUiThread {
                     // Now that we've got a list of details, we can
-                    mAdapter = RecyclerAdapter(detailsList.toMutableList(), isSelected, onItemClick)
+                    mAdapter = RecyclerAdapter(detailsList, isSelected, onItemClick)
                     mRecyclerView.setAdapter(mAdapter)
                     mAdapter.notifyItemRangeChanged(0, detailsList.size-1)
                     fetchVideosProgressSection.visibility = View.GONE
+
+                    // Get the default first video (the channel's first video)
+                    val firstDetail = detailsList[0]
+
+                    // Get the last video we were playing (which will be the next video in the playlist
+                    // if it was queued at the end of the last watch session if it had time to try to load)
+                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                    val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
+
+                    var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
+                    if (detailToPlay == null) {
+                        // If we couldn't find a video to play, play the chronologicallly irst video of the channel
+                        detailToPlay = VideoList.getAllDetailsFromDatabase(
+                                this,
+                                getString(R.string.pref_playlistOrder_chronological),
+                                {})[0]
+                    }
+
+                    val videoTimeToPlayMillis = WatchedMillis.getWatchedMillis(this, detailToPlay)
+                    playVideo(detailToPlay, true, videoTimeToPlayMillis)
+
+                    scrollToCurrentlyPlayingVideo()
                 }
 
-                // Get the default first video (the channel's first video)
-                val firstDetail = detailsList[0]
-
-                // Get the last video we were playing (which will be the next video in the playlist
-                // if it was queued at the end of the last watch session if it had time to try to load)
-                val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
-
-                var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
-                if (detailToPlay == null) {
-                    // If we couldn't find a video to play, play the first video of the channel
-                    detailToPlay = VideoList.getAllDetailsFromDatabase(this, {})[0]
-                }
-
-                val videoTimeToPlayMillis = WatchedMillis.getWatchedMillis(this, detailToPlay)
-                playVideo(detailToPlay, true, videoTimeToPlayMillis)
-
-                scrollToCurrentlyPlayingVideo()
             }
         }
         val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
@@ -235,15 +250,38 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         fetchVideosProgressSection.visibility=View.VISIBLE
         YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
-            // Force an upgrade if necessary, which will call the deleteSharedPreferences call if
-            // necessary
-            val existingDetails = VideoList.getAllDetailsFromDatabase(this, deleteSharedPreferences)
+            // Get the details chronologically and force an upgrade if necessary, which will call the deleteCurrentVideoFromSharedPreferences call if
+            // necessary.
+            val existingDetails = VideoList.getAllDetailsFromDatabase(
+                    this,
+                    getString(R.string.pref_playlistOrder_chronological),
+                    deleteCurrentVideoFromSharedPreferences)
 
             val stopAtDetail = if (existingDetails.size > 0) existingDetails[existingDetails.size - 1] else null
 
-            VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreferences, channelId,
+            // Make sure the results come back sorted in the order we want
+            val playlistOrder = getPreferredPlaylistOrder()
+
+            VideoList.fetchAllDetailsByChannelId(this,
+                    playlistOrder,
+                    deleteCurrentVideoFromSharedPreferences, channelId,
                     stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
         }})
+    }
+
+    private fun orderPlaylistChronologically() {
+        val details = VideoList.getAllDetailsFromDatabase(this,
+                getString(R.string.pref_playlistOrder_chronological),
+                deleteCurrentVideoFromSharedPreferences)
+        mAdapter.details = details.toMutableList()
+        mAdapter.notifyDataSetChanged()
+    }
+    private fun orderPlaylistByGame() {
+        val details = VideoList.getAllDetailsFromDatabase(this,
+                getString(R.string.pref_playlistOrder_byGame),
+                deleteCurrentVideoFromSharedPreferences)
+        mAdapter.details = details.toMutableList()
+        mAdapter.notifyDataSetChanged()
     }
 
     // If we press back when the sliding panel is visible, minimize it
@@ -280,7 +318,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
     }
 
-    val deleteSharedPreferences: () -> Unit = {
+    val deleteCurrentVideoFromSharedPreferences: () -> Unit = {
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
         val editor = sharedPref.edit()
         editor.remove(getString(R.string.currentVideoId))
@@ -308,6 +346,21 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         super.onPause()
         if (mInitialized)
             recordCurrentTime()
+
+//        PreferenceManager.getDefaultSharedPreferences(this)
+//                .unregisterOnSharedPreferenceChangeListener(this)
+    }
+    override fun onResume() {
+        super.onResume()
+        val listener = OnSharedPreferenceChangeListener { prefs, key ->
+            println("here")
+            if (key == getString(R.string.pref_playlistOrderKey)) {
+                println("here")
+            }
+        }
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(listener)
     }
 
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
@@ -382,11 +435,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private val recordCurrentTime: () -> Unit = {
         // The video was paused (or minimized or otherwise caused to pause playback)
         // Record the time we paused at so we can restore it when the app reloads
-//        val preferences = getPreferences(Context.MODE_PRIVATE)
-//        val editor = preferences.edit()
-//        editor.putInt(getString(R.string.currentVideoTimeMillis), player.currentTimeMillis)
-//        editor.commit()
-
         val d: Detail? = mCurrentlyPlayingVideoDetail
         if (d != null) {
             WatchedMillis.addOrUpdateWatchedMillis(this, d, player.currentTimeMillis)
@@ -394,7 +442,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     }
 
     private fun getNextVideo() : Detail? {
-        val details = VideoList.getAllDetailsFromDatabase(this, deleteSharedPreferences)
+
+        // The next video depends on our preferences for displaying the list
+        val playlistOrder = getPreferredPlaylistOrder()
+
+        val details = VideoList.getAllDetailsFromDatabase(this, playlistOrder, deleteCurrentVideoFromSharedPreferences)
         var found = false
         for(detail in details) {
             if (found) {
@@ -406,10 +458,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         }
         return null
     }
+    private fun getPreferredPlaylistOrder(): String{
+        // Get the preferred display order from Preferences
+        val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
+        val playlistOrderPref = sharedPref.getString(getString(R.string.pref_playlistOrderKey),
+                getString(R.string.pref_playlistOrder_chronological))
+        return playlistOrderPref
+    }
 
     // Scroll the recyclerView to the playing video
     fun scrollToCurrentlyPlayingVideo() {
-        val index = mAdapter.getFilteredDetails().indexOf(mCurrentlyPlayingVideoDetail)
+        val index = mAdapter.details.indexOf(mCurrentlyPlayingVideoDetail)
         runOnUiThread {
             // Scroll with an offset so that the selected video is one item down in the list
             mLinearLayoutManager.scrollToPositionWithOffset(index - 1, 0)

@@ -9,6 +9,7 @@ import android.content.ContentValues.TAG
 import android.content.ContentValues
 import android.util.Log
 import com.google.api.client.util.DateTime
+import com.mymikemiller.gamegrumpsplayer.R
 
 /**
  * VideoList stores video Details in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
@@ -46,12 +47,21 @@ class VideoList {
         // This will return all the Details currently in the database, and will call
         // the databaseUpgradeCallback if the database had to be upgraded to a new version by
         // incrementing the DATABASE_VERSION above
-        fun getAllDetailsFromDatabase (context: Context, databaseUpgradedCallback: () -> Unit): List<Detail>{
+        fun getAllDetailsFromDatabase (context: Context,
+                                       playlistOrder: String,
+                                       databaseUpgradedCallback: () -> Unit): List<Detail>{
             val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
-            return dbHelper.getAllDetailsFromDb()
+
+            // Get all the details from the database and sort them according to preference
+            val details = sortDetailsByPreference(context,
+                    dbHelper.getAllDetailsFromDb(),
+                    playlistOrder)
+
+            return details
         }
 
         fun fetchAllDetailsByChannelId(context: Context,
+                                       playlistOrder: String,
                                        databaseUpgradedCallback: () -> Unit,
                                        channelId: String,
                                        stopAtDetail: Detail?,
@@ -65,7 +75,7 @@ class VideoList {
                     val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
 
                     // Get all Details from database
-                    val detailsFromDb = dbHelper.getAllDetailsFromDb()
+                    val detailsFromDb = dbHelper.getAllDetailsFromDb().toMutableList()
 
                     // We got all the new Details from YouTube, so append them to the database.
                     // Remove duplicates before adding to the database.
@@ -81,18 +91,32 @@ class VideoList {
 
                     detailsFromDb.addAll(newDetailsMutable)
 
-                    // Get back the full list of Details, sorted
-                    val allDetails = dbHelper.getAllDetailsFromDb()
-                    allDetails.sort()
+                    // Get back the full list of Details and sort it by preference
+                    val allDetails = sortDetailsByPreference(context,
+                            dbHelper.getAllDetailsFromDb(),
+                            playlistOrder)
 
                     // Return to the original callback the combined list of all Details, sorted by date
                     callback(allDetails)
                 }
             })
         }
+        fun sortDetailsByPreference(context: Context, details: List<Detail>, preference: String): List<Detail> {
+            if (preference == context.getString(R.string.pref_playlistOrder_chronological)) {
+                return details.sorted()
+            } else if (preference == context.getString(R.string.pref_playlistOrder_byGame)) {
+                //TODO: actually sort the details by game
+                return details.reversed()
+            }
+
+            // Default to the order returned from the database
+            return details
+        }
 
         fun getDetailFromVideoId(context: Context, videoId: String) : Detail? {
-            val details = getAllDetailsFromDatabase(context, {})
+            val details = getAllDetailsFromDatabase(context,
+                    context.getString(R.string.pref_playlistOrder_chronological),
+                    {})
 
             var returnDetail:Detail? = null
             for(detail in details) {
@@ -147,7 +171,7 @@ class VideoList {
             }
         }
 
-        fun getAllDetailsFromDb(): MutableList<Detail> {
+        fun getAllDetailsFromDb(): List<Detail> {
             val allDetails = mutableListOf<Detail>()
 
             // SELECT * FROM DETAILS
@@ -179,7 +203,7 @@ class VideoList {
 
             val detailsSorted: List<Detail> = allDetails.sorted()
 
-            return detailsSorted.toMutableList()
+            return detailsSorted
         }
 
         // Update a Detail. We probably won't use this. If we need to update other columns we'll have to create more methods like this.
