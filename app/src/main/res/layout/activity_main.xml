@@ -173,6 +173,26 @@
                 android:layout_weight="0"
                 android:orientation="vertical">
 
+                <!-- Expand/retract button -->
+                <ImageView
+                    android:id="@+id/expand_button"
+                    android:layout_width="@dimen/button_size"
+                    android:layout_height="@dimen/button_size"
+                    android:src="@drawable/ic_expand_less_black_24dp"
+                    android:background="@null"
+                    android:padding="@dimen/button_padding"
+                    android:contentDescription="@string/up_button"/>
+
+                <!-- Up button -->
+                <ImageView
+                    android:id="@+id/up_button"
+                    android:layout_width="@dimen/button_size"
+                    android:layout_height="@dimen/button_size"
+                    android:src="@drawable/ic_eject_black_24dp"
+                    android:background="@null"
+                    android:padding="@dimen/button_padding"
+                    android:contentDescription="@string/up_button"/>
+
                 <!-- Target button -->
                 <ImageView
                     android:id="@+id/target_button"
@@ -183,22 +203,13 @@
                     android:padding="@dimen/button_padding"
                     android:contentDescription="@string/target_button"/>
 
-                <!-- Up button -->
-                <ImageView
-                    android:id="@+id/up_button"
-                    android:layout_width="@dimen/button_size"
-                    android:layout_height="@dimen/button_size"
-                    android:src="@drawable/arrow_up"
-                    android:background="@null"
-                    android:padding="@dimen/button_padding"
-                    android:contentDescription="@string/up_button"/>
-
                 <!-- Down button -->
                 <ImageView
                     android:id="@+id/down_button"
                     android:layout_width="@dimen/button_size"
                     android:layout_height="@dimen/button_size"
-                    android:src="@drawable/arrow_down"
+                    android:src="@drawable/ic_eject_black_24dp"
+                    android:scaleY="-1"
                     android:background="@null"
                     android:padding="@dimen/button_padding"
                     android:contentDescription="@string/down_button"/>

@@ -24,6 +24,9 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 import kotlinx.android.synthetic.main.activity_main.*
+import com.google.android.youtube.player.internal.i
+
+
 
 
 /**
@@ -55,6 +58,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var mDownButton: ImageView
     private lateinit var mTargetButton: ImageView
     private lateinit var mSearchEditText: EditText
+    private lateinit var mExpandButton: ImageView
     private var mInitialized: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,6 +80,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mDownButton = findViewById(R.id.down_button)
         mTargetButton = findViewById(R.id.target_button)
         mSearchEditText = findViewById(R.id.searchEditText)
+        mExpandButton = findViewById(R.id.expand_button)
 
         // Respond to keyboard up/down events
         val activityRootView = findViewById<LinearLayout>(R.id.layout)
@@ -86,11 +91,33 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 // keyboard is up. Make the top half of screen go away to make room for the RecyclerView
                 findViewById<LinearLayout>(R.id.playerContainer).visibility = View.GONE
                 otherViews.visibility = View.GONE
-                slidingLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+                openPlaylist()
             } else {
                 // keyboard is down. Bring the top half of the screen back.
                 findViewById<LinearLayout>(R.id.playerContainer).visibility = View.VISIBLE
                 otherViews.visibility = View.VISIBLE
+            }
+        })
+
+        // Flip the Expand/retract button depending on the sliding layout state
+        slidingLayout.addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
+            override fun onPanelStateChanged(panel: View?, previousState: SlidingUpPanelLayout.PanelState?, newState: SlidingUpPanelLayout.PanelState?) {
+                if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    mExpandButton.scaleY = 1f
+                } else {
+                    mExpandButton.scaleY = -1f
+                }
+            }
+            override fun onPanelSlide(panel: View, slideOffset: Float) {}
+        })
+
+        mExpandButton.setOnClickListener(object : View.OnClickListener{
+            override fun onClick(p0: View?) {
+                if (slidingLayout.panelState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    openPlaylist()
+                }else {
+                    closePlaylist()
+                }
             }
         })
 
@@ -239,6 +266,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
     fun openPlaylist() {
         slidingLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+    }
+    fun closePlaylist() {
+        slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
     }
 
     val deleteSharedPreferences: () -> Unit = {
