@@ -16,10 +16,14 @@ data class Detail(val videoId: String,
 
     override fun equals(other: Any?): Boolean {
         if (other != null && other is Detail) {
-            val otherDetail = other as Detail
+            val otherDetail = other
             return videoId == otherDetail.videoId
         }
         return false
+    }
+
+    override fun hashCode(): Int {
+        return videoId.hashCode()
     }
 
     val team: String by lazy {
