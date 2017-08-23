@@ -30,7 +30,6 @@ import kotlinx.android.synthetic.main.activity_main.*
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
  */
 class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscreenListener {
-    private val PLAYLIST_PEEK_Y = 200f
     private val CHANNEL_NAME = "gamegrumps"
 
     private lateinit var baseLayout: LinearLayout
