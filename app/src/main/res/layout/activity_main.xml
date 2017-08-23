@@ -97,18 +97,24 @@
             />
 
             <TextView
-            android:id="@+id/episodeDescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:singleLine="false"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@color/light_font"
-            android:shadowColor="@color/text_shadow"
-            android:shadowDx="10"
-            android:shadowDy="10"
-            android:shadowRadius="2"
-            android:textAlignment="center" />
+                android:id="@+id/episodeDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="false"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/light_font"
+                android:shadowColor="@color/text_shadow"
+                android:shadowDx="10"
+                android:shadowDy="10"
+                android:shadowRadius="2"
+                android:textAlignment="center" />
+
+            <Button
+                android:id="@+id/ignoreGame"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ignoreGame"/>
 
             </LinearLayout>
 

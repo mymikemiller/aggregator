@@ -60,7 +60,7 @@ class RecyclerAdapter(private var mDetails: MutableList<Detail>, private val isS
             Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
 
             val part = if (detail.part.length > 0) " (" + detail.part + ")" else ""
-            val fullTitle = detail.game + part
+            val fullTitle = detail.game + " " + part
             mGame.setText(fullTitle)
             mTitle.setText(detail.title)
 

@@ -23,6 +23,7 @@ import android.view.WindowManager
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 /**
@@ -56,6 +57,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var mTargetButton: ImageView
     private lateinit var mSearchEditText: EditText
     private var mInitialized: Boolean = false
+    private lateinit var mIgnoreButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +78,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mDownButton = findViewById(R.id.down_button)
         mTargetButton = findViewById(R.id.target_button)
         mSearchEditText = findViewById(R.id.searchEditText)
+        mIgnoreButton = findViewById(R.id.ignoreGame)
 
         // Respond to keyboard up/down events
         val activityRootView = findViewById<LinearLayout>(R.id.layout)
@@ -92,6 +95,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
                 findViewById<LinearLayout>(R.id.playerContainer).visibility = View.VISIBLE
                 otherViews.visibility = View.VISIBLE
             }
+        })
+
+        mIgnoreButton.setOnClickListener({
+            ignoreGame()
         })
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
@@ -208,6 +215,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             VideoList.fetchAllDetailsByChannelId(this, deleteSharedPreferences, channelId,
                     stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
         }})
+    }
+
+    private fun ignoreGame() {
+        val detail = mCurrentlyPlayingVideoDetail
+        if (detail != null) {
+            val game = detail.game
+
+        }
     }
 
     // If we press back when the sliding panel is visible, minimize it
