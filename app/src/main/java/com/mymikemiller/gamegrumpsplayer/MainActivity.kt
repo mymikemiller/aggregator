@@ -83,6 +83,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mSearchEditText = findViewById(R.id.searchEditText)
         mExpandButton = findViewById(R.id.expand_button)
         mPreferencesButton = findViewById(R.id.preferences_button)
+        mRecyclerView = findViewById(R.id.recyclerView)
+        mLinearLayoutManager = LinearLayoutManager(this)
+        mRecyclerView.setLayoutManager(mLinearLayoutManager)
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
 
@@ -141,10 +144,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
 
         val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
         episodeTitle.setTypeface(typeface)
-
-        mRecyclerView = findViewById<RecyclerView>(R.id.recyclerView)
-        mLinearLayoutManager = LinearLayoutManager(this)
-        mRecyclerView.setLayoutManager(mLinearLayoutManager)
 
         mSearchEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(text: Editable?) {
