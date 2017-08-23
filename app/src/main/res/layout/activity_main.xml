@@ -167,7 +167,7 @@
             </LinearLayout>
 
             <!-- Action Bar -->
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
@@ -181,43 +181,64 @@
                     android:src="@drawable/ic_expand_less_black_24dp"
                     android:background="@null"
                     android:padding="@dimen/button_padding"
-                    android:contentDescription="@string/up_button"/>
+                    android:contentDescription="@string/up_button"
+                    android:layout_alignParentTop="true"/>
 
-                <!-- Up button -->
+                <!-- Container for up/target/down buttons -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_centerInParent="true">
+
+                    <!-- Up button -->
+                    <ImageView
+                        android:id="@+id/up_button"
+                        android:layout_width="@dimen/button_size"
+                        android:layout_height="@dimen/button_size"
+                        android:src="@drawable/ic_eject_black_24dp"
+                        android:background="@null"
+                        android:padding="@dimen/button_padding"
+                        android:contentDescription="@string/up_button"/>
+
+                    <!-- Target button -->
+                    <ImageView
+                        android:id="@+id/target_button"
+                        android:layout_width="@dimen/button_size"
+                        android:layout_height="@dimen/button_size"
+                        android:src="@drawable/ic_gps_fixed_black_24dp"
+                        android:background="@null"
+                        android:padding="@dimen/button_padding"
+                        android:contentDescription="@string/target_button"/>
+
+                    <!-- Down button -->
+                    <ImageView
+                        android:id="@+id/down_button"
+                        android:layout_width="@dimen/button_size"
+                        android:layout_height="@dimen/button_size"
+                        android:src="@drawable/ic_eject_black_24dp"
+                        android:scaleY="-1"
+                        android:background="@null"
+                        android:padding="@dimen/button_padding"
+                        android:contentDescription="@string/down_button"/>
+
+                </LinearLayout>
+
+                <!-- Settings button -->
                 <ImageView
-                    android:id="@+id/up_button"
+                    android:id="@+id/settings_button"
                     android:layout_width="@dimen/button_size"
                     android:layout_height="@dimen/button_size"
-                    android:src="@drawable/ic_eject_black_24dp"
+                    android:src="@drawable/ic_settings_black_24dp"
                     android:background="@null"
                     android:padding="@dimen/button_padding"
-                    android:contentDescription="@string/up_button"/>
+                    android:contentDescription="@string/settings_button"
+                    android:layout_alignParentBottom="true"/>
 
-                <!-- Target button -->
-                <ImageView
-                    android:id="@+id/target_button"
-                    android:layout_width="@dimen/button_size"
-                    android:layout_height="@dimen/button_size"
-                    android:src="@drawable/ic_gps_fixed_black_24dp"
-                    android:background="@null"
-                    android:padding="@dimen/button_padding"
-                    android:contentDescription="@string/target_button"/>
-
-                <!-- Down button -->
-                <ImageView
-                    android:id="@+id/down_button"
-                    android:layout_width="@dimen/button_size"
-                    android:layout_height="@dimen/button_size"
-                    android:src="@drawable/ic_eject_black_24dp"
-                    android:scaleY="-1"
-                    android:background="@null"
-                    android:padding="@dimen/button_padding"
-                    android:contentDescription="@string/down_button"/>
-            </LinearLayout>
+            </RelativeLayout>
 
         </LinearLayout>
 
     </com.sothree.slidinguppanel.SlidingUpPanelLayout>
-
 
 </LinearLayout>

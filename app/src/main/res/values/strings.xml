@@ -10,6 +10,7 @@
     <string name="search">Search by Title</string>
     <string name="up_button">Move to top</string>
     <string name="down_button">Move to bottom</string>
+    <string name="settings_button">Settings</string>
     <string name="target_button">Show Currently Playing</string>
     <string name="ignoreGame">Unsubscribe from series</string>
 
