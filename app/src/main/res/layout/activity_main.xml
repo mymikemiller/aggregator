@@ -198,7 +198,7 @@
                     android:id="@+id/target_button"
                     android:layout_width="@dimen/button_size"
                     android:layout_height="@dimen/button_size"
-                    android:src="@drawable/target"
+                    android:src="@drawable/ic_gps_fixed_black_24dp"
                     android:background="@null"
                     android:padding="@dimen/button_padding"
                     android:contentDescription="@string/target_button"/>
