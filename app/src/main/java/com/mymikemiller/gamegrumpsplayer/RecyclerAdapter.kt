@@ -1,6 +1,5 @@
 package com.mymikemiller.gamegrumpsplayer
 
-import android.content.Intent
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -8,13 +7,12 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.google.api.client.util.DateTime
 
 import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
 
-class RecyclerAdapter(private var mDetails: MutableList<Detail>, private val isSelectedCallback: (detail: Detail) -> Boolean, private val onItemClickCallback: (detail: Detail) -> Unit) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
+class RecyclerAdapter(var details: MutableList<Detail>, private val isSelectedCallback: (detail: Detail) -> Boolean, private val onItemClickCallback: (detail: Detail) -> Unit) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
 
     class DetailHolder
     (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
@@ -82,7 +80,7 @@ class RecyclerAdapter(private var mDetails: MutableList<Detail>, private val isS
     }
 
     fun getFilteredDetails() : List<Detail> {
-        return mDetails
+        return details
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerAdapter.DetailHolder {
@@ -93,21 +91,21 @@ class RecyclerAdapter(private var mDetails: MutableList<Detail>, private val isS
     }
 
     override fun onBindViewHolder(holder: RecyclerAdapter.DetailHolder, position: Int) {
-        val itemDetail = mDetails[position]
+        val itemDetail = details[position]
         holder.setIsSelectedCallback(isSelectedCallback)
         holder.setOnItemClickCallback(onItemClickCallback)
         holder.bindDetail(itemDetail)
     }
 
     override fun getItemCount(): Int {
-        return mDetails.size
+        return details.size
     }
 
     //This method will filter the list
     //here we are passing the filtered data
     //and assigning it to the list with notifydatasetchanged method
     fun filterList(filteredDetails: MutableList<Detail>) {
-        this.mDetails = filteredDetails
+        this.details = filteredDetails
         notifyDataSetChanged()
     }
 }

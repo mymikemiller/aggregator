@@ -50,7 +50,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
     private lateinit var playbackEventListener: MyPlaybackEventListener
     private var mCurrentlyPlayingVideoDetail: Detail? = null
     val recordCurrentTimeHandler: Handler = Handler()
-    var mDetailsList: MutableList<Detail> = mutableListOf()
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLinearLayoutManager: LinearLayoutManager
     private lateinit var mAdapter: RecyclerAdapter
@@ -85,6 +84,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         mPreferencesButton = findViewById(R.id.preferences_button)
         mRecyclerView = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
+
         mRecyclerView.setLayoutManager(mLinearLayoutManager)
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
@@ -129,14 +129,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         })
 
         mPreferencesButton.setOnClickListener {
-
-            // Move this to the place where I need to access the preference
-//            val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
-//            val playlistOrderPref = sharedPref.getString(PreferencesActivity.KEY_PREF_SYNC_CONN, "")
-
-            val SP = PreferenceManager.getDefaultSharedPreferences(baseContext)
-            val playlistOrder = SP.getString(getString(R.string.pref_playlistOrderKey), getString(R.string.pref_playlistOrder_chronological))
-
             // Display the fragment as the main content.
             val i = Intent(this, PreferencesActivity::class.java)
             startActivity(i)
@@ -177,9 +169,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             }
         }
 
-        mAdapter = RecyclerAdapter(mDetailsList, isSelected, onItemClick)
-        mRecyclerView.setAdapter(mAdapter)
-
         setRecyclerViewScrollListener()
         //setRecyclerViewItemTouchListener() // Enable this to enable left/right swiping
 
@@ -191,11 +180,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
             }
         })
 
+        // This happens once the details are fetched from YouTube. detailsList contains all the details, including those from the database.
         val detailsFetched: (List<Detail>) -> Unit = { detailsList ->
             run {
 
                 runOnUiThread {
-                    mDetailsList.addAll(detailsList)
+                    // Now that we've got a list of details, we can
+                    mAdapter = RecyclerAdapter(detailsList.toMutableList(), isSelected, onItemClick)
+                    mRecyclerView.setAdapter(mAdapter)
                     mAdapter.notifyItemRangeChanged(0, detailsList.size-1)
                     fetchVideosProgressSection.visibility = View.GONE
                 }
@@ -268,7 +260,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(), YouTubePlayer.OnFullscree
         val filteredNames = mutableListOf<Detail>()
 
         //looping through existingss elements
-        for (detail in mDetailsList) {
+        for (detail in mAdapter.details) {
             //if the existing elements contains the search input
             if (detail.title.toLowerCase().contains(text!!.toLowerCase()) ||
                     detail.game.toLowerCase().contains(text.toLowerCase())) {
