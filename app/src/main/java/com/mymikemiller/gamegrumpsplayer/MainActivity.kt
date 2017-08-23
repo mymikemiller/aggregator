@@ -34,9 +34,6 @@ import android.preference.Preference
 class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubePlayer.OnFullscreenListener,
         SharedPreferences.OnSharedPreferenceChangeListener {
-    override fun onSharedPreferenceChanged(p0: SharedPreferences?, p1: String?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     private val CHANNEL_NAME = "gamegrumps"
 
@@ -90,15 +87,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mRecyclerView = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
 
+        val listener = OnSharedPreferenceChangeListener { prefs, key ->
+            println("here")
+            if (key == getString(R.string.pref_playlistOrderKey)) {
+                println("here")
+            }
+        }
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this)
+
         mRecyclerView.setLayoutManager(mLinearLayoutManager)
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
-
-        val listener = OnSharedPreferenceChangeListener { sf, key ->
-            println("setting changed")
-        }
-        val sp = this.getSharedPreferences(getString(R.string.pref_playlistOrderKey), Context.MODE_PRIVATE)
-        sp.registerOnSharedPreferenceChangeListener(listener)
 
         // Respond to keyboard up/down events
         val activityRootView = findViewById<LinearLayout>(R.id.layout)
@@ -269,6 +270,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }})
     }
 
+    override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
+        if (key == getString(R.string.pref_playlistOrderKey)) {
+            println("hi")
+            if (sp != null) {
+                if (sp.getString(getString(R.string.pref_playlistOrder), getString(R.string.pref_playlistOrder_chronological)) == getString(R.string.pref_playlistOrder_byGame)) {
+                    // order by game
+                    println("game")
+                } else {
+                    println("chronologically")
+                }
+            }
+        }
+    }
+
     private fun orderPlaylistChronologically() {
         val details = VideoList.getAllDetailsFromDatabase(this,
                 getString(R.string.pref_playlistOrder_chronological),
@@ -346,21 +361,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         super.onPause()
         if (mInitialized)
             recordCurrentTime()
-
-//        PreferenceManager.getDefaultSharedPreferences(this)
-//                .unregisterOnSharedPreferenceChangeListener(this)
-    }
-    override fun onResume() {
-        super.onResume()
-        val listener = OnSharedPreferenceChangeListener { prefs, key ->
-            println("here")
-            if (key == getString(R.string.pref_playlistOrderKey)) {
-                println("here")
-            }
-        }
-
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(listener)
     }
 
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
