@@ -2,8 +2,8 @@
 <resources>
 
     <string-array name="pref_playlistOrder_entries">
-        <item>By upload date</item>
-        <item>By game</item>
+        <item>Order by upload date</item>
+        <item>Order by game</item>
     </string-array>
 
     <string-array name="pref_playlistOrder_values">

@@ -266,7 +266,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 val preference = sp.getString(playlistOrderKey, chronological)
 
                 if (preference == byGame) {
-                    // TODO: make mAdapter.details not mutable
                     mAdapter.details = getAllDetailsOrderedByGame()
                 } else {
                     mAdapter.details = getAllDetailsOrderedByDateUploaded()

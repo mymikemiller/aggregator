@@ -15,7 +15,6 @@
     <string name="ignoreGame">Unsubscribe from series</string>
     <string name="pref_playlistOrder">Playlist Order</string>
     <string name="pref_playlistOrderKey">playlistOrder</string>
-
     <string name="pref_playlistOrder_byDateUploaded">byDateUploaded</string>
     <string name="pref_playlistOrder_byGame">byGame</string>
 
