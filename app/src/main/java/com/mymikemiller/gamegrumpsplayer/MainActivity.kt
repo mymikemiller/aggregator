@@ -305,11 +305,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun filter(text: String?) {
+        // Filter the playlists starting in the order of preference
+        val playlistOrder = getPreferredPlaylistOrder()
+
         //new array list that will hold the filtered data
         val filteredNames = mutableListOf<Detail>()
-
         //looping through existingss elements
-        for (detail in mAdapter.details) {
+        val mAllDetails = VideoList.getAllDetailsFromDatabase(this,
+                playlistOrder, {})
+        for (detail in allDetails) {
             //if the existing elements contains the search input
             if (detail.title.toLowerCase().contains(text!!.toLowerCase()) ||
                     detail.game.toLowerCase().contains(text.toLowerCase())) {

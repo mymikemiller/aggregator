@@ -60,8 +60,6 @@ class PlaylistManipulatorTest {
         Assert.assertEquals(output[4], expectedOutput[4])
         Assert.assertEquals(output[5], expectedOutput[5])
     }
-
-
 }
 
 fun generateTestInput(): List<Detail> {
