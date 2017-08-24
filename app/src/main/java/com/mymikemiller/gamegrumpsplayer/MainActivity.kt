@@ -87,13 +87,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mRecyclerView = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
 
-        val listener = OnSharedPreferenceChangeListener { prefs, key ->
-            println("here")
-            if (key == getString(R.string.pref_playlistOrderKey)) {
-                println("here")
-            }
-        }
-
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(this)
 
@@ -272,13 +265,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
         if (key == getString(R.string.pref_playlistOrderKey)) {
-            println("hi")
             if (sp != null) {
-                if (sp.getString(getString(R.string.pref_playlistOrder), getString(R.string.pref_playlistOrder_chronological)) == getString(R.string.pref_playlistOrder_byGame)) {
-                    // order by game
-                    println("game")
+                val playlistOrderKey = getString(R.string.pref_playlistOrderKey)
+                val chronological = getString(R.string.pref_playlistOrder_chronological)
+                val byGame = getString(R.string.pref_playlistOrder_byGame)
+                val preference = sp.getString(playlistOrderKey, chronological)
+
+                if (preference == byGame) {
+                    orderPlaylistByGame()
                 } else {
-                    println("chronologically")
+                    orderPlaylistChronologically()
                 }
             }
         }
