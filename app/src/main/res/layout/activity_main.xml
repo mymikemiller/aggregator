@@ -115,6 +115,13 @@
                     android:shadowRadius="2"
                     android:textAlignment="center" />
 
+                <Button
+                    android:id="@+id/skipGameButton"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:text="Skip Game"/>
+
+
             </LinearLayout>
         </RelativeLayout>
 

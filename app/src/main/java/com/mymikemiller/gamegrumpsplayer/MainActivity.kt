@@ -23,6 +23,7 @@ import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 import android.content.SharedPreferences
+import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 
 
 /**
@@ -33,6 +34,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private val CHANNEL_NAME = "gamegrumps"
+
+    private val SKIP_GAMES = listOf<String>("Kirby")
 
     private lateinit var baseLayout: LinearLayout
     private lateinit var bar: LinearLayout
@@ -59,7 +62,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mExpandButton: ImageView
     private lateinit var mPreferencesButton: ImageView
     private var mInitialized: Boolean = false
-    private lateinit var mAllDetailsUnordered: List<Detail>
+    private lateinit var mAllUnskippedDetails: List<Detail>
+    private lateinit var mSkipGameButton: Button
+
+    var mAllDetailsIncludingSkipped = listOf<Detail>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,6 +90,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mPreferencesButton = findViewById(R.id.preferences_button)
         mRecyclerView = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
+        mSkipGameButton = findViewById(R.id.skipGameButton)
+
+        mSkipGameButton.setOnClickListener({
+            run {
+                val video = mCurrentlyPlayingVideoDetail
+                if (video != null) {
+                    addSkippedGame(video.game)
+                }
+            }
+        })
 
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(this)
@@ -184,20 +200,24 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         })
 
         // This happens once the details are fetched from YouTube. detailsList contains all the details, including those from the database.
-        val detailsFetched: (List<Detail>) -> Unit = { detailsList ->
+        val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
             run {
                 //TODO: we probably shouldn't be doing all this on the UI thread
                 runOnUiThread {
-                    mAllDetailsUnordered = detailsList
+                    // We need to cache the list of all videos so we can find
+                    mAllDetailsIncludingSkipped = allDetailsUnordered
+
+                    // Filter out the episodes the user has specified to skip
+                    mAllUnskippedDetails = SkippedGames.filterOutSkipped(this, allDetailsUnordered)
 
                     // Now that we've got a list of details, we can
-                    mAdapter = RecyclerAdapter(detailsList, isSelected, onItemClick)
+                    mAdapter = RecyclerAdapter(mAllUnskippedDetails, isSelected, onItemClick)
                     mRecyclerView.setAdapter(mAdapter)
-                    mAdapter.notifyItemRangeChanged(0, detailsList.size-1)
+                    mAdapter.notifyItemRangeChanged(0, mAllUnskippedDetails.size-1)
                     fetchVideosProgressSection.visibility = View.GONE
 
                     // Get the default first video (the channel's first video)
-                    val firstDetail = detailsList[0]
+                    val firstDetail = mAllUnskippedDetails[0]
 
                     // Get the last video we were playing (which will be the next video in the playlist
                     // if it was queued at the end of the last watch session if it had time to try to load)
@@ -207,13 +227,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
                     if (detailToPlay == null) {
                         // If we couldn't find a video to play, play the chronologicallly irst video of the channel
-                        detailToPlay = mAllDetailsUnordered[0]
+                        detailToPlay = mAllUnskippedDetails[0]
                     }
 
                     val videoTimeToPlayMillis = WatchedMillis.getWatchedMillis(this, detailToPlay)
                     playVideo(detailToPlay, true, videoTimeToPlayMillis)
 
                     scrollToCurrentlyPlayingVideo()
+
                 }
 
             }
@@ -256,7 +277,29 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     playlistOrder,
                     deleteCurrentVideoFromSharedPreferences, channelId,
                     stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
+
         }})
+    }
+
+    fun addSkippedGame(game: String) {
+        // Get what would be our next video if that game were already skipped. getNextVideo does
+        // that for us
+        val nextVideo = getNextVideo()
+
+        // nextVideo now refers to the first Detail that doesn't match the newly skipped game or any
+        // skipped games or null if we're at the end of the playlist
+
+        SkippedGames.addSkippedGame(this, game)
+
+        mAllUnskippedDetails = SkippedGames.filterOutSkipped(this, mAllUnskippedDetails)
+        mAdapter.details = mAllUnskippedDetails
+        mAdapter.notifyDataSetChanged()
+        if (!mAllUnskippedDetails.contains(mCurrentlyPlayingVideoDetail)) {
+            // The user skipped the currently playing video. Play the next video in the adapter if there is one.
+            if (nextVideo != null) {
+                playVideo(nextVideo)
+            }
+        }
     }
 
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
@@ -301,7 +344,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private fun filter(query: String) {
         val lowerCaseQuery = query.toLowerCase()
 
-        val filteredNames = mAllDetailsUnordered.filter {
+        val filteredNames = mAllUnskippedDetails.filter {
             it.game.toLowerCase().contains(lowerCaseQuery) ||
             it.title.toLowerCase().contains(lowerCaseQuery) }
 
@@ -425,14 +468,21 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun getNextVideo() : Detail? {
-
-        var found = false
-        for(detail in mAllDetailsUnordered) {
-            if (found) {
-                return detail
-            }
-            if (mCurrentlyPlayingVideoDetail != null && detail == mCurrentlyPlayingVideoDetail) {
-                found = true
+        val skippedGames = SkippedGames.getAllSkippedGames(this)
+        var foundCurrentlyPlayingVideo = false
+        val currentlyPlayingVideoDetail = mCurrentlyPlayingVideoDetail
+        if (currentlyPlayingVideoDetail != null) {
+            for (detail in mAllDetailsIncludingSkipped) {
+                if (foundCurrentlyPlayingVideo) {
+                    // Keep looping through mAllDetailsIncludingSkipped until we find one that wasn't skipped
+                    if (!skippedGames.contains(detail.game)) {
+                        return detail
+                    }
+                }
+                if (detail == mCurrentlyPlayingVideoDetail) {
+                    // We found the currently playing video. Now keep looping until we find a video not skipped
+                    foundCurrentlyPlayingVideo = true
+                }
             }
         }
         return null

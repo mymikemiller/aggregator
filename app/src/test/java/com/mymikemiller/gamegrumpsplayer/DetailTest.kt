@@ -6,7 +6,7 @@ import org.junit.Test
 import org.junit.Assert.*
 
 /**
-
+ * Details still that should fail this test and need to be fixed: Zelda (Good with money)
  */
 class DetailTest {
     @Test
