@@ -188,6 +188,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             run {
                 //TODO: we probably shouldn't be doing all this on the UI thread
                 runOnUiThread {
+                    mAllDetailsUnordered = detailsList
+
                     // Now that we've got a list of details, we can
                     mAdapter = RecyclerAdapter(detailsList, isSelected, onItemClick)
                     mRecyclerView.setAdapter(mAdapter)
@@ -241,11 +243,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
             // Get the details ordered by date uploaded and force an upgrade if necessary, which will call the deleteCurrentVideoFromSharedPreferences call if
             // necessary.
-            mAllDetailsUnordered = VideoList.getAllDetailsFromDatabase(this,
+            val details = VideoList.getAllDetailsFromDatabase(this,
                     getString(R.string.pref_playlistOrder_byDateUploaded),
                     deleteCurrentVideoFromSharedPreferences)
 
-            val stopAtDetail = if (mAllDetailsUnordered.size > 0) mAllDetailsUnordered[mAllDetailsUnordered.size - 1] else null
+            val stopAtDetail = if (details.size > 0) details[details.size - 1] else null
 
             // Make sure the results come back sorted in the order we want
             val playlistOrder = getPreferredPlaylistOrder()
