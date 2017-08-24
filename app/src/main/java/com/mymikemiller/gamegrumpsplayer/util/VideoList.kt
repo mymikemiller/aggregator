@@ -103,7 +103,7 @@ class VideoList {
         }
         fun sortDetailsByPreference(context: Context, details: List<Detail>, preference: String): List<Detail> {
 
-            if (preference == context.getString(R.string.pref_playlistOrder_chronological)) {
+            if (preference == context.getString(R.string.pref_playlistOrder_chronologically)) {
                 return PlaylistManipulator.orderChronologically(details)
             } else if (preference == context.getString(R.string.pref_playlistOrder_byGame)) {
                 return PlaylistManipulator.orderByGame(details)
@@ -115,7 +115,7 @@ class VideoList {
 
         fun getDetailFromVideoId(context: Context, videoId: String) : Detail? {
             val details = getAllDetailsFromDatabase(context,
-                    context.getString(R.string.pref_playlistOrder_chronological),
+                    context.getString(R.string.pref_playlistOrder_chronologically),
                     {})
 
             var returnDetail:Detail? = null

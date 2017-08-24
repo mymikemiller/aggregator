@@ -8,7 +8,7 @@
         android:summary="How the playlist should be ordered"
         android:key="@string/pref_playlistOrderKey"
         android:dialogTitle="@string/pref_playlistOrder"
-        android:defaultValue="@string/pref_playlistOrder_chronological"
+        android:defaultValue="@string/pref_playlistOrder_chronologically"
         android:entries="@array/pref_playlistOrder_entries"
         android:entryValues="@array/pref_playlistOrder_values" />
 

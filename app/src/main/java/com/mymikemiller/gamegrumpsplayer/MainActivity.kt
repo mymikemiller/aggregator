@@ -242,7 +242,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             // Get the details chronologically and force an upgrade if necessary, which will call the deleteCurrentVideoFromSharedPreferences call if
             // necessary.
             mAllDetailsUnordered = VideoList.getAllDetailsFromDatabase(this,
-                    getString(R.string.pref_playlistOrder_chronological),
+                    getString(R.string.pref_playlistOrder_chronologically),
                     deleteCurrentVideoFromSharedPreferences)
 
             val stopAtDetail = if (mAllDetailsUnordered.size > 0) mAllDetailsUnordered[mAllDetailsUnordered.size - 1] else null
@@ -261,7 +261,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         if (key == getString(R.string.pref_playlistOrderKey)) {
             if (sp != null) {
                 val playlistOrderKey = getString(R.string.pref_playlistOrderKey)
-                val chronological = getString(R.string.pref_playlistOrder_chronological)
+                val chronological = getString(R.string.pref_playlistOrder_chronologically)
                 val byGame = getString(R.string.pref_playlistOrder_byGame)
                 val preference = sp.getString(playlistOrderKey, chronological)
 
@@ -278,7 +278,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     private fun getAllDetailsOrderedChronologically(): List<Detail> {
         var allDetails = VideoList.getAllDetailsFromDatabase(this,
-                getString(R.string.pref_playlistOrder_chronological),
+                getString(R.string.pref_playlistOrder_chronologically),
                 deleteCurrentVideoFromSharedPreferences)
         return allDetails
     }
@@ -441,7 +441,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Get the preferred display order from Preferences
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
         val playlistOrderPref = sharedPref.getString(getString(R.string.pref_playlistOrderKey),
-                getString(R.string.pref_playlistOrder_chronological))
+                getString(R.string.pref_playlistOrder_chronologically))
         return playlistOrderPref
     }
 

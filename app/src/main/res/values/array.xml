@@ -2,12 +2,12 @@
 <resources>
 
     <string-array name="pref_playlistOrder_entries">
-        <item>Chronological</item>
+        <item>Chronologically</item>
         <item>By game</item>
     </string-array>
 
     <string-array name="pref_playlistOrder_values">
-        <item>chronological</item>
+        <item>chronologically</item>
         <item>byGame</item>
     </string-array>
 </resources>
