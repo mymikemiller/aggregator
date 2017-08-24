@@ -45,6 +45,11 @@ class SkippedGames {
             val skippedGames = dbHelper.getSkippedGamesFromDb()
             return skippedGames
         }
+
+        fun unskipAllGames(context: Context) {
+            val dbHelper = SkippedGamesOpenHelper(context.applicationContext)
+            dbHelper.unskipAllGames()
+        }
     }
 
     class SkippedGamesOpenHelper internal constructor(context: Context) : SQLiteOpenHelper(context, SkippedGames.DATABASE_NAME, null, SkippedGames.DATABASE_VERSION) {
@@ -110,6 +115,21 @@ class SkippedGames {
             }
 
             return games.toList()
+        }
+
+
+        fun unskipAllGames() {
+            val db = writableDatabase
+            db.beginTransaction()
+            try {
+                // Order of deletions is important when foreign key relationships exist.
+                db.delete(SkippedGames.SKIPPED_GAMES_TABLE_NAME, null, null)
+                db.setTransactionSuccessful()
+            } catch (e: Exception) {
+                Log.d(ContentValues.TAG, "Error while trying to delete all skipped games")
+            } finally {
+                db.endTransaction()
+            }
         }
     }
 }

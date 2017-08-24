@@ -24,6 +24,7 @@ import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 import android.content.SharedPreferences
 import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 /**
@@ -64,6 +65,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private var mInitialized: Boolean = false
     private lateinit var mAllUnskippedDetails: List<Detail>
     private lateinit var mSkipGameButton: Button
+    private lateinit var mUnskipAllGamesButton: Button
 
     var mAllDetailsIncludingSkipped = listOf<Detail>()
 
@@ -91,6 +93,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mRecyclerView = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
         mSkipGameButton = findViewById(R.id.skipGameButton)
+        mUnskipAllGamesButton = findViewById(R.id.unSkipAllGameButton)
 
         mSkipGameButton.setOnClickListener({
             run {
@@ -99,6 +102,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     addSkippedGame(video.game)
                 }
             }
+        })
+
+        mUnskipAllGamesButton.setOnClickListener({
+            unSkipAllGames()
         })
 
         PreferenceManager.getDefaultSharedPreferences(this)
@@ -302,23 +309,33 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
+    fun unSkipAllGames() {
+        SkippedGames.unskipAllGames(this)
+        refreshPlaylist()
+    }
+
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
         if (key == getString(R.string.pref_playlistOrderKey)) {
             if (sp != null) {
-                val playlistOrderKey = getString(R.string.pref_playlistOrderKey)
-                val chronological = getString(R.string.pref_playlistOrder_byDateUploaded)
-                val byGame = getString(R.string.pref_playlistOrder_byGame)
-                val preference = sp.getString(playlistOrderKey, chronological)
-
-                if (preference == byGame) {
-                    mAdapter.details = getAllDetailsOrderedByGame()
-                } else {
-                    mAdapter.details = getAllDetailsOrderedByDateUploaded()
-                }
-                mAdapter.notifyDataSetChanged()
-                scrollToCurrentlyPlayingVideo()
+                refreshPlaylist()
             }
         }
+    }
+    private fun refreshPlaylist() {
+
+        val playlistOrderKey = getString(R.string.pref_playlistOrderKey)
+        val chronological = getString(R.string.pref_playlistOrder_byDateUploaded)
+        val byGame = getString(R.string.pref_playlistOrder_byGame)
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        val preference = sharedPref.getString(playlistOrderKey, chronological)
+
+        if (preference == byGame) {
+            mAdapter.details = getAllDetailsOrderedByGame()
+        } else {
+            mAdapter.details = getAllDetailsOrderedByDateUploaded()
+        }
+        mAdapter.notifyDataSetChanged()
+        scrollToCurrentlyPlayingVideo()
     }
 
     private fun getAllDetailsOrderedByDateUploaded(): List<Detail> {

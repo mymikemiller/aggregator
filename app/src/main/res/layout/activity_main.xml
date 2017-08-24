@@ -121,6 +121,12 @@
                     android:layout_width="match_parent"
                     android:text="Skip Game"/>
 
+                <Button
+                    android:id="@+id/unSkipAllGameButton"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:text="Unskip All Games"/>
+
 
             </LinearLayout>
         </RelativeLayout>
