@@ -45,7 +45,7 @@ class PlaylistManipulator {
 
         }
 
-        fun orderChronologically(details: List<Detail>): List<Detail> {
+        fun orderByDateUploaded(details: List<Detail>): List<Detail> {
             return details.sorted()
         }
     }

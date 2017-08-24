@@ -2,12 +2,12 @@
 <resources>
 
     <string-array name="pref_playlistOrder_entries">
-        <item>Chronologically</item>
+        <item>By upload date</item>
         <item>By game</item>
     </string-array>
 
     <string-array name="pref_playlistOrder_values">
-        <item>chronologically</item>
+        <item>byDateUploaded</item>
         <item>byGame</item>
     </string-array>
 </resources>

@@ -16,7 +16,7 @@
     <string name="pref_playlistOrder">Playlist Order</string>
     <string name="pref_playlistOrderKey">playlistOrder</string>
 
-    <string name="pref_playlistOrder_chronologically">chronologically</string>
+    <string name="pref_playlistOrder_byDateUploaded">byDateUploaded</string>
     <string name="pref_playlistOrder_byGame">byGame</string>
 
 </resources>

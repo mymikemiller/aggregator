@@ -239,10 +239,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         fetchVideosProgressSection.visibility=View.VISIBLE
         YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
-            // Get the details chronologically and force an upgrade if necessary, which will call the deleteCurrentVideoFromSharedPreferences call if
+            // Get the details ordered by date uploaded and force an upgrade if necessary, which will call the deleteCurrentVideoFromSharedPreferences call if
             // necessary.
             mAllDetailsUnordered = VideoList.getAllDetailsFromDatabase(this,
-                    getString(R.string.pref_playlistOrder_chronologically),
+                    getString(R.string.pref_playlistOrder_byDateUploaded),
                     deleteCurrentVideoFromSharedPreferences)
 
             val stopAtDetail = if (mAllDetailsUnordered.size > 0) mAllDetailsUnordered[mAllDetailsUnordered.size - 1] else null
@@ -261,7 +261,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         if (key == getString(R.string.pref_playlistOrderKey)) {
             if (sp != null) {
                 val playlistOrderKey = getString(R.string.pref_playlistOrderKey)
-                val chronological = getString(R.string.pref_playlistOrder_chronologically)
+                val chronological = getString(R.string.pref_playlistOrder_byDateUploaded)
                 val byGame = getString(R.string.pref_playlistOrder_byGame)
                 val preference = sp.getString(playlistOrderKey, chronological)
 
@@ -269,24 +269,22 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     // TODO: make mAdapter.details not mutable
                     mAdapter.details = getAllDetailsOrderedByGame()
                 } else {
-                    mAdapter.details = getAllDetailsOrderedChronologically()
+                    mAdapter.details = getAllDetailsOrderedByDateUploaded()
                 }
                 mAdapter.notifyDataSetChanged()
             }
         }
     }
 
-    private fun getAllDetailsOrderedChronologically(): List<Detail> {
-        var allDetails = VideoList.getAllDetailsFromDatabase(this,
-                getString(R.string.pref_playlistOrder_chronologically),
+    private fun getAllDetailsOrderedByDateUploaded(): List<Detail> {
+        return VideoList.getAllDetailsFromDatabase(this,
+                getString(R.string.pref_playlistOrder_byDateUploaded),
                 deleteCurrentVideoFromSharedPreferences)
-        return allDetails
     }
     private fun getAllDetailsOrderedByGame(): List<Detail> {
-        var allDetails = VideoList.getAllDetailsFromDatabase(this,
+        return VideoList.getAllDetailsFromDatabase(this,
                 getString(R.string.pref_playlistOrder_byGame),
                 deleteCurrentVideoFromSharedPreferences)
-        return allDetails
     }
 
     // If we press back when the sliding panel is visible, minimize it
@@ -441,7 +439,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Get the preferred display order from Preferences
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
         val playlistOrderPref = sharedPref.getString(getString(R.string.pref_playlistOrderKey),
-                getString(R.string.pref_playlistOrder_chronologically))
+                getString(R.string.pref_playlistOrder_byDateUploaded))
         return playlistOrderPref
     }
 

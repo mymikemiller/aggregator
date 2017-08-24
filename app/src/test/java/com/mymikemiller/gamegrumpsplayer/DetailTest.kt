@@ -56,4 +56,16 @@ class DetailTest {
         assertEquals("Funny mii thing", d.team)
     }
 
+    @Test
+    fun finale_detail_isParsedCorrectly() {
+        val d = Detail(
+                "xxx",
+                "Joe & Mac: Finale - Game Grums",
+                "", "", DateTime(0))
+        assertEquals("Joe & Mac", d.game)
+        assertEquals("Finale", d.title)
+        assertEquals("", d.part)
+        assertEquals("Funny mii thing", d.team)
+    }
+
 }

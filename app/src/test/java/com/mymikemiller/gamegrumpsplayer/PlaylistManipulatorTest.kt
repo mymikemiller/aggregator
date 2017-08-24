@@ -13,7 +13,7 @@ class PlaylistManipulatorTest {
 
 
     @Test
-    fun orderChronologicallyIsCorrect() {
+    fun orderByDateUploadedIsCorrect() {
         val input: List<Detail> = generateTestInput()
 
         val expectedOutput = listOf<Detail>(
@@ -25,7 +25,7 @@ class PlaylistManipulatorTest {
                 Detail("5", "Kirby's Adventure: Vile Blue Vile - PART 2 - Game Grumps","", "", DateTime(0))
         )
 
-        val output:List<Detail> = PlaylistManipulator.orderChronologically(input)
+        val output:List<Detail> = PlaylistManipulator.orderByDateUploaded(input)
 
         // contentEquals isn't there, so we'll do it ourselves.
         Assert.assertEquals(output[0], expectedOutput[0])
