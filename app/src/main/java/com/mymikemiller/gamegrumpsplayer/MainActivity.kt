@@ -271,6 +271,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     mAdapter.details = getAllDetailsOrderedByDateUploaded()
                 }
                 mAdapter.notifyDataSetChanged()
+                scrollToCurrentlyPlayingVideo()
             }
         }
     }
