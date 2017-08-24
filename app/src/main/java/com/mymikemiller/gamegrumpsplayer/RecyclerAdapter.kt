@@ -98,12 +98,4 @@ class RecyclerAdapter(private val allDetails: List<Detail>, private val isSelect
     override fun getItemCount(): Int {
         return details.size
     }
-
-    //This method will filter the list
-    //here we are passing the filtered data
-    //and assigning it to the list with notifydatasetchanged method
-    fun filterList(filteredDetails: MutableList<Detail>) {
-        this.details = filteredDetails
-        notifyDataSetChanged()
-    }
 }

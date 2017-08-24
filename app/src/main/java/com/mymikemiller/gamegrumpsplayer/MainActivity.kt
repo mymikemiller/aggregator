@@ -62,6 +62,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mExpandButton: ImageView
     private lateinit var mPreferencesButton: ImageView
     private var mInitialized: Boolean = false
+    private lateinit var mAllDetailsUnordered: List<Detail>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -207,10 +208,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
                     if (detailToPlay == null) {
                         // If we couldn't find a video to play, play the chronologicallly irst video of the channel
-                        detailToPlay = VideoList.getAllDetailsFromDatabase(
-                                this,
-                                getString(R.string.pref_playlistOrder_chronological),
-                                {})[0]
+                        detailToPlay = mAllDetailsUnordered[0]
                     }
 
                     val videoTimeToPlayMillis = WatchedMillis.getWatchedMillis(this, detailToPlay)
@@ -246,12 +244,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
             // Get the details chronologically and force an upgrade if necessary, which will call the deleteCurrentVideoFromSharedPreferences call if
             // necessary.
-            val existingDetails = VideoList.getAllDetailsFromDatabase(
-                    this,
+            mAllDetailsUnordered = VideoList.getAllDetailsFromDatabase(this,
                     getString(R.string.pref_playlistOrder_chronological),
                     deleteCurrentVideoFromSharedPreferences)
 
-            val stopAtDetail = if (existingDetails.size > 0) existingDetails[existingDetails.size - 1] else null
+            val stopAtDetail = if (mAllDetailsUnordered.size > 0) mAllDetailsUnordered[mAllDetailsUnordered.size - 1] else null
 
             // Make sure the results come back sorted in the order we want
             val playlistOrder = getPreferredPlaylistOrder()
@@ -272,27 +269,25 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 val preference = sp.getString(playlistOrderKey, chronological)
 
                 if (preference == byGame) {
-                    orderPlaylistByGame()
+                    mAllDetailsUnordered = getAllDetailsOrderedByGame()
                 } else {
-                    orderPlaylistChronologically()
+                    mAllDetailsUnordered = getAllDetailsOrderedChronologically()
                 }
             }
         }
     }
 
-    private fun orderPlaylistChronologically() {
-        val details = VideoList.getAllDetailsFromDatabase(this,
+    private fun getAllDetailsOrderedChronologically(): List<Detail> {
+        var allDetails = VideoList.getAllDetailsFromDatabase(this,
                 getString(R.string.pref_playlistOrder_chronological),
                 deleteCurrentVideoFromSharedPreferences)
-        mAdapter.details = details.toMutableList()
-        mAdapter.notifyDataSetChanged()
+        return allDetails
     }
-    private fun orderPlaylistByGame() {
-        val details = VideoList.getAllDetailsFromDatabase(this,
+    private fun getAllDetailsOrderedByGame(): List<Detail> {
+        var allDetails = VideoList.getAllDetailsFromDatabase(this,
                 getString(R.string.pref_playlistOrder_byGame),
                 deleteCurrentVideoFromSharedPreferences)
-        mAdapter.details = details.toMutableList()
-        mAdapter.notifyDataSetChanged()
+        return allDetails
     }
 
     // If we press back when the sliding panel is visible, minimize it
@@ -304,26 +299,26 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    private fun filter(text: String?) {
-        // Filter the playlists starting in the order of preference
-        val playlistOrder = getPreferredPlaylistOrder()
+    private fun filter(text: String) {
+        val query = text.toLowerCase()
 
         //new array list that will hold the filtered data
         val filteredNames = mutableListOf<Detail>()
-        //looping through existingss elements
-        val mAllDetails = VideoList.getAllDetailsFromDatabase(this,
-                playlistOrder, {})
-        for (detail in allDetails) {
+        //looping through existings elements
+        for (detail in mAllDetailsUnordered) {
             //if the existing elements contains the search input
-            if (detail.title.toLowerCase().contains(text!!.toLowerCase()) ||
-                    detail.game.toLowerCase().contains(text.toLowerCase())) {
+            val game = detail.game.toLowerCase()
+            val title = detail.title.toLowerCase()
+
+            if (title.contains(query) ||
+                    game.contains(query)) {
                 //adding the element to filtered list
                 filteredNames.add(detail)
             }
         }
 
-        //calling a method of the adapter class and passing the filtered list
-        mAdapter.filterList(filteredNames)
+        mAdapter.details = filteredNames
+        mAdapter.notifyDataSetChanged()
     }
 
     fun openPlaylist() {
@@ -443,12 +438,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     private fun getNextVideo() : Detail? {
 
-        // The next video depends on our preferences for displaying the list
-        val playlistOrder = getPreferredPlaylistOrder()
-
-        val details = VideoList.getAllDetailsFromDatabase(this, playlistOrder, deleteCurrentVideoFromSharedPreferences)
         var found = false
-        for(detail in details) {
+        for(detail in mAllDetailsUnordered) {
             if (found) {
                 return detail
             }
