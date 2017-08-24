@@ -23,9 +23,6 @@ import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 import android.content.SharedPreferences
-import com.google.android.youtube.player.internal.e
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener
-import android.preference.Preference
 
 
 /**
@@ -270,9 +267,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                 if (preference == byGame) {
                     // TODO: make mAdapter.details not mutable
-                    mAdapter.details = getAllDetailsOrderedByGame().toMutableList()
+                    mAdapter.details = getAllDetailsOrderedByGame()
                 } else {
-                    mAdapter.details = getAllDetailsOrderedChronologically().toMutableList()
+                    mAdapter.details = getAllDetailsOrderedChronologically()
                 }
                 mAdapter.notifyDataSetChanged()
             }
@@ -301,25 +298,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    private fun filter(text: String) {
-        val query = text.toLowerCase()
+    private fun filter(query: String) {
+        val lowerCaseQuery = query.toLowerCase()
 
-        //new array list that will hold the filtered data
-        val filteredNames = mutableListOf<Detail>()
-        //looping through existings elements
-        for (detail in mAllDetailsUnordered) {
-            //if the existing elements contains the search input
-            val game = detail.game.toLowerCase()
-            val title = detail.title.toLowerCase()
+        val filteredNames = mAllDetailsUnordered.filter {
+            it.game.toLowerCase().contains(lowerCaseQuery) ||
+            it.title.toLowerCase().contains(lowerCaseQuery) }
 
-            if (title.contains(query) ||
-                    game.contains(query)) {
-                //adding the element to filtered list
-                filteredNames.add(detail)
-            }
-        }
-
-        mAdapter.details = filteredNames
+        mAdapter.details = filteredNames.toList()
         mAdapter.notifyDataSetChanged()
     }
 

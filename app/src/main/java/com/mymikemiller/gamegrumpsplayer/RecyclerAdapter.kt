@@ -14,7 +14,7 @@ import java.util.*
 
 class RecyclerAdapter(private val allDetails: List<Detail>, private val isSelectedCallback: (detail: Detail) -> Boolean, private val onItemClickCallback: (detail: Detail) -> Unit) : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>() {
 
-    var details = allDetails.toMutableList()
+    var details = allDetails
 
     class DetailHolder
     (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
