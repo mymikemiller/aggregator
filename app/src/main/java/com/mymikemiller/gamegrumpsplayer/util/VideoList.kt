@@ -102,11 +102,11 @@ class VideoList {
             })
         }
         fun sortDetailsByPreference(context: Context, details: List<Detail>, preference: String): List<Detail> {
+
             if (preference == context.getString(R.string.pref_playlistOrder_chronological)) {
-                return details.sorted()
+                return PlaylistManipulator.orderChronologically(details)
             } else if (preference == context.getString(R.string.pref_playlistOrder_byGame)) {
-                //TODO: actually sort the details by game
-                return details.reversed()
+                return PlaylistManipulator.orderByGame(details)
             }
 
             // Default to the order returned from the database
