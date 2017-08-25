@@ -327,9 +327,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val preference = getPreferredPlaylistOrder()
 
         if (preference == byGame) {
-            mAdapter.details = getAllDetailsOrderedByGame()
+            mAdapter.details = SkippedGames.filterOutSkipped(this, getAllDetailsOrderedByGame())
         } else {
-            mAdapter.details = getAllDetailsOrderedByDateUploaded()
+            mAdapter.details = SkippedGames.filterOutSkipped(this, getAllDetailsOrderedByDateUploaded())
         }
         mAdapter.notifyDataSetChanged()
         scrollToCurrentlyPlayingVideo()
