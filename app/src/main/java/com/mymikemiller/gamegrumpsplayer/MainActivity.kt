@@ -423,6 +423,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
 
         override fun onVideoEnded() {
+
+            // Play the next video by calling the callback
             videoEndCallback()
         }
     }

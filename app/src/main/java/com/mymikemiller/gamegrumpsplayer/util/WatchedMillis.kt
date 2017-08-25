@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import com.mymikemiller.gamegrumpsplayer.Detail
+import java.sql.SQLException
 
 /**
  *  Keeps track of how long you've watched each episode.
@@ -84,12 +85,21 @@ class WatchedMillis {
                 }
             }
 
+            db.close()
+
             return watchedMillis
         }
 
         // Add or update the watched time.
         fun addOrUpdateWatchedMillis(detail: Detail, watchedMillis: Int) {
-            val db = this.writableDatabase
+            var db: SQLiteDatabase
+            try {
+                db = this.writableDatabase
+            } catch (s: SQLException) {
+                // We sometimes get an error opening the database.
+                // Don't save the watched time. 's ok. Maybe next time.
+                return
+            }
 
             val initialValues = ContentValues()
             initialValues.put(KEY_VIDEOID, detail.videoId) // the execution is different if _id is 2
@@ -100,6 +110,8 @@ class WatchedMillis {
             if (id == (-1).toLong()) {
                 db.update(WATCHED_MILLIS_TABLE_NAME, initialValues, "$KEY_VIDEOID=?", arrayOf(detail.videoId))  // number 1 is the _id here, update to variable for your code
             }
+
+            db.close()
         }
     }
 }
