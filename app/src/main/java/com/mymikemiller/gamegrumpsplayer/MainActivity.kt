@@ -1,7 +1,6 @@
 package com.mymikemiller.gamegrumpsplayer
 
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
 
@@ -22,11 +21,10 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
-import android.content.SharedPreferences
-import com.google.api.services.youtube.model.PlaylistListResponse
 import com.mymikemiller.gamegrumpsplayer.util.PlaylistManipulator
 import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 import com.squareup.picasso.Picasso
+import android.support.v4.content.LocalBroadcastManager
 
 
 /**
@@ -37,8 +35,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private val CHANNEL_NAME = "gamegrumps"
-
-    private val SKIP_GAMES = listOf<String>("Kirby")
 
     private lateinit var baseLayout: LinearLayout
     private lateinit var bar: LinearLayout
@@ -64,10 +60,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mSearchEditText: EditText
     private lateinit var mExpandButton: ImageView
     private lateinit var mPreferencesButton: ImageView
-    private var mInitialized: Boolean = false
+    private var mPlayerInitialized: Boolean = false
+    private var mAdapterInitialized: Boolean = false
     private lateinit var mSkipGameButton: Button
     private lateinit var mUnskipAllGamesButton: Button
     private lateinit var mThumbnail: ImageView
+    private lateinit var mBroadcastReceiver: BroadcastReceiver
 
     // These collections have the skipped games filtered out
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
@@ -103,6 +101,18 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mSkipGameButton = findViewById(R.id.skipGameButton)
         mUnskipAllGamesButton = findViewById(R.id.unSkipAllGameButton)
         mThumbnail = findViewById(R.id.thumbnail)
+
+        mBroadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(contxt: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    PreferencesActivity.UNSKIP_ALL -> unSkipAllGames()
+                }
+            }
+        }
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
+
+
 
         mSkipGameButton.setOnClickListener({
             run {
@@ -230,6 +240,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     // Now that we've got a list of details, we can prepare the RecyclerView
                     mAdapter = RecyclerAdapter(getDetailsByPref(), isSelected, onItemClick)
+                    mAdapterInitialized = true
                     mRecyclerView.setAdapter(mAdapter)
                     mAdapter.notifyItemRangeChanged(0, getDetailsByPref().size-1)
                     fetchVideosProgressSection.visibility = View.GONE
@@ -294,6 +305,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }})
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        LocalBroadcastManager.getInstance(this)
+                .unregisterReceiver(mBroadcastReceiver)
+    }
+
     fun getDetailsByPref(): List<Detail> {
         val pref = PlaylistManipulator.getPreferredPlaylistOrder(this)
         if (pref == getString(R.string.pref_playlistOrder_byDateUploaded)) {
@@ -340,7 +357,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun unSkipAllGames() {
         SkippedGames.unskipAllGames(this)
-        refreshPlaylist()
+        if (mAdapterInitialized)
+            refreshPlaylist()
     }
 
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
@@ -398,7 +416,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
                                          wasRestored: Boolean) {
         this.player = player
-        mInitialized = true
+        mPlayerInitialized = true
         player.setPlayerStateChangeListener(playerStateChangeListener)
         player.setPlaybackEventListener(playbackEventListener)
 
@@ -414,7 +432,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     override fun onPause() {
         super.onPause()
-        if (mInitialized)
+        if (mPlayerInitialized)
             recordCurrentTime()
     }
 
@@ -617,8 +635,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 //                mRecyclerView.adapter.notifyItemRemoved(position)
             }
         }
-
-        //4
         val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
         itemTouchHelper.attachToRecyclerView(mRecyclerView)
     }

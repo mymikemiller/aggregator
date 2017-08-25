@@ -12,4 +12,9 @@
         android:entries="@array/pref_playlistOrder_entries"
         android:entryValues="@array/pref_playlistOrder_values" />
 
+    <Preference
+        android:title="@string/pref_unskip_title"
+        android:summary="@string/pref_unskip_description"
+        android:key="@string/pref_unskipKey"/>
+
 </PreferenceScreen>

@@ -6,21 +6,22 @@ import android.preference.PreferenceActivity
 import android.preference.ListPreference
 import android.preference.Preference
 import android.content.SharedPreferences
-
-
+import android.content.Intent
+import android.support.v4.content.LocalBroadcastManager
 
 
 /**
  * The settings activity
  */
-
-
 class PreferencesActivity : PreferenceActivity() {
     companion object {
+        const val UNSKIP_ALL = "com.example.mymikemiller.UNSKIP_ALL"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
         fragmentManager.beginTransaction().replace(android.R.id.content, MyPreferenceFragment()).commit()
     }
 
@@ -31,6 +32,16 @@ class PreferencesActivity : PreferenceActivity() {
 
             val pref = findPreference(getString(R.string.pref_playlistOrderKey))
             pref.summary = (pref as ListPreference).entry
+
+            val button = findPreference(getString(R.string.pref_unskipKey))
+            button.setOnPreferenceClickListener({
+
+                val intent = Intent()
+                intent.action = UNSKIP_ALL
+                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
+
+                true
+            })
         }
 
         override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {

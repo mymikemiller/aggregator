@@ -17,5 +17,8 @@
     <string name="pref_playlistOrderKey">playlistOrder</string>
     <string name="pref_playlistOrder_byDateUploaded">byDateUploaded</string>
     <string name="pref_playlistOrder_byGame">byGame</string>
+    <string name="pref_unskipKey">unskipButton</string>
+    <string name="pref_unskip_title">Unskip All</string>
+    <string name="pref_unskip_description">Reset the skipped games list</string>
 
 </resources>
