@@ -9,7 +9,7 @@ import com.mymikemiller.gamegrumpsplayer.Detail
 import java.sql.SQLException
 
 /**
- *
+ * This class uses the database to keep track of which games the user has specified they'd like to skip
  */
 class SkippedGames {
     companion object {
@@ -132,8 +132,7 @@ class SkippedGames {
             try {
                 db = this.writableDatabase
             } catch (s: SQLException) {
-                // We sometimes get an error opening the database.
-                // Don't save the watched time. 's ok. Maybe next time.
+                // Hopefully this doesn't happen...
                 return
             }
             db.beginTransaction()

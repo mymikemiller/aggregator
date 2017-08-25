@@ -232,11 +232,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 runOnUiThread {
                     val unskippedDetails = SkippedGames.filterOutSkipped(this, allDetailsUnordered)
 
-                    mDetailsByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
-                    mDetailsByGameIncludingSkipped = PlaylistManipulator.orderByGame(allDetailsUnordered)
+                    // We first order by date to make sure the detilsByGame are in the right order
+                    val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
 
-                    mDetailsByDate = PlaylistManipulator.orderByDate(unskippedDetails)
-                    mDetailsByGame = PlaylistManipulator.orderByGame(unskippedDetails)
+                    mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
+                    mDetailsByGameIncludingSkipped = PlaylistManipulator.orderByGame(orderedByDateIncludingSkipped)
+
+                    mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
+                    mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGameIncludingSkipped)
 
                     // Now that we've got a list of details, we can prepare the RecyclerView
                     mAdapter = RecyclerAdapter(getDetailsByPref(), isSelected, onItemClick)
@@ -357,6 +360,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun unSkipAllGames() {
         SkippedGames.unskipAllGames(this)
+
+        // Update our cached lists
+        mDetailsByDate = mDetailsByDateIncludingSkipped
+        mDetailsByGame = mDetailsByGameIncludingSkipped
+
         if (mAdapterInitialized)
             refreshPlaylist()
     }
