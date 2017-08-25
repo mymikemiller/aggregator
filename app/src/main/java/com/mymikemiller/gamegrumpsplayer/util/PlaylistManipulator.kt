@@ -1,7 +1,10 @@
 package com.mymikemiller.gamegrumpsplayer.util
 
+import android.content.Context
+import android.preference.PreferenceManager
 import com.google.api.client.util.DateTime
 import com.mymikemiller.gamegrumpsplayer.Detail
+import com.mymikemiller.gamegrumpsplayer.R
 
 /**
  * This file manipulates playlist to be set in the RecylerAdapter, such as when ordering by game
@@ -10,6 +13,15 @@ import com.mymikemiller.gamegrumpsplayer.Detail
 
 class PlaylistManipulator {
     companion object {
+
+        fun getPreferredPlaylistOrder(context: Context): String{
+            // Get the preferred display order from Preferences
+            val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
+            val playlistOrderPref = sharedPref.getString(context.getString(R.string.pref_playlistOrderKey),
+                    context.getString(R.string.pref_playlistOrder_byDateUploaded))
+            return playlistOrderPref
+        }
+
         fun orderByGame(details: List<Detail>): List<Detail> {
 
             // This map is the map that points from a given game to an ordered list of all the episodes of that game.
@@ -45,7 +57,7 @@ class PlaylistManipulator {
 
         }
 
-        fun orderByDateUploaded(details: List<Detail>): List<Detail> {
+        fun orderByDate(details: List<Detail>): List<Detail> {
             return details.sorted()
         }
     }

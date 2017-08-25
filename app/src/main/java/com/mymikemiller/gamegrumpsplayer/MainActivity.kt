@@ -23,9 +23,10 @@ import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 import android.content.SharedPreferences
+import com.google.api.services.youtube.model.PlaylistListResponse
+import com.mymikemiller.gamegrumpsplayer.util.PlaylistManipulator
 import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.activity_main.*
 
 
 /**
@@ -64,12 +65,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mExpandButton: ImageView
     private lateinit var mPreferencesButton: ImageView
     private var mInitialized: Boolean = false
-    private lateinit var mAllUnskippedDetails: List<Detail>
     private lateinit var mSkipGameButton: Button
     private lateinit var mUnskipAllGamesButton: Button
     private lateinit var mThumbnail: ImageView
 
-    var mAllDetailsIncludingSkipped = listOf<Detail>()
+    // These collections have the skipped games filtered out
+    var mDetailsByDateIncludingSkipped = listOf<Detail>()
+    var mDetailsByGameIncludingSkipped = listOf<Detail>()
+
+    // These collections have the skipped games filtered out
+    var mDetailsByDate = listOf<Detail>()
+    var mDetailsByGame = listOf<Detail>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -214,20 +220,22 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             run {
                 //TODO: we probably shouldn't be doing all this on the UI thread
                 runOnUiThread {
-                    // We need to cache the list of all videos so we can find
-                    mAllDetailsIncludingSkipped = allDetailsUnordered
+                    val unskippedDetails = SkippedGames.filterOutSkipped(this, allDetailsUnordered)
 
-                    // Filter out the episodes the user has specified to skip
-                    mAllUnskippedDetails = SkippedGames.filterOutSkipped(this, allDetailsUnordered)
+                    mDetailsByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
+                    mDetailsByGameIncludingSkipped = PlaylistManipulator.orderByGame(allDetailsUnordered)
 
-                    // Now that we've got a list of details, we can
-                    mAdapter = RecyclerAdapter(mAllUnskippedDetails, isSelected, onItemClick)
+                    mDetailsByDate = PlaylistManipulator.orderByDate(unskippedDetails)
+                    mDetailsByGame = PlaylistManipulator.orderByGame(unskippedDetails)
+
+                    // Now that we've got a list of details, we can prepare the RecyclerView
+                    mAdapter = RecyclerAdapter(getDetailsByPref(), isSelected, onItemClick)
                     mRecyclerView.setAdapter(mAdapter)
-                    mAdapter.notifyItemRangeChanged(0, mAllUnskippedDetails.size-1)
+                    mAdapter.notifyItemRangeChanged(0, getDetailsByPref().size-1)
                     fetchVideosProgressSection.visibility = View.GONE
 
                     // Get the default first video (the channel's first video)
-                    val firstDetail = mAllUnskippedDetails[0]
+                    val firstDetail = mDetailsByDate[0]
 
                     // Get the last video we were playing (which will be the next video in the playlist
                     // if it was queued at the end of the last watch session if it had time to try to load)
@@ -236,8 +244,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
                     if (detailToPlay == null) {
-                        // If we couldn't find a video to play, play the chronologicallly irst video of the channel
-                        detailToPlay = mAllUnskippedDetails[0]
+                        // If we couldn't find a video to play, play the chronologicallly first video of the channel
+                        detailToPlay = firstDetail
                     }
 
                     val videoTimeToPlayMillis = WatchedMillis.getWatchedMillis(this, detailToPlay)
@@ -274,21 +282,33 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
             // Get the details ordered by date uploaded and force an upgrade if necessary, which will call the deleteCurrentVideoFromSharedPreferences call if
             // necessary.
-            val details = VideoList.getAllDetailsFromDatabase(this,
-                    getString(R.string.pref_playlistOrder_byDateUploaded),
-                    deleteCurrentVideoFromSharedPreferences)
+            val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDatabase(this,
+                    deleteCurrentVideoFromSharedPreferences))
 
-            val stopAtDetail = if (details.size > 0) details[details.size - 1] else null
-
-            // Make sure the results come back sorted in the order we want
-            val playlistOrder = getPreferredPlaylistOrder()
+            // This won't work until we've initialized these lists
+            val stopAtDetail = if (detailsFromDbByDate.size > 0) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
 
             VideoList.fetchAllDetailsByChannelId(this,
-                    playlistOrder,
                     deleteCurrentVideoFromSharedPreferences, channelId,
                     stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
-
         }})
+    }
+
+    fun getDetailsByPref(): List<Detail> {
+        val pref = PlaylistManipulator.getPreferredPlaylistOrder(this)
+        if (pref == getString(R.string.pref_playlistOrder_byDateUploaded)) {
+            return mDetailsByDate
+        } else {
+            return mDetailsByGame
+        }
+    }
+    fun getDetailsByPrefIncludingSkipped(): List<Detail> {
+        val pref = PlaylistManipulator.getPreferredPlaylistOrder(this)
+        if (pref == getString(R.string.pref_playlistOrder_byDateUploaded)) {
+            return mDetailsByDateIncludingSkipped
+        } else {
+            return mDetailsByGameIncludingSkipped
+        }
     }
 
     fun addSkippedGame(game: String) {
@@ -298,14 +318,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Get what would be our next video if that game were already skipped. getNextVideo does
         // that for us
         val nextVideo = getNextVideo()
+
         // nextVideo now refers to the first Detail that doesn't match the newly skipped game or any
         // skipped games or null if we're at the end of the playlist
 
+        // Update our cached lists
+        mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDate)
+        mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGame)
 
-        mAllUnskippedDetails = SkippedGames.filterOutSkipped(this, mAllUnskippedDetails)
-        mAdapter.details = mAllUnskippedDetails
+        // Update the adapter
+        mAdapter.details = getDetailsByPref()
         mAdapter.notifyDataSetChanged()
-        if (!mAllUnskippedDetails.contains(mCurrentlyPlayingVideoDetail)) {
+
+        if (!getDetailsByPref().contains(mCurrentlyPlayingVideoDetail)) {
             // The user skipped the currently playing video. Play the next video in the adapter if there is one.
             if (nextVideo != null) {
                 playVideo(nextVideo)
@@ -326,27 +351,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
     private fun refreshPlaylist() {
-        val byGame = getString(R.string.pref_playlistOrder_byGame)
-        val preference = getPreferredPlaylistOrder()
-
-        if (preference == byGame) {
-            mAdapter.details = SkippedGames.filterOutSkipped(this, getAllDetailsOrderedByGame())
-        } else {
-            mAdapter.details = SkippedGames.filterOutSkipped(this, getAllDetailsOrderedByDateUploaded())
-        }
+        mAdapter.details = getDetailsByPref()
         mAdapter.notifyDataSetChanged()
         scrollToCurrentlyPlayingVideo()
-    }
-
-    private fun getAllDetailsOrderedByDateUploaded(): List<Detail> {
-        return VideoList.getAllDetailsFromDatabase(this,
-                getString(R.string.pref_playlistOrder_byDateUploaded),
-                deleteCurrentVideoFromSharedPreferences)
-    }
-    private fun getAllDetailsOrderedByGame(): List<Detail> {
-        return VideoList.getAllDetailsFromDatabase(this,
-                getString(R.string.pref_playlistOrder_byGame),
-                deleteCurrentVideoFromSharedPreferences)
     }
 
     // If we press back when the sliding panel is visible, minimize it
@@ -359,9 +366,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun filter(query: String) {
-        val lowerCaseQuery = query.toLowerCase()
+        var lowerCaseQuery = query.toLowerCase()
 
-        val filteredNames = mAllUnskippedDetails.filter {
+        // Ignore a space at the end
+        if(lowerCaseQuery.endsWith(" ")) {
+            lowerCaseQuery = lowerCaseQuery.substring(0, lowerCaseQuery.length - 2)
+        }
+
+        val filteredNames = getDetailsByPref().filter {
             it.game.toLowerCase().contains(lowerCaseQuery) ||
             it.title.toLowerCase().contains(lowerCaseQuery) }
 
@@ -477,7 +489,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             // but if it is, continue playing where we left off
             val startTimeMillis = WatchedMillis.getWatchedMillis(this, nextVideoDetail)
             // Play the next video, but don't scroll to it in case the user is looking somewhere else in the playlist
-            playVideo(nextVideoDetail, false, startTimeMillis)
+            playVideo(nextVideoDetail, true, startTimeMillis)
         }
     }
 
@@ -491,32 +503,42 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun getNextVideo() : Detail? {
+        // We need to know the list of skipped games so we make sure we don't play one that is
+        // meant to be skipped. But when finding our current place in the playlist, we need to work
+        // with all games including the skipped ones in case the user just specified to skip a game
+        // they're currently playing
         val skippedGames = SkippedGames.getAllSkippedGames(this)
+
+        // This will be true once we found the current video. Once we have that, we keep looping
+        // through all the videos until we find one that isn't specified as skipped
         var foundCurrentlyPlayingVideo = false
         val currentlyPlayingVideoDetail = mCurrentlyPlayingVideoDetail
+
+        // If we're currently playing a video, start the search. Otherwise return null because we
+        // must be at the end of the playlist.
         if (currentlyPlayingVideoDetail != null) {
-            for (detail in mAllDetailsIncludingSkipped) {
+
+            // As explained above, we need to search through all the videos, including skipped ones,
+            // in order to find the currently playing video.
+            for (detail in getDetailsByPrefIncludingSkipped()) {
                 if (foundCurrentlyPlayingVideo) {
-                    // Keep looping through mAllDetailsIncludingSkipped until we find one that wasn't skipped
+                    // Once we've found the current video, continue looping through
+                    // all videos until we find one that wasn't skipped
                     if (!skippedGames.contains(detail.game)) {
                         return detail
                     }
                 }
                 if (detail == mCurrentlyPlayingVideoDetail) {
-                    // We found the currently playing video. Now keep looping until we find a video not skipped
+                    // We found the currently playing video. Now keep looping until we find a video
+                    // not skipped
                     foundCurrentlyPlayingVideo = true
                 }
             }
         }
         return null
     }
-    private fun getPreferredPlaylistOrder(): String{
-        // Get the preferred display order from Preferences
-        val sharedPref = PreferenceManager.getDefaultSharedPreferences(this)
-        val playlistOrderPref = sharedPref.getString(getString(R.string.pref_playlistOrderKey),
-                getString(R.string.pref_playlistOrder_byDateUploaded))
-        return playlistOrderPref
-    }
+
+
 
     // Scroll the recyclerView to the playing video
     fun scrollToCurrentlyPlayingVideo() {

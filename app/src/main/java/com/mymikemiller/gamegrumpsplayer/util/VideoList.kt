@@ -47,22 +47,15 @@ class VideoList {
 
         // This will return all the Details currently in the database, and will call
         // the databaseUpgradeCallback if the database had to be upgraded to a new version by
-        // incrementing the DATABASE_VERSION above
-        fun getAllDetailsFromDatabase (context: Context,
-                                       playlistOrder: String,
+        // incrementing the DATABASE_VERSION above. The returned details are in an arbitrary order.
+        fun getAllDetailsFromDatabase(context: Context,
                                        databaseUpgradedCallback: () -> Unit): List<Detail>{
             val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
 
-            // Get all the details from the database and sort them according to preference
-            val details = sortDetailsByPreference(context,
-                    dbHelper.getAllDetailsFromDb(),
-                    playlistOrder)
-
-            return details
+            return dbHelper.getAllDetailsFromDb()
         }
 
         fun fetchAllDetailsByChannelId(context: Context,
-                                       playlistOrder: String,
                                        databaseUpgradedCallback: () -> Unit,
                                        channelId: String,
                                        stopAtDetail: Detail?,
@@ -92,31 +85,15 @@ class VideoList {
 
                     detailsFromDb.addAll(newDetailsMutable)
 
-                    // Get back the full list of Details and sort it by preference
-                    val allDetails = sortDetailsByPreference(context,
-                            dbHelper.getAllDetailsFromDb(),
-                            playlistOrder)
-
-                    // Return to the original callback the combined list of all Details, sorted by date
-                    callback(allDetails)
+                    // Return to the original callback the combined list of unsorted Details
+                    callback(detailsFromDb)
                 }
             })
         }
-        fun sortDetailsByPreference(context: Context, details: List<Detail>, preference: String): List<Detail> {
 
-            if (preference == context.getString(R.string.pref_playlistOrder_byDateUploaded)) {
-                return PlaylistManipulator.orderByDateUploaded(details)
-            } else if (preference == context.getString(R.string.pref_playlistOrder_byGame)) {
-                return PlaylistManipulator.orderByGame(details)
-            }
-
-            // Default to the order returned from the database
-            return details
-        }
 
         fun getDetailFromVideoId(context: Context, videoId: String) : Detail? {
             val details = getAllDetailsFromDatabase(context,
-                    context.getString(R.string.pref_playlistOrder_byDateUploaded),
                     {})
 
             var returnDetail:Detail? = null
@@ -211,9 +188,7 @@ class VideoList {
                 db.close()
             }
 
-            val detailsSorted: List<Detail> = allDetails.sorted()
-
-            return detailsSorted
+            return allDetails
         }
 
         // Update a Detail. We probably won't use this. If we need to update other columns we'll have to create more methods like this.
