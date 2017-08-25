@@ -423,7 +423,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
 
         override fun onVideoEnded() {
-
             // Play the next video by calling the callback
             videoEndCallback()
         }
@@ -464,6 +463,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
 
     private val playNextVideo: () -> Unit = {
+        // First reset the watched time to 0 for the current video
+        // so we start over at the beginning when playing this video next
+        val currentlyPlaying = mCurrentlyPlayingVideoDetail
+        if (currentlyPlaying != null) {
+            WatchedMillis.addOrUpdateWatchedMillis(this, currentlyPlaying, 0)
+        }
+
         // Cue up the next video
         val nextVideoDetail: Detail? = getNextVideo()
         if (nextVideoDetail != null) {
