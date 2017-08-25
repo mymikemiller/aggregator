@@ -322,12 +322,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
     private fun refreshPlaylist() {
-
-        val playlistOrderKey = getString(R.string.pref_playlistOrderKey)
-        val chronological = getString(R.string.pref_playlistOrder_byDateUploaded)
         val byGame = getString(R.string.pref_playlistOrder_byGame)
-        val sharedPref = getPreferences(Context.MODE_PRIVATE)
-        val preference = sharedPref.getString(playlistOrderKey, chronological)
+        val preference = getPreferredPlaylistOrder()
 
         if (preference == byGame) {
             mAdapter.details = getAllDetailsOrderedByGame()
