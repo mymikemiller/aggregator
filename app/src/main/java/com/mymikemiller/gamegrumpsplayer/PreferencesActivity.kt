@@ -8,6 +8,7 @@ import android.preference.Preference
 import android.content.SharedPreferences
 import android.content.Intent
 import android.support.v4.content.LocalBroadcastManager
+import android.widget.Toast
 
 
 /**
@@ -39,6 +40,9 @@ class PreferencesActivity : PreferenceActivity() {
                 val intent = Intent()
                 intent.action = UNSKIP_ALL
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
+
+                Toast.makeText(getActivity(), getString(R.string.videosUnskipped),
+                        Toast.LENGTH_SHORT).show()
 
                 true
             })
