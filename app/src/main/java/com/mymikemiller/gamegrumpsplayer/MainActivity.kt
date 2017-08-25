@@ -289,14 +289,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun addSkippedGame(game: String) {
+
+        SkippedGames.addSkippedGame(this, game)
+
         // Get what would be our next video if that game were already skipped. getNextVideo does
         // that for us
         val nextVideo = getNextVideo()
-
         // nextVideo now refers to the first Detail that doesn't match the newly skipped game or any
         // skipped games or null if we're at the end of the playlist
 
-        SkippedGames.addSkippedGame(this, game)
 
         mAllUnskippedDetails = SkippedGames.filterOutSkipped(this, mAllUnskippedDetails)
         mAdapter.details = mAllUnskippedDetails
