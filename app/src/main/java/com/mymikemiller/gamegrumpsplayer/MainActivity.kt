@@ -24,6 +24,7 @@ import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 import android.content.SharedPreferences
 import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -66,6 +67,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mAllUnskippedDetails: List<Detail>
     private lateinit var mSkipGameButton: Button
     private lateinit var mUnskipAllGamesButton: Button
+    private lateinit var mThumbnail: ImageView
 
     var mAllDetailsIncludingSkipped = listOf<Detail>()
 
@@ -94,6 +96,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mLinearLayoutManager = LinearLayoutManager(this)
         mSkipGameButton = findViewById(R.id.skipGameButton)
         mUnskipAllGamesButton = findViewById(R.id.unSkipAllGameButton)
+        mThumbnail = findViewById(R.id.thumbnail)
 
         mSkipGameButton.setOnClickListener({
             run {
@@ -462,8 +465,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Cue up the next video
         val nextVideoDetail: Detail? = getNextVideo()
         if (nextVideoDetail != null) {
-            episodeTitle.setText(nextVideoDetail.title)
-            episodeDescription.setText(nextVideoDetail.description)
             // The start time is probably 0 because the video is probably not in the database yet,
             // but if it is, continue playing where we left off
             val startTimeMillis = WatchedMillis.getWatchedMillis(this, nextVideoDetail)
@@ -548,6 +549,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 episodeTitle.setText(detail.title)
                 episodeDescription.setText(detail.description)
                 player.loadVideo(detail.videoId, startTimeMillis)
+                Picasso.with(this).load(detail.thumbnail).into(mThumbnail)
 
                 // Refresh the RecyclerAdapter to get the currently playing highlight right
                 mRecyclerView.adapter.notifyDataSetChanged()
