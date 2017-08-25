@@ -70,8 +70,15 @@ class WatchedMillis {
                     " FROM $WATCHED_MILLIS_TABLE_NAME WHERE $KEY_VIDEOID='${detail.videoId}'"
 
             //val SELECT_QUERY = "SELECT * FROM $WATCHED_MILLIS_TABLE_NAME"
+            val db: SQLiteDatabase
+            try {
+                db = this.readableDatabase
+            } catch (s: SQLException) {
+                // We sometimes get an error opening the database.
+                // Don't get the watched time, just return 0.
+                return 0
+            }
 
-            val db = readableDatabase
             val cursor = db.rawQuery(SELECT_QUERY, null)
             try {
                 if (cursor.moveToFirst()) {
@@ -83,16 +90,16 @@ class WatchedMillis {
                 if (cursor != null && !cursor.isClosed) {
                     cursor.close()
                 }
-            }
 
-            db.close()
+                db.close()
+            }
 
             return watchedMillis
         }
 
         // Add or update the watched time.
         fun addOrUpdateWatchedMillis(detail: Detail, watchedMillis: Int) {
-            var db: SQLiteDatabase
+            val db: SQLiteDatabase
             try {
                 db = this.writableDatabase
             } catch (s: SQLException) {

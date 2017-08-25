@@ -10,6 +10,7 @@ import android.content.ContentValues
 import android.util.Log
 import com.google.api.client.util.DateTime
 import com.mymikemiller.gamegrumpsplayer.R
+import java.sql.SQLException
 
 /**
  * VideoList stores video Details in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
@@ -176,8 +177,16 @@ class VideoList {
 
             // SELECT * FROM DETAILS
             val DETAILS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME"
+            val db: SQLiteDatabase
 
-            val db = readableDatabase
+            try {
+                db = this.readableDatabase
+            } catch (s: SQLException) {
+                // We sometimes get an error opening the database.
+                // Don't save the watched time. 's ok. Maybe next time.
+                return listOf()
+            }
+
             val cursor = db.rawQuery(DETAILS_SELECT_QUERY, null)
             try {
                 if (cursor.moveToFirst()) {
@@ -199,6 +208,7 @@ class VideoList {
                 if (cursor != null && !cursor.isClosed) {
                     cursor.close()
                 }
+                db.close()
             }
 
             val detailsSorted: List<Detail> = allDetails.sorted()

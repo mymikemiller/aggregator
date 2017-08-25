@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import com.mymikemiller.gamegrumpsplayer.Detail
+import java.sql.SQLException
 
 /**
  *
@@ -96,8 +97,15 @@ class SkippedGames {
 
             // SELECT * FROM SkippedGamesTable
             val SKIPPED_GAMES_SELECT_QUERY = "SELECT * FROM ${SkippedGames.SKIPPED_GAMES_TABLE_NAME}"
+            val db: SQLiteDatabase
+            try {
+                db = this.readableDatabase
+            } catch (s: SQLException) {
+                // We sometimes get an error opening the database.
+                // Don't save the watched time. 's ok. Maybe next time.
+                return listOf()
+            }
 
-            val db = readableDatabase
             val cursor = db.rawQuery(SKIPPED_GAMES_SELECT_QUERY, null)
             try {
                 if (cursor.moveToFirst()) {
@@ -112,6 +120,7 @@ class SkippedGames {
                 if (cursor != null && !cursor.isClosed) {
                     cursor.close()
                 }
+                db.close()
             }
 
             return games.toList()
@@ -119,7 +128,14 @@ class SkippedGames {
 
 
         fun unskipAllGames() {
-            val db = writableDatabase
+            val db: SQLiteDatabase
+            try {
+                db = this.writableDatabase
+            } catch (s: SQLException) {
+                // We sometimes get an error opening the database.
+                // Don't save the watched time. 's ok. Maybe next time.
+                return
+            }
             db.beginTransaction()
             try {
                 // Order of deletions is important when foreign key relationships exist.
@@ -129,6 +145,7 @@ class SkippedGames {
                 Log.d(ContentValues.TAG, "Error while trying to delete all skipped games")
             } finally {
                 db.endTransaction()
+                db.close()
             }
         }
     }
