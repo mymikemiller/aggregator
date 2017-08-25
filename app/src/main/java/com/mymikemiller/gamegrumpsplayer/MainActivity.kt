@@ -370,7 +370,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // Ignore a space at the end
         if(lowerCaseQuery.endsWith(" ")) {
-            lowerCaseQuery = lowerCaseQuery.substring(0, lowerCaseQuery.length - 2)
+            lowerCaseQuery = lowerCaseQuery.substring(0, lowerCaseQuery.length - 1)
         }
 
         val filteredNames = getDetailsByPref().filter {
