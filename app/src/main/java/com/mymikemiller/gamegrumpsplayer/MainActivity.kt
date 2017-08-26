@@ -25,6 +25,9 @@ import com.mymikemiller.gamegrumpsplayer.util.PlaylistManipulator
 import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 import com.squareup.picasso.Picasso
 import android.support.v4.content.LocalBroadcastManager
+import android.support.design.widget.Snackbar
+
+
 
 
 /**
@@ -215,7 +218,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
 
         setRecyclerViewScrollListener()
-        //setRecyclerViewItemTouchListener() // Enable this to enable left/right swiping
+
+        // Enable swiping left to delete
+        setRecyclerViewItemTouchListener()
 
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
 
@@ -230,8 +235,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             run {
                 //TODO: we probably shouldn't be doing all this on the UI thread
                 runOnUiThread {
-                    val unskippedDetails = SkippedGames.filterOutSkipped(this, allDetailsUnordered)
-
                     // We first order by date to make sure the detilsByGame are in the right order
                     val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
 
@@ -336,11 +339,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         SkippedGames.addSkippedGame(this, game)
 
         // Get what would be our next video if that game were already skipped. getNextVideo does
-        // that for us
+        // that for us, even if we've skipped the currently playing video.
         val nextVideo = getNextVideo()
-
-        // nextVideo now refers to the first Detail that doesn't match the newly skipped game or any
-        // skipped games or null if we're at the end of the playlist
 
         // Update our cached lists
         mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDate)
@@ -356,6 +356,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 playVideo(nextVideo)
             }
         }
+    }
+
+    fun unskipGame(game: String) {
+        SkippedGames.unskipGame(this, game)
+
+        // Update our cached lists
+        mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
+        mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGameIncludingSkipped)
+
+        refreshPlaylist()
     }
 
     fun unSkipAllGames() {
@@ -631,16 +641,28 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     private fun setRecyclerViewItemTouchListener()
     {
-        val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+        val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) { // or ItemTouchHelper.RIGHT
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, viewHolder1: RecyclerView.ViewHolder): Boolean {
                 return false
             }
 
+            // This happens when we swipe a Detail to the left. Skip all episodes of that game.
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, swipeDir: Int) {
-                // This shouldn't be called because we disabled the call to setRecyclerViewItemTouchListener
-//                val position = viewHolder.adapterPosition
-//                mDetailsList.removeAt(position)
-//                mRecyclerView.adapter.notifyItemRemoved(position)
+                val position = viewHolder.adapterPosition
+                val removedDetail = mAdapter.details.get(position)
+
+                addSkippedGame(removedDetail.game)
+
+                // Make the RecyclerView items scroll up to fill in the space
+                mRecyclerView.adapter.notifyItemRemoved(position)
+
+                val snackbar = Snackbar
+                        .make(mRecyclerView, getString(R.string.item_removed) + " " + removedDetail.game, Snackbar.LENGTH_LONG)
+                        .setAction(R.string.undo, {
+                            unskipGame(removedDetail.game)
+                        })
+
+                snackbar.show()
             }
         }
         val itemTouchHelper = ItemTouchHelper(itemTouchCallback)

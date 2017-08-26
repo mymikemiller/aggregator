@@ -6,7 +6,10 @@ import org.junit.Test
 import org.junit.Assert.*
 
 /**
- * Details still that should fail this test and need to be fixed: Zelda (Good with money), teenage mutant ninja turtals (tournament fighters)
+ * Details still that should fail this test and need to be fixed:
+ * Zelda (Good with money),
+ * teenage mutant ninja turtles (tournament fighters)
+ * Godzilla Kaijoo daikessen, godzilla: destroy all monsters melee
  */
 class DetailTest {
     @Test

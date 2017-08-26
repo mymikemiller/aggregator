@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import com.mymikemiller.gamegrumpsplayer.Detail
+import android.content.ContentValues.TAG
 import java.sql.SQLException
 
 /**
@@ -51,6 +52,10 @@ class SkippedGames {
             val dbHelper = SkippedGamesOpenHelper(context.applicationContext)
             dbHelper.unskipAllGames()
         }
+        fun unskipGame(context: Context, game: String) {
+            val dbHelper = SkippedGamesOpenHelper(context.applicationContext)
+            dbHelper.unskipGame(game)
+        }
     }
 
     class SkippedGamesOpenHelper internal constructor(context: Context) : SQLiteOpenHelper(context, SkippedGames.DATABASE_NAME, null, SkippedGames.DATABASE_VERSION) {
@@ -87,6 +92,22 @@ class SkippedGames {
                 db.setTransactionSuccessful()
             } catch (e: Exception) {
                 Log.d(ContentValues.TAG, "Error while trying to add Skipped Game to database")
+            } finally {
+                db.endTransaction()
+            }
+        }
+        fun unskipGame(game: String) {
+            // Make sure the game string doesn't contain single quotes or it will mess the query up.
+            // Instead it should have double quotes
+            val theGame = game.replace("'", "''")
+
+            val db = writableDatabase
+            db.beginTransaction()
+            try {
+                db.delete(SKIPPED_GAMES_TABLE_NAME, KEY_GAME + "='" + theGame + "'", null)
+                db.setTransactionSuccessful()
+            } catch (e: Exception) {
+                Log.d(TAG, "Error while trying to delete skipped game from database")
             } finally {
                 db.endTransaction()
             }
