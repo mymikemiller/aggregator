@@ -65,8 +65,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mPreferencesButton: ImageView
     private var mPlayerInitialized: Boolean = false
     private var mAdapterInitialized: Boolean = false
-    private lateinit var mSkipGameButton: Button
-    private lateinit var mUnskipAllGamesButton: Button
     private lateinit var mThumbnail: ImageView
     private lateinit var mBroadcastReceiver: BroadcastReceiver
 
@@ -101,8 +99,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mPreferencesButton = findViewById(R.id.preferences_button)
         mRecyclerView = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
-        mSkipGameButton = findViewById(R.id.skipGameButton)
-        mUnskipAllGamesButton = findViewById(R.id.unSkipAllGameButton)
         mThumbnail = findViewById(R.id.thumbnail)
 
         mBroadcastReceiver = object : BroadcastReceiver() {
@@ -114,21 +110,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
-
-
-
-        mSkipGameButton.setOnClickListener({
-            run {
-                val video = mCurrentlyPlayingVideoDetail
-                if (video != null) {
-                    addSkippedGame(video.game)
-                }
-            }
-        })
-
-        mUnskipAllGamesButton.setOnClickListener({
-            unSkipAllGames()
-        })
 
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(this)
