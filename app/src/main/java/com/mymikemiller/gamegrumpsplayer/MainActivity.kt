@@ -315,6 +315,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
+    // Returns the number of episodes of the specified game that are in the playlist
+    fun countEpisodes(game: String): Int {
+        return mAdapter.details.count { it.game == game }
+    }
+
     fun addSkippedGame(game: String) {
 
         SkippedGames.addSkippedGame(this, game)
@@ -632,13 +637,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 val position = viewHolder.adapterPosition
                 val removedDetail = mAdapter.details.get(position)
 
+                // Record the number of skipped games so we can inform the user in the snackbar
+                val numSkipped = countEpisodes(removedDetail.game)
+
                 addSkippedGame(removedDetail.game)
 
                 // Make the RecyclerView items scroll up to fill in the space
                 mRecyclerView.adapter.notifyItemRemoved(position)
 
                 val snackbar = Snackbar
-                        .make(mRecyclerView, getString(R.string.item_removed) + " " + removedDetail.game, Snackbar.LENGTH_LONG)
+                        .make(mRecyclerView, java.lang.String.format(getString(R.string.item_removed), numSkipped,removedDetail.game), Snackbar.LENGTH_LONG)
                         .setAction(R.string.undo, {
                             unskipGame(removedDetail.game)
                         })
