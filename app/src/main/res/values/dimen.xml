@@ -3,4 +3,5 @@
     <dimen name="button_size">40dp</dimen>
     <dimen name="button_padding">6dp</dimen>
     <dimen name="bar_padding">0dp</dimen>
+    <dimen name="text_padding">8dp</dimen>
 </resources>

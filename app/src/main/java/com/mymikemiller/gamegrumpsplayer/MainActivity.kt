@@ -5,7 +5,6 @@ import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
 
 import android.content.pm.ActivityInfo
-import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -26,8 +25,7 @@ import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 import com.squareup.picasso.Picasso
 import android.support.v4.content.LocalBroadcastManager
 import android.support.design.widget.Snackbar
-
-
+import android.support.v4.view.ViewPager
 
 
 /**
@@ -47,8 +45,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var otherViews: View
     private lateinit var fetchVideosProgressSection: LinearLayout
     private lateinit var fetchVideosProgresBar: ProgressBar
-    private lateinit var episodeTitle: TextView
-    private lateinit var episodeDescription: TextView
     private var fullscreen: Boolean = false
     private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
     private lateinit var playbackEventListener: MyPlaybackEventListener
@@ -65,8 +61,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mPreferencesButton: ImageView
     private var mPlayerInitialized: Boolean = false
     private var mAdapterInitialized: Boolean = false
-    private lateinit var mThumbnail: ImageView
     private lateinit var mBroadcastReceiver: BroadcastReceiver
+    private lateinit var mEpisodeViewPager: ViewPager
 
     // These collections have the skipped games filtered out
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
@@ -87,8 +83,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         otherViews = findViewById(R.id.other_views)
         fetchVideosProgressSection = findViewById(R.id.fetchVideosProgressSection)
         fetchVideosProgresBar = findViewById(R.id.fetchVideosProgressBar)
-        episodeTitle = findViewById<TextView>(R.id.episodeTitle)
-        episodeDescription = findViewById<TextView>(R.id.episodeDescription)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
         playbackEventListener = MyPlaybackEventListener(recordCurrentTime, recordCurrentTimeHandler)
         mUpButton = findViewById(R.id.up_button)
@@ -99,7 +93,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mPreferencesButton = findViewById(R.id.preferences_button)
         mRecyclerView = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
-        mThumbnail = findViewById(R.id.thumbnail)
+        mEpisodeViewPager = findViewById(R.id.episodeViewPager)
+
 
         mBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(contxt: Context?, intent: Intent?) {
@@ -163,9 +158,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             startActivity(i)
         }
 
-        val typeface: Typeface = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/gamegrumps.ttf")
-        episodeTitle.setTypeface(typeface)
-
         mSearchEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(text: Editable?) {
                 filter(text.toString())
@@ -227,6 +219,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     // Now that we've got a list of details, we can prepare the RecyclerView
                     mAdapter = RecyclerAdapter(getDetailsByPref(), isSelected, onItemClick)
+                    mEpisodeViewPager.setAdapter(EpisodePagerAdapter(this, getDetailsByPref()))
+
                     mAdapterInitialized = true
                     mRecyclerView.setAdapter(mAdapter)
                     mAdapter.notifyItemRangeChanged(0, getDetailsByPref().size-1)
@@ -598,10 +592,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             mCurrentlyPlayingVideoDetail = detail
 
             runOnUiThread {
-                episodeTitle.setText(detail.title)
-                episodeDescription.setText(detail.description)
+                // Todo: obviously not this. Find the right page
+                mEpisodeViewPager.currentItem += 1
+
                 player.loadVideo(detail.videoId, startTimeMillis)
-                Picasso.with(this).load(detail.thumbnail).into(mThumbnail)
 
                 // Refresh the RecyclerAdapter to get the currently playing highlight right
                 mRecyclerView.adapter.notifyDataSetChanged()

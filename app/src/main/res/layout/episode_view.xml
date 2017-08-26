@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:autofit="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!--Episode Title-->
+    <me.grantland.widget.AutofitTextView
+        android:id="@+id/episodeTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="false"
+        android:textSize="30sp"
+        autofit:minTextSize="16sp"
+        android:paddingTop="@dimen/text_padding"
+        android:textStyle="bold"
+        android:textColor="@color/light_font"
+        android:shadowColor="@color/text_shadow"
+        android:shadowDx="10"
+        android:shadowDy="10"
+        android:shadowRadius="2"
+        android:textAlignment="center" />
+
+    <!-- Episode Description -->
+    <TextView
+        android:id="@+id/episodeDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="false"
+        android:paddingTop="@dimen/text_padding"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/light_font"
+        android:shadowColor="@color/text_shadow"
+        android:shadowDx="7"
+        android:shadowDy="7"
+        android:shadowRadius="2"
+        android:textAlignment="center" />
+
+    <ImageView
+        android:id="@+id/thumbnail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/text_padding"
+        android:contentDescription="@string/thumbnail"/>
+
+</LinearLayout>

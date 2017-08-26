@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:autofit="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -69,8 +68,8 @@
                         android:text="@string/fetching"
                         android:textColor="@color/light_font"
                         android:shadowColor="@color/text_shadow"
-                        android:shadowDx="10"
-                        android:shadowDy="10"
+                        android:shadowDx="5"
+                        android:shadowDy="5"
                         android:shadowRadius="2"
                         android:textAlignment="center"/>
 
@@ -84,42 +83,11 @@
 
                 </LinearLayout>
 
-                <!-- Episode Title -->
-                <me.grantland.widget.AutofitTextView
-                    android:id="@+id/episodeTitle"
+                <android.support.v4.view.ViewPager
+                    android:id="@+id/episodeViewPager"
+                    xmlns:android="http://schemas.android.com/apk/res/android"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:singleLine="false"
-                    android:textSize="30sp"
-                    autofit:minTextSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/light_font"
-                    android:shadowColor="@color/text_shadow"
-                    android:shadowDx="10"
-                    android:shadowDy="10"
-                    android:shadowRadius="2"
-                    android:textAlignment="center" />
-
-                <!-- Episode Description -->
-                <TextView
-                    android:id="@+id/episodeDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:singleLine="false"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/light_font"
-                    android:shadowColor="@color/text_shadow"
-                    android:shadowDx="10"
-                    android:shadowDy="10"
-                    android:shadowRadius="2"
-                    android:textAlignment="center" />
-
-                <ImageView
-                    android:id="@+id/thumbnail"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/thumbnail"/>
+                    android:layout_height="match_parent" />
 
             </LinearLayout>
         </RelativeLayout>
