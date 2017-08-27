@@ -340,6 +340,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mAdapter.details = getDetailsByPref()
         mAdapter.notifyDataSetChanged()
         mEpisodeViewPagerAdapter.details = mAdapter.details
+        mEpisodeViewPagerAdapter.notifyDataSetChanged()
 
 
         if (!getDetailsByPref().contains(mCurrentlyPlayingVideoDetail)) {
