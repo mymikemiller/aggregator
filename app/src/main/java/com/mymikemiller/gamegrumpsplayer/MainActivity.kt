@@ -196,18 +196,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
-        run {
-            val numDetailsInDatabase = VideoList.getNumDetailsInDatabase(this, {})
-            fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
-            fetchVideosProgresBar.setProgress(currentVideoNumber)
-        }
-    }
 
     private fun setUpPlayer() {
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
     }
-
     private fun setUpEpisodePager() {
         mEpisodePager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
@@ -221,7 +213,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             override fun onPageSelected(position: Int) {}
         })
     }
-
     private fun setUpPlaylist() {
         mPlaylist.setLayoutManager(mLinearLayoutManager)
 
@@ -286,7 +277,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Enable swiping left to delete
         setRecyclerViewItemTouchListener()
     }
-
     private fun setUpSearch() {
         mSearchEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(text: Editable?) {
@@ -300,7 +290,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         })
     }
-
     private fun setUpPreferences() {
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(this)
@@ -325,6 +314,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
+    }
+
+    val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
+        run {
+            val numDetailsInDatabase = VideoList.getNumDetailsInDatabase(this, {})
+            fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
+            fetchVideosProgresBar.setProgress(currentVideoNumber)
+        }
     }
 
     override fun onDestroy() {
@@ -479,25 +476,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
-        override fun onAdStarted() {
-        }
-
-        override fun onLoading() {
-        }
-
-        override fun onVideoStarted() {
-        }
-
-        override fun onLoaded(p0: String?) {
-        }
-
-        override fun onError(p0: YouTubePlayer.ErrorReason?) {
-        }
-
         override fun onVideoEnded() {
             // Play the next video by calling the callback
             videoEndCallback()
         }
+        override fun onAdStarted() {}
+        override fun onLoading() {}
+        override fun onVideoStarted() {}
+        override fun onLoaded(p0: String?) {}
+        override fun onError(p0: YouTubePlayer.ErrorReason?) {}
     }
 
     private class MyPlaybackEventListener(val recordCurrentTimeCallback: () -> Unit, val recordCurrentTimeHandler: Handler) : YouTubePlayer.PlaybackEventListener {
@@ -514,9 +501,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             recordCurrentTimeHandler.post(backupCurrentTime)
         }
 
-        override fun onBuffering(isBuffering: Boolean) {
-        }
-
         override fun onStopped() {
             // Prevent the current time caching from happening every 5 seconds when we're paused
             recordCurrentTimeHandler.removeCallbacksAndMessages(null)
@@ -529,8 +513,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             recordCurrentTimeHandler.removeCallbacksAndMessages(null)
         }
 
-        override fun onSeekTo(endPositionMillis: Int) {
-        }
+        override fun onSeekTo(endPositionMillis: Int) {}
+        override fun onBuffering(isBuffering: Boolean) {}
     }
 
 
@@ -689,9 +673,5 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
         val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
         itemTouchHelper.attachToRecyclerView(mPlaylist)
-    }
-
-    private fun getLastVisibleItemPosition(): Int {
-        return mLinearLayoutManager.findLastVisibleItemPosition()
     }
 }
