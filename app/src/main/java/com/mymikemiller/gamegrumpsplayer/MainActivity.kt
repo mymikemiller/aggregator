@@ -324,13 +324,52 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
+    //region [initialization]
+    override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
+                                         wasRestored: Boolean) {
+        this.player = player
+        mPlayerInitialized = true
+        player.setPlayerStateChangeListener(playerStateChangeListener)
+        player.setPlaybackEventListener(playbackEventListener)
+
+        // Specify that we want to handle fullscreen behavior ourselves.
+        player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT)
+        player.setOnFullscreenListener(this)
+
+        var controlFlags = player.fullscreenControlFlags
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+        controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
+        player.fullscreenControlFlags = controlFlags
+    }
+    //endregion
+
+    //region [lifecycle]
     override fun onDestroy() {
         super.onDestroy()
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver)
     }
 
-    fun getDetailsByPref(): List<Detail> {
+    override fun onPause() {
+        super.onPause()
+        if (mPlayerInitialized)
+            recordCurrentTime()
+    }
+    //endregion
+
+    //region [layout]
+    // If we press back when the sliding panel is visible, minimize it
+    override fun onBackPressed() {
+        if (slidingLayout.panelState != SlidingUpPanelLayout.PanelState.COLLAPSED) {
+            slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+        } else {
+            super.onBackPressed()
+        }
+    }
+    //endregion
+
+    //region [get details]
+    private fun getDetailsByPref(): List<Detail> {
         val pref = PlaylistManipulator.getPreferredPlaylistOrder(this)
         if (pref == getString(R.string.pref_playlistOrder_byDateUploaded)) {
             return mDetailsByDate
@@ -338,7 +377,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             return mDetailsByGame
         }
     }
-    fun getDetailsByPrefIncludingSkipped(): List<Detail> {
+    private fun getDetailsByPrefIncludingSkipped(): List<Detail> {
         val pref = PlaylistManipulator.getPreferredPlaylistOrder(this)
         if (pref == getString(R.string.pref_playlistOrder_byDateUploaded)) {
             return mDetailsByDateIncludingSkipped
@@ -346,13 +385,29 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             return mDetailsByGameIncludingSkipped
         }
     }
+    //endregion]
 
+    //region [playlist functions]
     // Returns the number of episodes of the specified game that are in the playlist
-    fun countEpisodes(game: String): Int {
+    private fun countPlaylistEpisodes(game: String): Int {
         return mAdapter.details.count { it.game == game }
     }
 
-    fun addSkippedGame(game: String) {
+    private fun refreshPlaylist() {
+        mAdapter.details = getDetailsByPref()
+        mAdapter.notifyDataSetChanged()
+        scrollToCurrentlyPlayingVideo()
+    }
+    fun openPlaylist() {
+        slidingLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+    }
+    fun closePlaylist() {
+        slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+    }
+    //endregion
+
+    //region [handle skipped games]
+    private fun addSkippedGame(game: String) {
 
         SkippedGames.addSkippedGame(this, game)
 
@@ -399,7 +454,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         if (mAdapterInitialized)
             refreshPlaylist()
     }
+    //endregion
 
+    //region [preferences]
     override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
         if (key == getString(R.string.pref_playlistOrderKey)) {
             if (sp != null) {
@@ -407,20 +464,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         }
     }
-    private fun refreshPlaylist() {
-        mAdapter.details = getDetailsByPref()
-        mAdapter.notifyDataSetChanged()
-        scrollToCurrentlyPlayingVideo()
-    }
 
-    // If we press back when the sliding panel is visible, minimize it
-    override fun onBackPressed() {
-        if (slidingLayout.panelState != SlidingUpPanelLayout.PanelState.COLLAPSED) {
-            slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-        } else {
-            super.onBackPressed()
-        }
+    val deleteCurrentVideoFromSharedPreferences: () -> Unit = {
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+        val editor = sharedPref.edit()
+        editor.remove(getString(R.string.currentVideoId))
+        editor.apply()
     }
+    //endregion
 
     private fun filter(query: String) {
         var lowerCaseQuery = query.toLowerCase()
@@ -438,42 +489,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mAdapter.notifyDataSetChanged()
     }
 
-    fun openPlaylist() {
-        slidingLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
-    }
-    fun closePlaylist() {
-        slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-    }
-
-    val deleteCurrentVideoFromSharedPreferences: () -> Unit = {
-        val sharedPref = getPreferences(Context.MODE_PRIVATE)
-        val editor = sharedPref.edit()
-        editor.remove(getString(R.string.currentVideoId))
-        editor.apply()
-    }
-
-    override fun onInitializationSuccess(provider: YouTubePlayer.Provider, player: YouTubePlayer,
-                                         wasRestored: Boolean) {
-        this.player = player
-        mPlayerInitialized = true
-        player.setPlayerStateChangeListener(playerStateChangeListener)
-        player.setPlaybackEventListener(playbackEventListener)
-
-        // Specify that we want to handle fullscreen behavior ourselves.
-        player.addFullscreenControlFlag(YouTubePlayer.FULLSCREEN_FLAG_CUSTOM_LAYOUT)
-        player.setOnFullscreenListener(this)
-
-        var controlFlags = player.fullscreenControlFlags
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-        controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
-        player.fullscreenControlFlags = controlFlags
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (mPlayerInitialized)
-            recordCurrentTime()
-    }
 
     private class MyPlayerStateChangeListener(val videoEndCallback: () -> Unit) : YouTubePlayer.PlayerStateChangeListener {
         override fun onVideoEnded() {
@@ -487,7 +502,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         override fun onError(p0: YouTubePlayer.ErrorReason?) {}
     }
 
-    private class MyPlaybackEventListener(val recordCurrentTimeCallback: () -> Unit, val recordCurrentTimeHandler: Handler) : YouTubePlayer.PlaybackEventListener {
+    private class MyPlaybackEventListener(
+            val recordCurrentTimeCallback: () -> Unit,
+            val recordCurrentTimeHandler: Handler) : YouTubePlayer.PlaybackEventListener {
+
         override fun onPlaying() {
             // This runnable happens every 5 seconds and records the current play time to
             // SharedPreferences, until recordCurrentTimeHandler.removeCallbacksAndMessages(null)
@@ -655,7 +673,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 val removedDetail = mAdapter.details.get(position)
 
                 // Record the number of skipped games so we can inform the user in the snackbar
-                val numSkipped = countEpisodes(removedDetail.game)
+                val numSkipped = countPlaylistEpisodes(removedDetail.game)
 
                 addSkippedGame(removedDetail.game)
 
