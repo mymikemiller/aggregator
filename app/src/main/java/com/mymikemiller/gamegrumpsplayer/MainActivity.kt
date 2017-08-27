@@ -36,6 +36,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     private val CHANNEL_NAME = "gamegrumps"
 
+    //region [Variable definitions]
     private lateinit var baseLayout: LinearLayout
     private lateinit var bar: LinearLayout
     private lateinit var slidingLayout: SlidingUpPanelLayout
@@ -49,7 +50,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var playbackEventListener: MyPlaybackEventListener
     private var mCurrentlyPlayingVideoDetail: Detail? = null
     val recordCurrentTimeHandler: Handler = Handler()
-    private lateinit var mRecyclerView: RecyclerView
+    private lateinit var mPlaylist: RecyclerView
     private lateinit var mLinearLayoutManager: LinearLayoutManager
     private lateinit var mAdapter: RecyclerAdapter
     private lateinit var mUpButton: ImageView
@@ -61,21 +62,23 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private var mPlayerInitialized: Boolean = false
     private var mAdapterInitialized: Boolean = false
     private lateinit var mBroadcastReceiver: BroadcastReceiver
-    private lateinit var mEpisodeViewPager: ViewPager
+    private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
 
-    // These collections have the skipped games filtered out
+    // These collections include the skipped games
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
     var mDetailsByGameIncludingSkipped = listOf<Detail>()
 
     // These collections have the skipped games filtered out
     var mDetailsByDate = listOf<Detail>()
     var mDetailsByGame = listOf<Detail>()
+    // endregion
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_main)
+
+        //region [Variable initialization}
         baseLayout = findViewById<LinearLayout>(R.id.layout)
         bar = findViewById<LinearLayout>(R.id.bar)
         slidingLayout = findViewById(R.id.sliding_layout)
@@ -91,26 +94,137 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mSearchEditText = findViewById(R.id.searchEditText)
         mExpandButton = findViewById(R.id.expand_button)
         mPreferencesButton = findViewById(R.id.preferences_button)
-        mRecyclerView = findViewById(R.id.recyclerView)
+        mPlaylist = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
-        mEpisodeViewPager = findViewById(R.id.episodeViewPager)
+        mEpisodePager = findViewById(R.id.episodeViewPager)
+        // endregion
 
-        mBroadcastReceiver = object : BroadcastReceiver() {
-            override fun onReceive(contxt: Context?, intent: Intent?) {
-                when (intent?.action) {
-                    PreferencesActivity.UNSKIP_ALL -> unSkipAllGames()
+        // region [callbacks]
+        // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
+        //endregion
+
+        setUpYouTubeFetch()
+        setUpPlayer()
+        setUpEpisodePager()
+        setUpPlaylist()
+        setUpSearch()
+        setUpPreferences()
+    }
+
+    val isSelected: (Detail) -> Boolean = {detail ->
+        run {
+            detail == mCurrentlyPlayingVideoDetail
+        }
+    }
+
+
+    private fun setUpYouTubeFetch() {
+        YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
+            // Get the details ordered by date uploaded and force an upgrade if necessary,
+            // which will call the deleteCurrentVideoFromSharedPreferences call if necessary.
+            val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDatabase(this,
+                    deleteCurrentVideoFromSharedPreferences))
+
+            // This won't work until we've initialized these lists
+            val stopAtDetail = if (detailsFromDbByDate.size > 0) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
+
+            // Set up what happens when an playlist item is clicked
+            val onItemClick: (Detail) -> Unit = {detail ->
+                run {
+                    if (detail != mCurrentlyPlayingVideoDetail) {
+                        playVideo(detail, false)
+                    }
+                    // Hide the keyboard and collapse the slidingPanel if we click an item
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(mSearchEditText.getWindowToken(), 0)
+                    slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
                 }
             }
+
+            // This happens once the details are fetched from YouTube. detailsList contains all the
+            // details, including those from the database, skipped or not.
+            val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
+                run {
+                    //TODO: we probably shouldn't be doing all this on the UI thread
+                    runOnUiThread {
+                        // We first order by date to make sure the detilsByGame are in the right order
+                        val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
+
+                        mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
+                        mDetailsByGameIncludingSkipped = PlaylistManipulator.orderByGame(orderedByDateIncludingSkipped)
+
+                        mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
+                        mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGameIncludingSkipped)
+
+                        // Now that we've got a list of details, we can prepare the RecyclerView
+                        mAdapter = RecyclerAdapter(getDetailsByPref(), isSelected, onItemClick)
+                        mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, getDetailsByPref())
+                        mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
+
+                        mAdapterInitialized = true
+                        mPlaylist.setAdapter(mAdapter)
+                        mAdapter.notifyItemRangeChanged(0, getDetailsByPref().size-1)
+                        fetchVideosProgressSection.visibility = View.GONE
+
+                        // Get the default first video (the channel's first video)
+                        val firstDetail = mDetailsByDate[0]
+
+                        // Get the last video we were playing (which will be the next video in the playlist
+                        // if it was queued at the end of the last watch session if it had time to try to load)
+                        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                        val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
+
+                        var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
+                        if (detailToPlay == null) {
+                            // If we couldn't find a video to play, play the chronologicallly first video of the channel
+                            detailToPlay = firstDetail
+                        }
+
+                        playVideo(detailToPlay, true)
+
+                        scrollToCurrentlyPlayingVideo()
+
+                    }
+
+                }
+            }
+
+            VideoList.fetchAllDetailsByChannelId(this,
+                    deleteCurrentVideoFromSharedPreferences, channelId,
+                    stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
+
+
+        }})
+    }
+
+    val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
+        run {
+            val numDetailsInDatabase = VideoList.getNumDetailsInDatabase(this, {})
+            fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
+            fetchVideosProgresBar.setProgress(currentVideoNumber)
         }
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
+    }
 
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this)
+    private fun setUpPlayer() {
+        playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
+    }
 
-        mRecyclerView.setLayoutManager(mLinearLayoutManager)
+    private fun setUpEpisodePager() {
+        mEpisodePager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
+            override fun onPageScrollStateChanged(state: Int) {
+                if (state == 0) { // finished scrolling
+                    val detail = mEpisodeViewPagerAdapter.details[mEpisodePager.currentItem]
+                    playVideo(detail)
+                }
+            }
 
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+            override fun onPageSelected(position: Int) {}
+        })
+    }
+
+    private fun setUpPlaylist() {
+        mPlaylist.setLayoutManager(mLinearLayoutManager)
 
         // Respond to keyboard up/down events
         val activityRootView = findViewById<LinearLayout>(R.id.layout)
@@ -129,144 +243,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         })
 
-        // Flip the Expand/retract button depending on the sliding layout state
-        slidingLayout.addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
-            override fun onPanelStateChanged(panel: View?, previousState: SlidingUpPanelLayout.PanelState?, newState: SlidingUpPanelLayout.PanelState?) {
-                if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
-                    mExpandButton.scaleY = 1f
-                } else {
-                    mExpandButton.scaleY = -1f
-                }
-            }
-            override fun onPanelSlide(panel: View, slideOffset: Float) {}
-        })
-
-        mEpisodeViewPager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {
-                if (state == 0) { // finished scrolling
-                    val detail = mEpisodeViewPagerAdapter.details[mEpisodeViewPager.currentItem]
-                    playVideo(detail)
-                }
-            }
-
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
-            override fun onPageSelected(position: Int) {}
-        })
-
-        mExpandButton.setOnClickListener(object : View.OnClickListener{
-            override fun onClick(p0: View?) {
-                if (slidingLayout.panelState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
-                    openPlaylist()
-                }else {
-                    closePlaylist()
-                }
-            }
-        })
-
-        mPreferencesButton.setOnClickListener {
-            // Display the fragment as the main content.
-            val i = Intent(this, PreferencesActivity::class.java)
-            startActivity(i)
-        }
-
-        mSearchEditText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(text: Editable?) {
-                filter(text.toString())
-            }
-
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-            }
-
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-            }
-        })
-
-        // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
-        val isSelected: (Detail) -> Boolean = {detail ->
-            run {
-                detail == mCurrentlyPlayingVideoDetail
-            }
-        }
-        // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
-        val onItemClick: (Detail) -> Unit = {detail ->
-            run {
-                if (detail != mCurrentlyPlayingVideoDetail) {
-                    playVideo(detail, false)
-                }
-                // Hide the keyboard and collapse the slidingPanel if we click an item
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(mSearchEditText.getWindowToken(), 0)
-                slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-            }
-        }
-
-        setRecyclerViewScrollListener()
-
-        // Enable swiping left to delete
-        setRecyclerViewItemTouchListener()
-
-        playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
-
-        bar.getViewTreeObserver().addOnGlobalLayoutListener({
-            if (bar.height > 0) {
-                slidingLayout.panelHeight = bar.height
-            }
-        })
-
-        // This happens once the details are fetched from YouTube. detailsList contains all the details, including those from the database.
-        val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
-            run {
-                //TODO: we probably shouldn't be doing all this on the UI thread
-                runOnUiThread {
-                    // We first order by date to make sure the detilsByGame are in the right order
-                    val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
-
-                    mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
-                    mDetailsByGameIncludingSkipped = PlaylistManipulator.orderByGame(orderedByDateIncludingSkipped)
-
-                    mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
-                    mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGameIncludingSkipped)
-
-                    // Now that we've got a list of details, we can prepare the RecyclerView
-                    mAdapter = RecyclerAdapter(getDetailsByPref(), isSelected, onItemClick)
-                    mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, getDetailsByPref())
-                    mEpisodeViewPager.setAdapter(mEpisodeViewPagerAdapter)
-
-                    mAdapterInitialized = true
-                    mRecyclerView.setAdapter(mAdapter)
-                    mAdapter.notifyItemRangeChanged(0, getDetailsByPref().size-1)
-                    fetchVideosProgressSection.visibility = View.GONE
-
-                    // Get the default first video (the channel's first video)
-                    val firstDetail = mDetailsByDate[0]
-
-                    // Get the last video we were playing (which will be the next video in the playlist
-                    // if it was queued at the end of the last watch session if it had time to try to load)
-                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                    val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
-
-                    var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
-                    if (detailToPlay == null) {
-                        // If we couldn't find a video to play, play the chronologicallly first video of the channel
-                        detailToPlay = firstDetail
-                    }
-
-                    playVideo(detailToPlay, true)
-
-                    scrollToCurrentlyPlayingVideo()
-
-                }
-
-            }
-        }
-        val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
-            run {
-                val numDetailsInDatabase = VideoList.getNumDetailsInDatabase(this, {})
-                fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
-                fetchVideosProgresBar.setProgress(currentVideoNumber)
-            }
-        }
-
         mUpButton.setOnClickListener {
             openPlaylist()
             scrollToTop()
@@ -280,20 +256,76 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             scrollToCurrentlyPlayingVideo()
         }
 
-        fetchVideosProgressSection.visibility=View.VISIBLE
-        YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
-            // Get the details ordered by date uploaded and force an upgrade if necessary, which will call the deleteCurrentVideoFromSharedPreferences call if
-            // necessary.
-            val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDatabase(this,
-                    deleteCurrentVideoFromSharedPreferences))
+        bar.getViewTreeObserver().addOnGlobalLayoutListener({
+            if (bar.height > 0) {
+                slidingLayout.panelHeight = bar.height
+            }
+        })
 
-            // This won't work until we've initialized these lists
-            val stopAtDetail = if (detailsFromDbByDate.size > 0) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
+        // Flip the Expand/retract button depending on the sliding layout state
+        slidingLayout.addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
+            override fun onPanelStateChanged(panel: View?, previousState: SlidingUpPanelLayout.PanelState?, newState: SlidingUpPanelLayout.PanelState?) {
+                if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    mExpandButton.scaleY = 1f
+                } else {
+                    mExpandButton.scaleY = -1f
+                }
+            }
+            override fun onPanelSlide(panel: View, slideOffset: Float) {}
+        })
 
-            VideoList.fetchAllDetailsByChannelId(this,
-                    deleteCurrentVideoFromSharedPreferences, channelId,
-                    stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
-        }})
+        mExpandButton.setOnClickListener(object : View.OnClickListener{
+            override fun onClick(p0: View?) {
+                if (slidingLayout.panelState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    openPlaylist()
+                }else {
+                    closePlaylist()
+                }
+            }
+        })
+
+        // Enable swiping left to delete
+        setRecyclerViewItemTouchListener()
+    }
+
+    private fun setUpSearch() {
+        mSearchEditText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(text: Editable?) {
+                filter(text.toString())
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+            }
+        })
+    }
+
+    private fun setUpPreferences() {
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this)
+
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this)
+
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
+        mPreferencesButton.setOnClickListener {
+            // Display the fragment as the main content.
+            val i = Intent(this, PreferencesActivity::class.java)
+            startActivity(i)
+        }
+        mBroadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(contxt: Context?, intent: Intent?) {
+                when (intent?.action) {
+                    PreferencesActivity.UNSKIP_ALL -> unSkipAllGames()
+                }
+            }
+        }
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
     }
 
     override fun onDestroy() {
@@ -585,7 +617,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
     fun scrollToBottom() {
-        val index = mRecyclerView.adapter.itemCount - 1
+        val index = mPlaylist.adapter.itemCount - 1
         if (index > -1) {
             runOnUiThread {
                 mLinearLayoutManager.scrollToPosition(index)
@@ -609,12 +641,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
             runOnUiThread {
                 // Find the right detail to switch the episode viewpager to
-                mEpisodeViewPager.currentItem = mEpisodeViewPagerAdapter.details.indexOf(detail)
+                mEpisodePager.currentItem = mEpisodeViewPagerAdapter.details.indexOf(detail)
 
                 player.loadVideo(detail.videoId, startTimeMillis)
 
                 // Refresh the RecyclerAdapter to get the currently playing highlight right
-                mRecyclerView.adapter.notifyDataSetChanged()
+                mPlaylist.adapter.notifyDataSetChanged()
             }
 
             // Save the Detail to SharedPreference so we can start there next time
@@ -625,14 +657,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             if (centerPlaylistItem)
                 scrollToCurrentlyPlayingVideo()
         }
-    }
-
-    private fun setRecyclerViewScrollListener() {
-        mRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-            }
-        })
     }
 
     private fun setRecyclerViewItemTouchListener()
@@ -653,10 +677,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 addSkippedGame(removedDetail.game)
 
                 // Make the RecyclerView items scroll up to fill in the space
-                mRecyclerView.adapter.notifyItemRemoved(position)
+                mPlaylist.adapter.notifyItemRemoved(position)
 
                 val snackbar = Snackbar
-                        .make(mRecyclerView, java.lang.String.format(getString(R.string.item_removed), numSkipped,removedDetail.game), Snackbar.LENGTH_LONG)
+                        .make(mPlaylist, java.lang.String.format(getString(R.string.item_removed), numSkipped,removedDetail.game), Snackbar.LENGTH_LONG)
                         .setAction(R.string.undo, {
                             unskipGame(removedDetail.game)
                         })
@@ -665,7 +689,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         }
         val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
-        itemTouchHelper.attachToRecyclerView(mRecyclerView)
+        itemTouchHelper.attachToRecyclerView(mPlaylist)
     }
 
     private fun getLastVisibleItemPosition(): Int {
