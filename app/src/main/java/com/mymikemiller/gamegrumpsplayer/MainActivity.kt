@@ -141,6 +141,18 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             override fun onPanelSlide(panel: View, slideOffset: Float) {}
         })
 
+        mEpisodeViewPager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
+            override fun onPageScrollStateChanged(state: Int) {
+                if (state == 0) { // finished scrolling
+                    val detail = mEpisodeViewPagerAdapter.details[mEpisodeViewPager.currentItem]
+                    playVideo(detail)
+                }
+            }
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+            override fun onPageSelected(position: Int) {}
+        })
+
         mExpandButton.setOnClickListener(object : View.OnClickListener{
             override fun onClick(p0: View?) {
                 if (slidingLayout.panelState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
@@ -179,8 +191,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val onItemClick: (Detail) -> Unit = {detail ->
             run {
                 if (detail != mCurrentlyPlayingVideoDetail) {
-                    val startTimeMillis = WatchedMillis.getWatchedMillis(this, detail)
-                    playVideo(detail, false, startTimeMillis)
+                    playVideo(detail, false)
                 }
                 // Hide the keyboard and collapse the slidingPanel if we click an item
                 val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -240,8 +251,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         detailToPlay = firstDetail
                     }
 
-                    val videoTimeToPlayMillis = WatchedMillis.getWatchedMillis(this, detailToPlay)
-                    playVideo(detailToPlay, true, videoTimeToPlayMillis)
+                    playVideo(detailToPlay, true)
 
                     scrollToCurrentlyPlayingVideo()
 
@@ -503,11 +513,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Cue up the next video
         val nextVideoDetail: Detail? = getNextVideo()
         if (nextVideoDetail != null) {
-            // The start time is probably 0 because the video is probably not in the database yet,
-            // but if it is, continue playing where we left off
-            val startTimeMillis = WatchedMillis.getWatchedMillis(this, nextVideoDetail)
             // Play the next video, but don't scroll to it in case the user is looking somewhere else in the playlist
-            playVideo(nextVideoDetail, true, startTimeMillis)
+            playVideo(nextVideoDetail, true)
         }
     }
 
@@ -592,9 +599,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         fullscreen = isFullscreen
     }
 
-    fun playVideo(detail: Detail?, centerPlaylistItem: Boolean = true, startTimeMillis: Int = 0) {
+    fun playVideo(detail: Detail?, centerPlaylistItem: Boolean = true) {
         if (detail != null) {
             mCurrentlyPlayingVideoDetail = detail
+
+
+            val startTimeMillis = WatchedMillis.getWatchedMillis(this, detail)
 
             runOnUiThread {
                 // Find the right detail to switch the episode viewpager to
