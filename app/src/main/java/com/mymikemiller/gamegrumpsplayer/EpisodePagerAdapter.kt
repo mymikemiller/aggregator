@@ -14,7 +14,7 @@ import me.grantland.widget.AutofitTextView
 /**
  *
  */
-class EpisodePagerAdapter(private val mContext: Context, val details: List<Detail>) : PagerAdapter() {
+class EpisodePagerAdapter(private val mContext: Context, var details: List<Detail>) : PagerAdapter() {
 
     override fun instantiateItem(collection: ViewGroup, position: Int): Any {
         val inflater = LayoutInflater.from(mContext)
@@ -53,5 +53,4 @@ class EpisodePagerAdapter(private val mContext: Context, val details: List<Detai
     override fun getPageTitle(position: Int): CharSequence {
         return details[position].title
     }
-
 }

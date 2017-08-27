@@ -22,7 +22,6 @@ import android.view.inputmethod.InputMethodManager
 import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
 import com.mymikemiller.gamegrumpsplayer.util.PlaylistManipulator
 import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
-import com.squareup.picasso.Picasso
 import android.support.v4.content.LocalBroadcastManager
 import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewPager
@@ -63,6 +62,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private var mAdapterInitialized: Boolean = false
     private lateinit var mBroadcastReceiver: BroadcastReceiver
     private lateinit var mEpisodeViewPager: ViewPager
+    private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
 
     // These collections have the skipped games filtered out
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
@@ -94,7 +94,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mRecyclerView = findViewById(R.id.recyclerView)
         mLinearLayoutManager = LinearLayoutManager(this)
         mEpisodeViewPager = findViewById(R.id.episodeViewPager)
-
 
         mBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(contxt: Context?, intent: Intent?) {
@@ -219,7 +218,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     // Now that we've got a list of details, we can prepare the RecyclerView
                     mAdapter = RecyclerAdapter(getDetailsByPref(), isSelected, onItemClick)
-                    mEpisodeViewPager.setAdapter(EpisodePagerAdapter(this, getDetailsByPref()))
+                    mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, getDetailsByPref())
+                    mEpisodeViewPager.setAdapter(mEpisodeViewPagerAdapter)
 
                     mAdapterInitialized = true
                     mRecyclerView.setAdapter(mAdapter)
@@ -329,6 +329,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Update the adapter
         mAdapter.details = getDetailsByPref()
         mAdapter.notifyDataSetChanged()
+        mEpisodeViewPagerAdapter.details = mAdapter.details
+
 
         if (!getDetailsByPref().contains(mCurrentlyPlayingVideoDetail)) {
             // The user skipped the currently playing video. Play the next video in the adapter if there is one.
@@ -559,10 +561,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     // Scroll the recyclerView to the playing video
     fun scrollToCurrentlyPlayingVideo() {
         val index = mAdapter.details.indexOf(mCurrentlyPlayingVideoDetail)
+
         runOnUiThread {
             // Scroll with an offset so that the selected video is one item down in the list
             mLinearLayoutManager.scrollToPositionWithOffset(index - 1, 0)
         }
+
+
     }
 
     fun scrollToTop() {
@@ -592,8 +597,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             mCurrentlyPlayingVideoDetail = detail
 
             runOnUiThread {
-                // Todo: obviously not this. Find the right page
-                mEpisodeViewPager.currentItem += 1
+                // Find the right detail to switch the episode viewpager to
+                mEpisodeViewPager.currentItem = mEpisodeViewPagerAdapter.details.indexOf(detail)
 
                 player.loadVideo(detail.videoId, startTimeMillis)
 
