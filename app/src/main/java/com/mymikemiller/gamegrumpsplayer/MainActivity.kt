@@ -99,24 +99,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mEpisodePager = findViewById(R.id.episodeViewPager)
         // endregion
 
-        // region [callbacks]
-        // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
-        //endregion
-
         setUpYouTubeFetch()
         setUpPlayer()
         setUpEpisodePager()
         setUpPlaylist()
         setUpSearch()
         setUpPreferences()
-    }
 
-    val isSelected: (Detail) -> Boolean = {detail ->
-        run {
-            detail == mCurrentlyPlayingVideoDetail
-        }
+        // region [callbacks]
+        // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
+        //endregion
     }
-
 
     private fun setUpYouTubeFetch() {
         YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
@@ -195,6 +188,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
 
         }})
+    }
+
+    val isSelected: (Detail) -> Boolean = {detail ->
+        run {
+            detail == mCurrentlyPlayingVideoDetail
+        }
     }
 
     val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
