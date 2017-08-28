@@ -25,6 +25,9 @@ import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 import android.support.v4.content.LocalBroadcastManager
 import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewPager
+import android.view.MenuInflater
+import android.text.method.TextKeyListener.clear
+import android.view.Menu
 
 
 /**
@@ -305,6 +308,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         })
     }
+
     private fun setUpSearch() {
         mSearchEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(text: Editable?) {

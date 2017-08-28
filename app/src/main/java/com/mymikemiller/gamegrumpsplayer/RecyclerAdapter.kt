@@ -2,10 +2,7 @@ package com.mymikemiller.gamegrumpsplayer
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.*
 
 import com.squareup.picasso.Picasso
@@ -30,12 +27,11 @@ class RecyclerAdapter(private val context: Context,
         private val mGame: TextView
         private val mTitle: TextView
         private val mDate: TextView
-        private var mButton: Button
+        private var mMenuButton: ImageView
+        //private var mSkipGameMenuItem: MenuItem
         private lateinit var mDetail: Detail
         private lateinit var mIsSelectedCallback: (detail: Detail) -> Boolean
         private lateinit var mOnItemClickCallback: (detail: Detail) -> Unit
-
-        //TODO: move this into recyclerview_item_row (RecyclerAdapter)
 
         init {
             mRootLayout = v.findViewById(R.id.rootLayout)
@@ -43,7 +39,9 @@ class RecyclerAdapter(private val context: Context,
             mGame = v.findViewById<TextView>(R.id.game)
             mTitle = v.findViewById<TextView>(R.id.title)
             mDate = v.findViewById<TextView>(R.id.date)
-            mButton = v.findViewById(R.id.button)
+            mMenuButton = v.findViewById(R.id.game_menu_button)
+//            mSkipGameMenuItem = v.findViewById<View>(R.id.skip_game) as MenuItem
+
             v.setOnClickListener(this)
         }
 
@@ -82,10 +80,10 @@ class RecyclerAdapter(private val context: Context,
             val dateString = format.format(date)
             mDate.setText(dateString)
 
-            mButton.setOnClickListener(object : View.OnClickListener {
+            mMenuButton.setOnClickListener(object : View.OnClickListener {
                 override fun onClick(p0: View?) {
                     //Creating the instance of PopupMenu
-                    val popup = PopupMenu(context, mButton)
+                    val popup = PopupMenu(context, mMenuButton)
 
                     //Inflating the Popup using xml file
                     popup.menuInflater.inflate(R.menu.recyclerview_item_popup, popup.menu)

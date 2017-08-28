@@ -14,17 +14,11 @@
         android:contentDescription="@string/thumbnail"/>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:layout_gravity="center_vertical">
-
-        <Button
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Skip Game"
-            />
 
         <TextView
             android:id="@+id/game"
@@ -53,4 +47,12 @@
             android:maxLines="2"/>
 
     </LinearLayout>
+
+    <!-- The ... button for the "skip game" menu -->
+    <ImageView
+        android:id="@+id/game_menu_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_more_vert_black_24dp"/>
+
 </LinearLayout>
