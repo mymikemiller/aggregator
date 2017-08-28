@@ -18,8 +18,8 @@
         android:key="@string/pref_unskipAllGamesKey"/>
 
     <Preference
-        android:title="@string/pref_unskip_game_title"
-        android:summary="@string/pref_unskip_game_description"
-        android:key="@string/pref_unskipGameKey"/>
+        android:title="@string/pref_watch_history_title"
+        android:summary="@string/pref_watch_history_description"
+        android:key="@string/pref_watchHistoryKey"/>
 
 </PreferenceScreen>

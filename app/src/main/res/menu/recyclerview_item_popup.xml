@@ -4,10 +4,6 @@
 
     <item
         android:id="@+id/skip_game"
-        android:title="Skip Game"/>
-
-    <item
-        android:id="@+id/unskip_game"
-        android:title="Unskip Game"/>
+        android:title="@string/skipGame"/>
 
 </menu>

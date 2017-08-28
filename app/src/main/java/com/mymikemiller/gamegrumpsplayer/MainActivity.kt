@@ -25,13 +25,7 @@ import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 import android.support.v4.content.LocalBroadcastManager
 import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewPager
-import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.content.Intent
-import android.R.attr.data
-
-
-
-
 
 
 /**
@@ -42,7 +36,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private val CHANNEL_NAME = "gamegrumps"
-    val UNSKIP_GAME_REQUEST = 1  // The request code from the UnskipGameActivity activity
+    val UNSKIP_GAME_REQUEST = 1  // The request code from the WatchHistoryActivity activity
 
     //region [Variable definitions]
     private lateinit var baseLayout: LinearLayout
@@ -219,12 +213,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    val unSkipGame: (game: String) -> Unit = {game ->
-        run {
-            println("unskip game")
-        }
-    }
-
     private fun notifyPlaylistItemsRemoved(game: String) {
         for (i in mAdapter.details.indices) {
             val detail = mAdapter.details[i]
@@ -346,14 +334,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             override fun onReceive(contxt: Context?, intent: Intent?) {
                 when (intent?.action) {
                     PreferencesActivity.UNSKIP_ALL -> unSkipAllGames()
-                    PreferencesActivity.UNSKIP_GAME -> showUnSkipGameActivity()
+                    PreferencesActivity.WATCH_HISTORY -> showUnSkipGameActivity()
                 }
             }
         }
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
         LocalBroadcastManager.getInstance(this)
-                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_GAME))
+                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.WATCH_HISTORY))
 
     }
 
@@ -480,7 +468,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
     fun showUnSkipGameActivity() {
 
-        val unskipGameIntent = Intent(this, UnskipGameActivity::class.java)
+        val unskipGameIntent = Intent(this, WatchHistoryActivity::class.java)
         startActivityForResult(unskipGameIntent, UNSKIP_GAME_REQUEST)
 //        startActivity(unskipGameIntent)
     }
@@ -491,6 +479,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             // Make sure the request was successful
             if (resultCode == Activity.RESULT_OK) {
                 val result = data.getStringExtra("videoToPlay")
+                //TODO: Play the requested video
             }
         }
     }

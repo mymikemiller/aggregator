@@ -16,7 +16,7 @@ import android.widget.Toast
 class PreferencesActivity : PreferenceActivity() {
     companion object {
         const val UNSKIP_ALL = "com.example.mymikemiller.UNSKIP_ALL"
-        const val UNSKIP_GAME = "com.example.mymikemiller.UNSKIP_GAME"
+        const val WATCH_HISTORY = "com.example.mymikemiller.WATCH_HISTORY"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,11 +47,11 @@ class PreferencesActivity : PreferenceActivity() {
                 true
             })
 
-            val unskipGameButton = findPreference(getString(R.string.pref_unskipGameKey))
-            unskipGameButton.setOnPreferenceClickListener({
+            val watchHistoryButton = findPreference(getString(R.string.pref_watchHistoryKey))
+            watchHistoryButton.setOnPreferenceClickListener({
 
                 val intent = Intent()
-                intent.action = UNSKIP_GAME
+                intent.action = WATCH_HISTORY
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
                 true

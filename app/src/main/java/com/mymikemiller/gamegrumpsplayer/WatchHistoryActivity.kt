@@ -10,7 +10,7 @@ import android.content.Intent
 
 
 
-class UnskipGameActivity : AppCompatActivity() {
+class WatchHistoryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

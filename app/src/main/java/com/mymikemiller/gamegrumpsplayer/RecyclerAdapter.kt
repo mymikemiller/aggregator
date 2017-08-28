@@ -68,8 +68,7 @@ class RecyclerAdapter(private val context: Context,
 
         fun bindDetail(context: Context,
                        detail: Detail,
-                       skipGameCallback: ((game: String) -> Unit)?,
-                       unSkipGameCallback: ((game: String) -> Unit)?) {
+                       skipGameCallback: ((game: String) -> Unit)?) {
             mDetail = detail
             Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
 
@@ -96,17 +95,12 @@ class RecyclerAdapter(private val context: Context,
                     if (skipGameCallback == null) {
                         popup.getMenu().findItem(R.id.skip_game).isVisible = false
                     }
-                    if (unSkipGameCallback == null) {
-                        popup.getMenu().findItem(R.id.unskip_game).isVisible = false
-                    }
 
                     //registering popup with OnMenuItemClickListener
                     popup.setOnMenuItemClickListener(object : PopupMenu.OnMenuItemClickListener {
                         override fun onMenuItemClick(item: MenuItem): Boolean {
 
-                            if (item.itemId == R.id.unskip_game) {
-                                // TODO: unskip game
-                            } else if (item.itemId == R.id.skip_game) {
+                            if (item.itemId == R.id.skip_game) {
                                 // Skip the clicked game
                                 if (skipGameCallback != null) {
                                     skipGameCallback(detail.game)
@@ -143,7 +137,7 @@ class RecyclerAdapter(private val context: Context,
         val itemDetail = details[position]
         holder.setIsSelectedCallback(isSelectedCallback)
         holder.setOnItemClickCallback(onItemClickCallback)
-        holder.bindDetail(context, itemDetail, skipGameCallback, null)
+        holder.bindDetail(context, itemDetail, skipGameCallback)
     }
 
     override fun getItemCount(): Int {

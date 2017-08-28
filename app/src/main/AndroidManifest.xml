@@ -24,8 +24,8 @@
         </activity>
         <activity android:name=".PreferencesActivity"></activity>
         <activity
-            android:name=".UnskipGameActivity"
-            android:label="@string/title_activity_unskip_game"
+            android:name=".WatchHistoryActivity"
+            android:label="@string/title_activity_watch_history"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
