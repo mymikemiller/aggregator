@@ -377,6 +377,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         controlFlags = controlFlags or YouTubePlayer.FULLSCREEN_FLAG_ALWAYS_FULLSCREEN_IN_LANDSCAPE
         player.fullscreenControlFlags = controlFlags
+
+        // We may get here after we failed to play the video if we tried playing it before
+        // initializing the player. Now that it's initialized we can play the video.
+        playVideo(mCurrentlyPlayingVideoDetail)
     }
     //endregion
 
@@ -686,7 +690,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // Find the right detail to switch the episode viewpager to
                 mEpisodePager.currentItem = mEpisodeViewPagerAdapter.details.indexOf(detail)
 
-                player.loadVideo(detail.videoId, startTimeMillis)
+                if (mPlayerInitialized)
+                    player.loadVideo(detail.videoId, startTimeMillis)
 
                 // Refresh the RecyclerAdapter to get the currently playing highlight right
                 mPlaylist.adapter.notifyDataSetChanged()
