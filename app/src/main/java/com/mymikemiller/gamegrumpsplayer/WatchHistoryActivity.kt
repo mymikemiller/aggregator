@@ -2,10 +2,9 @@ package com.mymikemiller.gamegrumpsplayer
 
 import android.app.Activity
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 
-import kotlinx.android.synthetic.main.activity_unskip_game.*
+import kotlinx.android.synthetic.main.activity_watch_history.*
 import android.content.Intent
 
 
@@ -14,7 +13,7 @@ class WatchHistoryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_unskip_game)
+        setContentView(R.layout.activity_watch_history)
         setSupportActionBar(toolbar)
 
     }
