@@ -1,5 +1,6 @@
 package com.mymikemiller.gamegrumpsplayer
 
+import android.app.Activity
 import android.content.*
 import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
@@ -26,6 +27,9 @@ import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewPager
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.content.Intent
+import android.R.attr.data
+
+
 
 
 
@@ -478,6 +482,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         val unskipGameIntent = Intent(this, UnskipGameActivity::class.java)
         startActivityForResult(unskipGameIntent, UNSKIP_GAME_REQUEST)
+//        startActivity(unskipGameIntent)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        // Check which request we're responding to
+        if (requestCode == UNSKIP_GAME_REQUEST) {
+            // Make sure the request was successful
+            if (resultCode == Activity.RESULT_OK) {
+                val result = data.getStringExtra("videoToPlay")
+            }
+        }
     }
 
     fun unSkipGame(game: String) {
