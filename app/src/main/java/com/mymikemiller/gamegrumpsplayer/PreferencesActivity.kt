@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.preference.PreferenceFragment
 import android.preference.PreferenceActivity
 import android.preference.ListPreference
-import android.preference.Preference
 import android.content.SharedPreferences
 import android.content.Intent
 import android.support.v4.content.LocalBroadcastManager
@@ -17,6 +16,7 @@ import android.widget.Toast
 class PreferencesActivity : PreferenceActivity() {
     companion object {
         const val UNSKIP_ALL = "com.example.mymikemiller.UNSKIP_ALL"
+        const val UNSKIP_GAME = "com.example.mymikemiller.UNSKIP_GAME"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,8 +34,8 @@ class PreferencesActivity : PreferenceActivity() {
             val pref = findPreference(getString(R.string.pref_playlistOrderKey))
             pref.summary = (pref as ListPreference).entry
 
-            val button = findPreference(getString(R.string.pref_unskipKey))
-            button.setOnPreferenceClickListener({
+            val unskipAllGamesButton = findPreference(getString(R.string.pref_unskipAllGamesKey))
+            unskipAllGamesButton.setOnPreferenceClickListener({
 
                 val intent = Intent()
                 intent.action = UNSKIP_ALL
@@ -43,6 +43,16 @@ class PreferencesActivity : PreferenceActivity() {
 
                 Toast.makeText(getActivity(), getString(R.string.videosUnskipped),
                         Toast.LENGTH_SHORT).show()
+
+                true
+            })
+
+            val unskipGameButton = findPreference(getString(R.string.pref_unskipGameKey))
+            unskipGameButton.setOnPreferenceClickListener({
+
+                val intent = Intent()
+                intent.action = UNSKIP_GAME
+                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
                 true
             })

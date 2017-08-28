@@ -14,7 +14,6 @@ import android.os.Handler
 import android.preference.PreferenceManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import android.text.Editable
 import android.text.TextWatcher
@@ -25,9 +24,10 @@ import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 import android.support.v4.content.LocalBroadcastManager
 import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewPager
-import android.view.MenuInflater
-import android.text.method.TextKeyListener.clear
-import android.view.Menu
+import android.provider.ContactsContract.CommonDataKinds.Phone
+import android.content.Intent
+
+
 
 
 /**
@@ -38,6 +38,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private val CHANNEL_NAME = "gamegrumps"
+    val UNSKIP_GAME_REQUEST = 1  // The request code from the UnskipGameActivity activity
 
     //region [Variable definitions]
     private lateinit var baseLayout: LinearLayout
@@ -216,7 +217,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     val unSkipGame: (game: String) -> Unit = {game ->
         run {
-
+            println("unskip game")
         }
     }
 
@@ -341,11 +342,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             override fun onReceive(contxt: Context?, intent: Intent?) {
                 when (intent?.action) {
                     PreferencesActivity.UNSKIP_ALL -> unSkipAllGames()
+                    PreferencesActivity.UNSKIP_GAME -> showUnSkipGameActivity()
                 }
             }
         }
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_GAME))
+
     }
 
     val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
@@ -464,6 +469,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 playVideo(nextVideo)
             }
         }
+    }
+    fun showUnSkipGameActivity() {
+
+        val unskipGameIntent = Intent(this, UnskipGameActivity::class.java)
+        startActivityForResult(unskipGameIntent, UNSKIP_GAME_REQUEST)
     }
 
     fun unSkipGame(game: String) {
