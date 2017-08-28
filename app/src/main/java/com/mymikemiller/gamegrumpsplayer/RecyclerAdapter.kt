@@ -8,17 +8,20 @@ import android.widget.*
 import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
+import android.graphics.LightingColorFilter
+import android.graphics.ColorFilter
+import android.R.attr.button
+import android.graphics.Color
+
 
 class RecyclerAdapter(private val context: Context,
-                      private val allDetails: List<Detail>,
+                      var details: List<Detail>,
                       private val isSelectedCallback: (detail: Detail) -> Boolean,
                       private val onItemClickCallback: (detail: Detail) -> Unit,
                       private val skipGameCallback: ((game: String) -> Unit)? = null,
                       private val unskipGameCallback: ((game: String) -> Unit)? = null)
         : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>()
 {
-
-    var details = allDetails
 
     class DetailHolder
     (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
@@ -80,6 +83,8 @@ class RecyclerAdapter(private val context: Context,
             val dateString = format.format(date)
             mDate.setText(dateString)
 
+            mMenuButton.colorFilter = LightingColorFilter(Color.LTGRAY, Color.LTGRAY)
+
             mMenuButton.setOnClickListener(object : View.OnClickListener {
                 override fun onClick(p0: View?) {
                     //Creating the instance of PopupMenu
@@ -87,6 +92,13 @@ class RecyclerAdapter(private val context: Context,
 
                     //Inflating the Popup using xml file
                     popup.menuInflater.inflate(R.menu.recyclerview_item_popup, popup.menu)
+
+                    if (skipGameCallback == null) {
+                        popup.getMenu().findItem(R.id.skip_game).isVisible = false
+                    }
+                    if (unSkipGameCallback == null) {
+                        popup.getMenu().findItem(R.id.unskip_game).isVisible = false
+                    }
 
                     //registering popup with OnMenuItemClickListener
                     popup.setOnMenuItemClickListener(object : PopupMenu.OnMenuItemClickListener {
