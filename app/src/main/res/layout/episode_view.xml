@@ -37,11 +37,13 @@
         android:shadowRadius="2"
         android:textAlignment="center" />
 
+    <!-- Thumbnail -->
     <ImageView
         android:id="@+id/thumbnail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/text_padding"
         android:contentDescription="@string/thumbnail"/>
+
 
 </LinearLayout>

@@ -48,11 +48,11 @@ class SkippedGames {
             return skippedGames
         }
 
-        fun unskipAllGames(context: Context) {
+        fun unSkipAllGames(context: Context) {
             val dbHelper = SkippedGamesOpenHelper(context.applicationContext)
             dbHelper.unskipAllGames()
         }
-        fun unskipGame(context: Context, game: String) {
+        fun unSkipGame(context: Context, game: String) {
             val dbHelper = SkippedGamesOpenHelper(context.applicationContext)
             dbHelper.unskipGame(game)
         }

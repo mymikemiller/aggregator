@@ -150,7 +150,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGameIncludingSkipped)
 
                         // Now that we've got a list of details, we can prepare the RecyclerView
-                        mAdapter = RecyclerAdapter(getDetailsByPref(), isSelected, onItemClick)
+                        mAdapter = RecyclerAdapter(this, getDetailsByPref(), isSelected, onItemClick, skipGame, null)
                         mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, getDetailsByPref())
                         mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
 
@@ -176,23 +176,54 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         playVideo(detailToPlay, true)
 
                         scrollToCurrentlyPlayingVideo()
-
                     }
-
                 }
             }
 
             VideoList.fetchAllDetailsByChannelId(this,
                     deleteCurrentVideoFromSharedPreferences, channelId,
                     stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
-
-
         }})
     }
 
     val isSelected: (Detail) -> Boolean = {detail ->
         run {
             detail == mCurrentlyPlayingVideoDetail
+        }
+    }
+
+    val skipGame: (game: String) -> Unit = {game ->
+        run {
+            // Record the number of skipped games so we can inform the user in the snackbar
+            val numSkipped = countPlaylistEpisodes(game)
+
+            addSkippedGame(game)
+
+            notifyPlaylistItemsRemoved(game)
+
+            val snackbar = Snackbar
+                    .make(mPlaylist, java.lang.String.format(getString(R.string.item_removed), numSkipped, game), Snackbar.LENGTH_LONG)
+                    .setAction(R.string.undo, {
+                        addSkippedGame(game)
+                    })
+
+            snackbar.show()
+        }
+    }
+
+    val unSkipGame: (game: String) -> Unit = {game ->
+        run {
+
+        }
+    }
+
+    private fun notifyPlaylistItemsRemoved(game: String) {
+        for (i in mAdapter.details.indices) {
+            val detail = mAdapter.details[i]
+            if (detail.game == game) {
+                // Make the RecyclerView items scroll up to fill in the space
+                mPlaylist.adapter.notifyItemRemoved(i)
+            }
         }
     }
 
@@ -273,9 +304,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 }
             }
         })
-
-        // Enable swiping left to delete
-        setRecyclerViewItemTouchListener()
     }
     private fun setUpSearch() {
         mSearchEditText.addTextChangedListener(object : TextWatcher {
@@ -389,7 +417,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     //region [playlist functions]
     // Returns the number of episodes of the specified game that are in the playlist
-    private fun countPlaylistEpisodes(game: String): Int {
+    fun countPlaylistEpisodes(game: String): Int {
         return mAdapter.details.count { it.game == game }
     }
 
@@ -407,7 +435,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     //endregion
 
     //region [handle skipped games]
-    private fun addSkippedGame(game: String) {
+    fun addSkippedGame(game: String) {
 
         SkippedGames.addSkippedGame(this, game)
 
@@ -434,8 +462,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun unskipGame(game: String) {
-        SkippedGames.unskipGame(this, game)
+    fun unSkipGame(game: String) {
+        SkippedGames.unSkipGame(this, game)
 
         // Update our cached lists
         mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
@@ -445,7 +473,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun unSkipAllGames() {
-        SkippedGames.unskipAllGames(this)
+        SkippedGames.unSkipAllGames(this)
 
         // Update our cached lists
         mDetailsByDate = mDetailsByDateIncludingSkipped
@@ -658,38 +686,5 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             if (centerPlaylistItem)
                 scrollToCurrentlyPlayingVideo()
         }
-    }
-
-    private fun setRecyclerViewItemTouchListener()
-    {
-        val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) { // or ItemTouchHelper.RIGHT
-            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, viewHolder1: RecyclerView.ViewHolder): Boolean {
-                return false
-            }
-
-            // This happens when we swipe a Detail to the left. Skip all episodes of that game.
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, swipeDir: Int) {
-                val position = viewHolder.adapterPosition
-                val removedDetail = mAdapter.details.get(position)
-
-                // Record the number of skipped games so we can inform the user in the snackbar
-                val numSkipped = countPlaylistEpisodes(removedDetail.game)
-
-                addSkippedGame(removedDetail.game)
-
-                // Make the RecyclerView items scroll up to fill in the space
-                mPlaylist.adapter.notifyItemRemoved(position)
-
-                val snackbar = Snackbar
-                        .make(mPlaylist, java.lang.String.format(getString(R.string.item_removed), numSkipped,removedDetail.game), Snackbar.LENGTH_LONG)
-                        .setAction(R.string.undo, {
-                            unskipGame(removedDetail.game)
-                        })
-
-                snackbar.show()
-            }
-        }
-        val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
-        itemTouchHelper.attachToRecyclerView(mPlaylist)
     }
 }

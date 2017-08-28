@@ -10,6 +10,10 @@ import org.junit.Assert.*
  * Zelda (Good with money),
  * teenage mutant ninja turtles (tournament fighters)
  * Godzilla Kaijoo daikessen, godzilla: destroy all monsters melee
+ *
+ * Still to do:
+ * (this one has two colons, so it can be done specially that way)
+ * Link: The Faces of Evil: My Name is Jesus
  */
 class DetailTest {
     @Test
