@@ -319,9 +319,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         mPreferencesButton.setOnClickListener {
-            // Display the fragment as the main content.
-            val i = Intent(this, PreferencesActivity::class.java)
-            startActivity(i)
+            showPreferencesActivity()
         }
         mBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(contxt: Context?, intent: Intent?) {
@@ -331,11 +329,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 }
             }
         }
+
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.WATCH_HISTORY))
+    }
 
+    fun showPreferencesActivity() {
+        val i = Intent(this, PreferencesActivity::class.java)
+        startActivity(i)
     }
 
     val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
@@ -467,10 +470,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
 
         // Check which request we're responding to
-        if (resultCode == Activity.RESULT_OK && requestCode == WATCH_HISTORY_REQUEST) {
-            val videoId = data.getStringExtra(WatchHistoryActivity.WATCH_HISTORY_DETAIL)
-            val detailToPlay = mDetailsByDateIncludingSkipped.find { it.videoId == videoId }
-            playVideo(detailToPlay)
+        if (requestCode == WATCH_HISTORY_REQUEST) {
+            if (resultCode == Activity.RESULT_OK ) {
+                // We clicked a video.  Find it and play it.
+                val videoId = data.getStringExtra(WatchHistoryActivity.WATCH_HISTORY_DETAIL)
+                val detailToPlay = mDetailsByDateIncludingSkipped.find { it.videoId == videoId }
+                playVideo(detailToPlay)
+
+                // Collapse the playlist because the user had to open it to get to the preferences
+                slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                // Launch the preferences pane so it looks like we went back to it from the warch history
+                showPreferencesActivity()
+            }
         }
     }
 
