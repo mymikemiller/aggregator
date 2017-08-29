@@ -14,7 +14,6 @@ import com.mymikemiller.gamegrumpsplayer.util.WatchHistory
 
 
 class WatchHistoryActivity : AppCompatActivity() {
-
     private lateinit var mHistoryView: RecyclerView
     private lateinit var mAdapter: HistoryRecyclerAdapter
     private lateinit var mDetails: List<Detail>
@@ -25,14 +24,6 @@ class WatchHistoryActivity : AppCompatActivity() {
         setContentView(R.layout.activity_watch_history)
         setSupportActionBar(toolbar)
         mDetails = WatchHistory.getWatchHistory(this).reversed()
-
-//        val d = Detail(
-//                "xxx",
-//                "Kirby Super Star - Spring Breeze ADVENTURES! - GameGrumps",
-//                "", "https://i.ytimg.com/vi/4wSB3AsSDyA/sddefault.jpg", DateTime(0))
-//        val details = mDetails.toMutableList()
-//        details.add(d)
-//        mDetails = details
 
         mAdapter = HistoryRecyclerAdapter(this, mDetails, onItemClick)
 
@@ -46,21 +37,22 @@ class WatchHistoryActivity : AppCompatActivity() {
     // Set up what happens when an playlist item is clicked
     val onItemClick: (Detail) -> Unit = {detail ->
         run {
-            //call finish with the detail passed through (parceled)
-
+            val result = Intent()
+            result.putExtra(WATCH_HISTORY_DETAIL, detail.videoId)
+            setResult(Activity.RESULT_OK, result)
+            finish()
         }
     }
 
     override fun onBackPressed() {
-        setIntents()
+        val result = Intent()
+        setResult(Activity.RESULT_CANCELED, result)
+        finish()
         super.onBackPressed()
     }
 
-    private fun setIntents() {
-        val result = Intent()
-        result.putExtra("videoToPlay", "osanalkd")
-        setResult(Activity.RESULT_OK, result)
-        finish()
+    companion object {
+        val WATCH_HISTORY_DETAIL = "WATCH_HISTORY_DETAIL"
     }
 
 }

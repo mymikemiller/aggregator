@@ -104,10 +104,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         setUpPlaylist()
         setUpSearch()
         setUpPreferences()
-
-        // region [callbacks]
-        // This callback will help the RecyclerView's DetailHolder know when to draw us as selected
-        //endregion
     }
 
     private fun setUpYouTubeFetch() {
@@ -469,13 +465,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+
         // Check which request we're responding to
-        if (requestCode == WATCH_HISTORY_REQUEST) {
-            // Make sure the request was successful
-            if (resultCode == Activity.RESULT_OK) {
-                val result = data.getStringExtra("videoToPlay")
-                //TODO: Play the requested video
-            }
+        if (resultCode == Activity.RESULT_OK && requestCode == WATCH_HISTORY_REQUEST) {
+            val videoId = data.getStringExtra(WatchHistoryActivity.WATCH_HISTORY_DETAIL)
+            val detailToPlay = mDetailsByDateIncludingSkipped.find { it.videoId == videoId }
+            playVideo(detailToPlay)
         }
     }
 

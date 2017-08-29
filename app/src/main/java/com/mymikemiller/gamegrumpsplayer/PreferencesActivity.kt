@@ -1,5 +1,6 @@
 package com.mymikemiller.gamegrumpsplayer
 
+import android.app.Activity
 import android.os.Bundle
 import android.preference.PreferenceFragment
 import android.preference.PreferenceActivity
@@ -49,6 +50,10 @@ class PreferencesActivity : PreferenceActivity() {
 
             val watchHistoryButton = findPreference(getString(R.string.pref_watchHistoryKey))
             watchHistoryButton.setOnPreferenceClickListener({
+
+                // Close the preferences pane so we go directly back to the main activity when we
+                // select a video to play
+                activity.finish()
 
                 val intent = Intent()
                 intent.action = WATCH_HISTORY
