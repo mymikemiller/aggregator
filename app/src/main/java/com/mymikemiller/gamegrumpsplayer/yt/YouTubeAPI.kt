@@ -168,8 +168,9 @@ class YouTubeAPI {
                                 result.snippet.publishedAt)
 
                         if (d == stopAtDetail) {
+                            // Don't break here because our results come in out of order, so we need
+                            // to keep looping to make sure we get all the new stuff
                             done = true
-                            break
                         }
 
                         results.add(d)
