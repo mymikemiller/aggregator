@@ -36,7 +36,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private val CHANNEL_NAME = "gamegrumps"
-    val UNSKIP_GAME_REQUEST = 1  // The request code from the WatchHistoryActivity activity
+    val WAtCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
 
     //region [Variable definitions]
     private lateinit var baseLayout: LinearLayout
@@ -467,15 +467,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
     fun showUnSkipGameActivity() {
-
-        val unskipGameIntent = Intent(this, WatchHistoryActivity::class.java)
-        startActivityForResult(unskipGameIntent, UNSKIP_GAME_REQUEST)
-//        startActivity(unskipGameIntent)
+        val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
+        startActivityForResult(watchHistoryIntent, WAtCH_HISTORY_REQUEST)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         // Check which request we're responding to
-        if (requestCode == UNSKIP_GAME_REQUEST) {
+        if (requestCode == WAtCH_HISTORY_REQUEST) {
             // Make sure the request was successful
             if (resultCode == Activity.RESULT_OK) {
                 val result = data.getStringExtra("videoToPlay")
