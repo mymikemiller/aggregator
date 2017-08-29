@@ -18,8 +18,7 @@ class RecyclerAdapter(private val context: Context,
                       var details: List<Detail>,
                       private val isSelectedCallback: (detail: Detail) -> Boolean,
                       private val onItemClickCallback: (detail: Detail) -> Unit,
-                      private val skipGameCallback: ((game: String) -> Unit)? = null,
-                      private val unskipGameCallback: ((game: String) -> Unit)? = null)
+                      private val skipGameCallback: ((game: String) -> Unit)? = null)
         : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>()
 {
 

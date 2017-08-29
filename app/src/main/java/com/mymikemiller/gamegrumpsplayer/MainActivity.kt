@@ -96,7 +96,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mSearchEditText = findViewById(R.id.searchEditText)
         mExpandButton = findViewById(R.id.expand_button)
         mPreferencesButton = findViewById(R.id.preferences_button)
-        mPlaylist = findViewById(R.id.recyclerView)
+        mPlaylist = findViewById(R.id.playlist)
         mLinearLayoutManager = LinearLayoutManager(this)
         mEpisodePager = findViewById(R.id.episodeViewPager)
         // endregion
@@ -152,7 +152,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGameIncludingSkipped)
 
                         // Now that we've got a list of details, we can prepare the RecyclerView
-                        mAdapter = RecyclerAdapter(this, getDetailsByPref(), isSelected, onItemClick, skipGame, null)
+                        mAdapter = RecyclerAdapter(this, getDetailsByPref(), isSelected, onItemClick, skipGame)
                         mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, getDetailsByPref())
                         mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
 
