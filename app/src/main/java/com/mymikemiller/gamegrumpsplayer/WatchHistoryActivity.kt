@@ -9,6 +9,8 @@ import android.content.Intent
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import com.google.api.client.util.DateTime
+import com.mymikemiller.gamegrumpsplayer.util.VideoList
+import com.mymikemiller.gamegrumpsplayer.util.WatchHistory
 
 
 class WatchHistoryActivity : AppCompatActivity() {
@@ -22,15 +24,15 @@ class WatchHistoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_watch_history)
         setSupportActionBar(toolbar)
-        mDetails = mutableListOf() // get the list of details from the bundle
+        mDetails = WatchHistory.getWatchHistory(this).reversed()
 
-        val d = Detail(
-                "xxx",
-                "Kirby Super Star - Spring Breeze ADVENTURES! - GameGrumps",
-                "", "https://i.ytimg.com/vi/4wSB3AsSDyA/sddefault.jpg", DateTime(0))
-        val details = mDetails.toMutableList()
-        details.add(d)
-        mDetails = details
+//        val d = Detail(
+//                "xxx",
+//                "Kirby Super Star - Spring Breeze ADVENTURES! - GameGrumps",
+//                "", "https://i.ytimg.com/vi/4wSB3AsSDyA/sddefault.jpg", DateTime(0))
+//        val details = mDetails.toMutableList()
+//        details.add(d)
+//        mDetails = details
 
         mAdapter = HistoryRecyclerAdapter(this, mDetails, onItemClick)
 

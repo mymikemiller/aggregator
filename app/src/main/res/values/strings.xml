@@ -23,6 +23,7 @@
     <string name="pref_watchHistoryKey">watchHistoryButton</string>
     <string name="pref_watch_history_title">Watch History</string>
     <string name="pref_watch_history_description">See recently watched videos</string>
+    <string name="watchHistory">watchHistory</string>
     <string name="videosUnskipped">All videos are now available</string>
     <string name="item_removed">Skipping %d episodes of %s</string>
     <string name="undo">Undo</string>

@@ -25,6 +25,7 @@ class HistoryRecyclerAdapter(private val context: Context,
         private val mGame: TextView
         private val mTitle: TextView
         private val mDate: TextView
+        private val mMenu: ImageView
         private lateinit var mDetail: Detail
         private lateinit var mOnItemClickCallback: (detail: Detail) -> Unit
 
@@ -34,6 +35,7 @@ class HistoryRecyclerAdapter(private val context: Context,
             mGame = v.findViewById<TextView>(R.id.game)
             mTitle = v.findViewById<TextView>(R.id.title)
             mDate = v.findViewById<TextView>(R.id.date)
+            mMenu = v.findViewById<ImageView>(R.id.game_menu_button)
 
             v.setOnClickListener(this)
         }
@@ -46,8 +48,7 @@ class HistoryRecyclerAdapter(private val context: Context,
             mOnItemClickCallback = callback
         }
 
-        fun bindDetail(context: Context,
-                       detail: Detail) {
+        fun bindDetail(detail: Detail) {
             mDetail = detail
             Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
 
@@ -56,11 +57,8 @@ class HistoryRecyclerAdapter(private val context: Context,
             mGame.setText(fullTitle)
             mTitle.setText(detail.title)
 
-            val format = SimpleDateFormat("E MMM dd, yyyy", Locale.US)
-            val date = Date(detail.dateUploaded.value)
-            val dateString = format.format(date)
-            mDate.setText(dateString)
-
+            mDate.visibility = View.GONE
+            mMenu.visibility = View.GONE
         }
 
         companion object {
@@ -78,7 +76,7 @@ class HistoryRecyclerAdapter(private val context: Context,
     override fun onBindViewHolder(holder: HistoryRecyclerAdapter.DetailHolder, position: Int) {
         val itemDetail = details[position]
         holder.setOnItemClickCallback(onItemClickCallback)
-        holder.bindDetail(context, itemDetail)
+        holder.bindDetail(itemDetail)
     }
 
     override fun getItemCount(): Int {

@@ -9,7 +9,6 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import android.widget.*
-import com.mymikemiller.gamegrumpsplayer.util.VideoList
 import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 import android.os.Handler
 import android.preference.PreferenceManager
@@ -19,13 +18,11 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
-import com.mymikemiller.gamegrumpsplayer.util.WatchedMillis
-import com.mymikemiller.gamegrumpsplayer.util.PlaylistManipulator
-import com.mymikemiller.gamegrumpsplayer.util.SkippedGames
 import android.support.v4.content.LocalBroadcastManager
 import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewPager
 import android.content.Intent
+import com.mymikemiller.gamegrumpsplayer.util.*
 
 
 /**
@@ -36,7 +33,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     private val CHANNEL_NAME = "gamegrumps"
-    val WAtCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
+    val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
 
     //region [Variable definitions]
     private lateinit var baseLayout: LinearLayout
@@ -468,12 +465,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
     fun showWatchHistoryActivity() {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
-        startActivityForResult(watchHistoryIntent, WAtCH_HISTORY_REQUEST)
+        startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         // Check which request we're responding to
-        if (requestCode == WAtCH_HISTORY_REQUEST) {
+        if (requestCode == WATCH_HISTORY_REQUEST) {
             // Make sure the request was successful
             if (resultCode == Activity.RESULT_OK) {
                 val result = data.getStringExtra("videoToPlay")
@@ -696,6 +693,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             editor.apply()
             if (centerPlaylistItem)
                 scrollToCurrentlyPlayingVideo()
+
+            // Save the detail to Watch History
+            WatchHistory.addDetail(this, detail)
         }
     }
 }
