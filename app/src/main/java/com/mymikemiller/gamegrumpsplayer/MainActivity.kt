@@ -334,7 +334,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             override fun onReceive(contxt: Context?, intent: Intent?) {
                 when (intent?.action) {
                     PreferencesActivity.UNSKIP_ALL -> unSkipAllGames()
-                    PreferencesActivity.WATCH_HISTORY -> showUnSkipGameActivity()
+                    PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity()
                 }
             }
         }
@@ -466,7 +466,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         }
     }
-    fun showUnSkipGameActivity() {
+    fun showWatchHistoryActivity() {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
         startActivityForResult(watchHistoryIntent, WAtCH_HISTORY_REQUEST)
     }
@@ -480,16 +480,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 //TODO: Play the requested video
             }
         }
-    }
-
-    fun unSkipGame(game: String) {
-        SkippedGames.unSkipGame(this, game)
-
-        // Update our cached lists
-        mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
-        mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGameIncludingSkipped)
-
-        refreshPlaylist()
     }
 
     fun unSkipAllGames() {
