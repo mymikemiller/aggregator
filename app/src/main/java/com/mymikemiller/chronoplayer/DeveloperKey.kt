@@ -11,6 +11,6 @@ object DeveloperKey {
      * [Google Developers Console](https://console.developers.google.com/)
      * to register a new developer key.
      */
-    val DEVELOPER_KEY = "AIzaSyAjWXIuUQTVIfw1pkT_kYj_b5nqle598PM"
+    val DEVELOPER_KEY = "REPLACEME"
 
 }
