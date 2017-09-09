@@ -21,14 +21,16 @@ class EpisodePagerAdapter(private val mActivity: MainActivity, var details: List
 
         val detail = details[position]
 
-        val typeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/timeburnerbold.ttf")
+        val standartTypeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/HelveticaNeueBd.ttf")
+        val boldTypeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/HelveticaNeueMed.ttf")
 
         val title:AutofitTextView = layout.findViewById<AutofitTextView>(R.id.episodeTitle)
         title.setText(detail.title)
-        title.setTypeface(typeface)
+        title.setTypeface(boldTypeface)
 
         val description = layout.findViewById<TextView>(R.id.episodeDescription)
         description.setText(detail.description)
+        description.setTypeface(standartTypeface)
 
         val thumbnail = layout.findViewById<ImageView>(R.id.thumbnail)
         Picasso.with(mActivity).load(detail.thumbnail).into(thumbnail)
