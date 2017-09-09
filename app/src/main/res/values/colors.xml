@@ -4,13 +4,13 @@
     <color name="green">#0F0</color>
     <color name="blue">#00F</color>
 
+    <color name="light_background">#F9F9F9</color>
+    <color name="dark_background">#3575D3</color>
+
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
 
     <color name="light_font">#F9F9F9</color>
-    <color name="text_shadow">#708ADF</color>
     <color name="dark_gray">#555</color>
-
-    <color name="orange">#FF9900</color>
 </resources>

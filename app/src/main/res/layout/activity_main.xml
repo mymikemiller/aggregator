@@ -39,12 +39,12 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <!-- This is the orange dot background image in an ImageView to get the scaling right -->
+            <!-- This is the lightly grey lined background image in an ImageView to get the scaling right -->
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/background"
-                android:src="@drawable/background_image"
+                android:src="@drawable/grey_background_pattern"
                 android:scaleType="centerCrop"/>
 
             <!-- Holds all the top pane elements -->
@@ -66,11 +66,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/fetching"
-                        android:textColor="@color/light_font"
-                        android:shadowColor="@color/text_shadow"
-                        android:shadowDx="5"
-                        android:shadowDy="5"
-                        android:shadowRadius="2"
+                        android:textColor="@color/colorPrimary"
                         android:textAlignment="center"/>
 
                     <!-- The progress bar indicating fetching progress -->

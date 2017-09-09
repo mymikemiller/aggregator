@@ -12,6 +12,8 @@ import android.graphics.LightingColorFilter
 import android.graphics.ColorFilter
 import android.R.attr.button
 import android.graphics.Color
+import android.support.v4.content.ContextCompat
+import org.w3c.dom.Text
 
 
 class RecyclerAdapter(private val context: Context,
@@ -23,14 +25,17 @@ class RecyclerAdapter(private val context: Context,
 {
 
     class DetailHolder
-    (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
+    (v: View, context: Context) : RecyclerView.ViewHolder(v), View.OnClickListener {
+        private val mContext = context;
         private val mRootLayout: LinearLayout
         private val mThumbnail: ImageView
         private val mGame: TextView
         private val mTitle: TextView
         private val mDate: TextView
         private var mMenuButton: ImageView
-        //private var mSkipGameMenuItem: MenuItem
+        private var mTitleTextView: TextView
+        private var mGameTextView: TextView
+        private var mDateTextView: TextView
         private lateinit var mDetail: Detail
         private lateinit var mIsSelectedCallback: (detail: Detail) -> Boolean
         private lateinit var mOnItemClickCallback: (detail: Detail) -> Unit
@@ -42,7 +47,9 @@ class RecyclerAdapter(private val context: Context,
             mTitle = v.findViewById<TextView>(R.id.title)
             mDate = v.findViewById<TextView>(R.id.date)
             mMenuButton = v.findViewById(R.id.game_menu_button)
-//            mSkipGameMenuItem = v.findViewById<View>(R.id.skip_game) as MenuItem
+            mTitleTextView = v.findViewById(R.id.title)
+            mGameTextView = v.findViewById(R.id.game)
+            mDateTextView = v.findViewById(R.id.date)
 
             v.setOnClickListener(this)
         }
@@ -55,10 +62,18 @@ class RecyclerAdapter(private val context: Context,
         }
 
         fun highlight() {
-            mRootLayout.setBackgroundResource(R.color.orange)
+            mRootLayout.setBackgroundResource(R.color.dark_background)
+            setTextColor(ContextCompat.getColor(mContext, R.color.light_font))
         }
         fun unhighlight() {
-            mRootLayout.setBackgroundResource(R.color.light_font)
+            mRootLayout.setBackgroundResource(R.color.light_background)
+            setTextColor(ContextCompat.getColor(mContext, R.color.dark_gray))
+        }
+
+        fun setTextColor(c: Int) {
+            mTitleTextView.setTextColor(c)
+            mDateTextView.setTextColor(c)
+            mGameTextView.setTextColor(c)
         }
 
         override fun onClick(v: View) {
@@ -129,7 +144,7 @@ class RecyclerAdapter(private val context: Context,
         val inflatedView = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recyclerview_item_row, parent, false)
 
-        return DetailHolder(inflatedView)
+        return DetailHolder(inflatedView, parent.context)
     }
 
     override fun onBindViewHolder(holder: RecyclerAdapter.DetailHolder, position: Int) {

@@ -21,7 +21,7 @@ class EpisodePagerAdapter(private val mActivity: MainActivity, var details: List
 
         val detail = details[position]
 
-        val typeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/gamegrumps.ttf")
+        val typeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/timeburnerbold.ttf")
 
         val title:AutofitTextView = layout.findViewById<AutofitTextView>(R.id.episodeTitle)
         title.setText(detail.title)
