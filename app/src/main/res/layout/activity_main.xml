@@ -57,7 +57,7 @@
                 <LinearLayout
                     android:id="@+id/fetchVideosProgressSection"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical"
                     android:visibility="visible">
 
@@ -66,6 +66,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/fetching"
+                        android:textSize="@dimen/small_font"
+                        android:padding="@dimen/text_padding"
                         android:textColor="@color/colorPrimary"
                         android:textAlignment="center"/>
 
