@@ -27,16 +27,13 @@ class PreferencesActivity : PreferenceActivity() {
         fragmentManager.beginTransaction().replace(android.R.id.content, MyPreferenceFragment()).commit()
     }
 
-    class MyPreferenceFragment : PreferenceFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
+    class MyPreferenceFragment : PreferenceFragment() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
 
-            val pref = findPreference(getString(R.string.pref_playlistOrderKey))
-            pref.summary = (pref as ListPreference).entry
-
-            val unskipAllGamesButton = findPreference(getString(R.string.pref_unskipAllGamesKey))
-            unskipAllGamesButton.setOnPreferenceClickListener({
+            val unskipAllVideosButton = findPreference(getString(R.string.pref_unskipAllVideosKey))
+            unskipAllVideosButton.setOnPreferenceClickListener({
 
                 val intent = Intent()
                 intent.action = UNSKIP_ALL
@@ -62,23 +59,5 @@ class PreferencesActivity : PreferenceActivity() {
                 true
             })
         }
-
-        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-            /* get preference */
-            val preference = findPreference(key)
-
-            /* update summary */
-            if (activity != null) {
-                if (key == getString(R.string.pref_playlistOrderKey)) {
-                    preference.summary = (preference as ListPreference).entry
-                }
-            }
-        }
-
-        override fun onResume() {
-            super.onResume()
-            preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-        }
     }
-
 }

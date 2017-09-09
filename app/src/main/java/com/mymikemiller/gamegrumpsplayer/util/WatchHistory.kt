@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import com.google.api.client.util.DateTime
 import com.mymikemiller.gamegrumpsplayer.Detail
-import com.mymikemiller.gamegrumpsplayer.yt.YouTubeAPI
 import java.sql.SQLException
 
 /**
@@ -81,8 +80,8 @@ class WatchHistory {
                 try {
                     val values = ContentValues()
                     values.put(KEY_VIDEOID, detail.videoId)
-                    values.put(KEY_TITLE, detail.fullVideoTitle)
-                    values.put(KEY_DESCRIPTION, detail.fullVideoDescription)
+                    values.put(KEY_TITLE, detail.title)
+                    values.put(KEY_DESCRIPTION, detail.description)
                     values.put(KEY_THUMBNAIL, detail.thumbnail)
                     values.put(KEY_DATE_UPLOADED, detail.dateUploaded.toStringRfc3339())
 

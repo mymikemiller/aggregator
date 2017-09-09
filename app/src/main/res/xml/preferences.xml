@@ -3,19 +3,10 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent">
 
-    <ListPreference
-        android:title="Playlist Order"
-        android:summary="Order playlist "
-        android:key="@string/pref_playlistOrderKey"
-        android:dialogTitle="@string/pref_playlistOrder"
-        android:defaultValue="@string/pref_playlistOrder_byDateUploaded"
-        android:entries="@array/pref_playlistOrder_entries"
-        android:entryValues="@array/pref_playlistOrder_values" />
-
     <Preference
-        android:title="@string/pref_unskip_all_games_title"
-        android:summary="@string/pref_unskip_all_games_description"
-        android:key="@string/pref_unskipAllGamesKey"/>
+        android:title="@string/pref_unskip_all_videos_title"
+        android:summary="@string/pref_unskip_all_videos_description"
+        android:key="@string/pref_unskipAllVideosKey"/>
 
     <Preference
         android:title="@string/pref_watch_history_title"

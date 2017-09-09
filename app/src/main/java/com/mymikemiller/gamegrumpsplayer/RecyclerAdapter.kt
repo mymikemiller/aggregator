@@ -9,32 +9,29 @@ import com.squareup.picasso.Picasso
 import java.text.SimpleDateFormat
 import java.util.*
 import android.graphics.LightingColorFilter
-import android.graphics.ColorFilter
-import android.R.attr.button
 import android.graphics.Color
 import android.support.v4.content.ContextCompat
-import org.w3c.dom.Text
 
 
 class RecyclerAdapter(private val context: Context,
                       var details: List<Detail>,
                       private val isSelectedCallback: (detail: Detail) -> Boolean,
                       private val onItemClickCallback: (detail: Detail) -> Unit,
-                      private val skipGameCallback: ((game: String) -> Unit)? = null)
+                      private val skipVideoCallback: ((detail: Detail) -> Unit)? = null)
         : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>()
 {
 
     class DetailHolder
     (v: View, context: Context) : RecyclerView.ViewHolder(v), View.OnClickListener {
-        private val mContext = context;
+        private val mContext = context
         private val mRootLayout: LinearLayout
         private val mThumbnail: ImageView
-        private val mGame: TextView
+        private val mDescription: TextView
         private val mTitle: TextView
         private val mDate: TextView
         private var mMenuButton: ImageView
         private var mTitleTextView: TextView
-        private var mGameTextView: TextView
+        private var mDescriptionTextView: TextView
         private var mDateTextView: TextView
         private lateinit var mDetail: Detail
         private lateinit var mIsSelectedCallback: (detail: Detail) -> Boolean
@@ -43,12 +40,12 @@ class RecyclerAdapter(private val context: Context,
         init {
             mRootLayout = v.findViewById(R.id.rootLayout)
             mThumbnail = v.findViewById<ImageView>(R.id.thumbnail)
-            mGame = v.findViewById<TextView>(R.id.game)
+            mDescription = v.findViewById<TextView>(R.id.description)
             mTitle = v.findViewById<TextView>(R.id.title)
             mDate = v.findViewById<TextView>(R.id.date)
             mMenuButton = v.findViewById(R.id.game_menu_button)
             mTitleTextView = v.findViewById(R.id.title)
-            mGameTextView = v.findViewById(R.id.game)
+            mDescriptionTextView = v.findViewById(R.id.description)
             mDateTextView = v.findViewById(R.id.date)
 
             v.setOnClickListener(this)
@@ -73,7 +70,7 @@ class RecyclerAdapter(private val context: Context,
         fun setTextColor(c: Int) {
             mTitleTextView.setTextColor(c)
             mDateTextView.setTextColor(c)
-            mGameTextView.setTextColor(c)
+            mDescriptionTextView.setTextColor(c)
         }
 
         override fun onClick(v: View) {
@@ -82,14 +79,12 @@ class RecyclerAdapter(private val context: Context,
 
         fun bindDetail(context: Context,
                        detail: Detail,
-                       skipGameCallback: ((game: String) -> Unit)?) {
+                       skipVideoCallback: ((detail: Detail) -> Unit)?) {
             mDetail = detail
             Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
 
-            val part = if (detail.part.length > 0) " (" + detail.part + ")" else ""
-            val fullTitle = detail.game + " " + part
-            mGame.setText(fullTitle)
             mTitle.setText(detail.title)
+            mDescription.setText(detail.description)
 
             val format = SimpleDateFormat("E MMM dd, yyyy", Locale.US)
             val date = Date(detail.dateUploaded.value)
@@ -106,18 +101,18 @@ class RecyclerAdapter(private val context: Context,
                     //Inflating the Popup using xml file
                     popup.menuInflater.inflate(R.menu.recyclerview_item_popup, popup.menu)
 
-                    if (skipGameCallback == null) {
-                        popup.getMenu().findItem(R.id.skip_game).isVisible = false
+                    if (skipVideoCallback == null) {
+                        popup.getMenu().findItem(R.id.skip_video).isVisible = false
                     }
 
                     //registering popup with OnMenuItemClickListener
                     popup.setOnMenuItemClickListener(object : PopupMenu.OnMenuItemClickListener {
                         override fun onMenuItemClick(item: MenuItem): Boolean {
 
-                            if (item.itemId == R.id.skip_game) {
+                            if (item.itemId == R.id.skip_video) {
                                 // Skip the clicked game
-                                if (skipGameCallback != null) {
-                                    skipGameCallback(detail.game)
+                                if (skipVideoCallback != null) {
+                                    skipVideoCallback(detail)
                                 }
                             }
                             return true
@@ -151,7 +146,7 @@ class RecyclerAdapter(private val context: Context,
         val itemDetail = details[position]
         holder.setIsSelectedCallback(isSelectedCallback)
         holder.setOnItemClickCallback(onItemClickCallback)
-        holder.bindDetail(context, itemDetail, skipGameCallback)
+        holder.bindDetail(context, itemDetail, skipVideoCallback)
     }
 
     override fun getItemCount(): Int {

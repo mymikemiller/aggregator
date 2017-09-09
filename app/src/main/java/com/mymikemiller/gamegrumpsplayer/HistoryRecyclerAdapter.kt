@@ -22,7 +22,7 @@ class HistoryRecyclerAdapter(private val context: Context,
     (v: View) : RecyclerView.ViewHolder(v), View.OnClickListener {
         private val mRootLayout: LinearLayout
         private val mThumbnail: ImageView
-        private val mGame: TextView
+        private val mDescription: TextView
         private val mTitle: TextView
         private val mDate: TextView
         private val mMenu: ImageView
@@ -32,7 +32,7 @@ class HistoryRecyclerAdapter(private val context: Context,
         init {
             mRootLayout = v.findViewById(R.id.rootLayout)
             mThumbnail = v.findViewById<ImageView>(R.id.thumbnail)
-            mGame = v.findViewById<TextView>(R.id.game)
+            mDescription = v.findViewById<TextView>(R.id.description)
             mTitle = v.findViewById<TextView>(R.id.title)
             mDate = v.findViewById<TextView>(R.id.date)
             mMenu = v.findViewById<ImageView>(R.id.game_menu_button)
@@ -52,9 +52,7 @@ class HistoryRecyclerAdapter(private val context: Context,
             mDetail = detail
             Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
 
-            val part = if (detail.part.length > 0) " (" + detail.part + ")" else ""
-            val fullTitle = detail.game + " " + part
-            mGame.setText(fullTitle)
+            mDescription.setText(detail.description)
             mTitle.setText(detail.title)
 
             mDate.visibility = View.GONE

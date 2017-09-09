@@ -3,7 +3,7 @@
     android:id="@+id/menu">
 
     <item
-        android:id="@+id/skip_game"
-        android:title="@string/skipGame"/>
+        android:id="@+id/skip_video"
+        android:title="@string/skipVideo"/>
 
 </menu>

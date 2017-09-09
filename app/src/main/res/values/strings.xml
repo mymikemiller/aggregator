@@ -12,21 +12,17 @@
     <string name="down_button">Move to bottom</string>
     <string name="preferences_button">Preferences</string>
     <string name="target_button">Show Currently Playing</string>
-    <string name="skipGame">Skip Game</string>
-    <string name="pref_playlistOrder">Playlist Order</string>
-    <string name="pref_playlistOrderKey">playlistOrder</string>
-    <string name="pref_playlistOrder_byDateUploaded">byDateUploaded</string>
-    <string name="pref_playlistOrder_byGame">byGame</string>
-    <string name="pref_unskipAllGamesKey">unskipAllGamesButton</string>
-    <string name="pref_unskip_all_games_title">Unskip All</string>
-    <string name="pref_unskip_all_games_description">Unskip all games</string>
+    <string name="skipVideo">Skip Video</string>
+    <string name="pref_unskipAllVideosKey">unskipAllVideosButton</string>
+    <string name="pref_unskip_all_videos_title">Unskip All</string>
+    <string name="pref_unskip_all_videos_description">Unskip all videos</string>
     <string name="pref_watchHistoryKey">watchHistoryButton</string>
     <string name="pref_watch_history_title">Watch History</string>
     <string name="pref_watch_history_description">See recently watched videos</string>
     <string name="watchHistory">watchHistory</string>
     <string name="videosUnskipped">All videos are now available</string>
-    <string name="item_removed">Skipping %d episodes of %s</string>
     <string name="undo">Undo</string>
     <string name="title_activity_watch_history">Watch History</string>
+    <string name="ellipsis">ellipsis</string>
 
 </resources>

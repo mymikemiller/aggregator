@@ -19,7 +19,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
 import android.support.v4.content.LocalBroadcastManager
-import android.support.design.widget.Snackbar
 import android.support.v4.view.ViewPager
 import android.content.Intent
 import com.mymikemiller.gamegrumpsplayer.util.*
@@ -29,8 +28,7 @@ import com.mymikemiller.gamegrumpsplayer.util.*
  * A video player allowing users to watch Game Grumps episodes in chronological order while providing the ability to skip entire series.
  */
 class MainActivity : YouTubeFailureRecoveryActivity(),
-        YouTubePlayer.OnFullscreenListener,
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        YouTubePlayer.OnFullscreenListener {
 
     private val CHANNEL_NAME = "gamegrumps"
     val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
@@ -66,11 +64,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     // These collections include the skipped games
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
-    var mDetailsByGameIncludingSkipped = listOf<Detail>()
 
     // These collections have the skipped games filtered out
     var mDetailsByDate = listOf<Detail>()
-    var mDetailsByGame = listOf<Detail>()
+
     // endregion
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -139,19 +136,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
 
                         mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
-                        mDetailsByGameIncludingSkipped = PlaylistManipulator.orderByGame(orderedByDateIncludingSkipped)
 
-                        mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
-                        mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGameIncludingSkipped)
+                        mDetailsByDate = SkippedVideos.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
 
                         // Now that we've got a list of details, we can prepare the RecyclerView
-                        mAdapter = RecyclerAdapter(this, getDetailsByPref(), isSelected, onItemClick, skipGame)
-                        mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, getDetailsByPref())
+                        mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, skipVideo)
+                        mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate)
                         mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
 
                         mAdapterInitialized = true
                         mPlaylist.setAdapter(mAdapter)
-                        mAdapter.notifyItemRangeChanged(0, getDetailsByPref().size-1)
+                        mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
                         fetchVideosProgressSection.visibility = View.GONE
 
                         // Get the default first video (the channel's first video)
@@ -187,29 +182,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    val skipGame: (game: String) -> Unit = {game ->
+    val skipVideo: (detail: Detail) -> Unit = {detail ->
         run {
-            // Record the number of skipped games so we can inform the user in the snackbar
-            val numSkipped = countPlaylistEpisodes(game)
-
-            addSkippedGame(game)
-
-            notifyPlaylistItemsRemoved(game)
-
-            val snackbar = Snackbar
-                    .make(mPlaylist, java.lang.String.format(getString(R.string.item_removed), numSkipped, game), Snackbar.LENGTH_LONG)
-                    .setAction(R.string.undo, {
-                        addSkippedGame(game)
-                    })
-
-            snackbar.show()
+            addSkippedVideo(detail)
+            notifyPlaylistItemsRemoved(detail)
         }
     }
 
-    private fun notifyPlaylistItemsRemoved(game: String) {
+    private fun notifyPlaylistItemsRemoved(detail: Detail) {
         for (i in mAdapter.details.indices) {
-            val detail = mAdapter.details[i]
-            if (detail.game == game) {
+            val iDetail = mAdapter.details[i]
+            if (detail == iDetail) {
                 // Make the RecyclerView items scroll up to fill in the space
                 mPlaylist.adapter.notifyItemRemoved(i)
             }
@@ -309,13 +292,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         })
     }
     private fun setUpPreferences() {
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this)
-
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
-
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this)
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         mPreferencesButton.setOnClickListener {
@@ -397,33 +374,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
     //endregion
 
-    //region [get details]
-    private fun getDetailsByPref(): List<Detail> {
-        val pref = PlaylistManipulator.getPreferredPlaylistOrder(this)
-        if (pref == getString(R.string.pref_playlistOrder_byDateUploaded)) {
-            return mDetailsByDate
-        } else {
-            return mDetailsByGame
-        }
-    }
-    private fun getDetailsByPrefIncludingSkipped(): List<Detail> {
-        val pref = PlaylistManipulator.getPreferredPlaylistOrder(this)
-        if (pref == getString(R.string.pref_playlistOrder_byDateUploaded)) {
-            return mDetailsByDateIncludingSkipped
-        } else {
-            return mDetailsByGameIncludingSkipped
-        }
-    }
-    //endregion]
-
     //region [playlist functions]
-    // Returns the number of episodes of the specified game that are in the playlist
-    fun countPlaylistEpisodes(game: String): Int {
-        return mAdapter.details.count { it.game == game }
-    }
-
     private fun refreshPlaylist() {
-        mAdapter.details = getDetailsByPref()
+        mAdapter.details = mDetailsByDate
         mAdapter.notifyDataSetChanged()
         scrollToCurrentlyPlayingVideo()
     }
@@ -436,26 +389,25 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     //endregion
 
     //region [handle skipped games]
-    fun addSkippedGame(game: String) {
+    fun addSkippedVideo(detail: Detail) {
 
-        SkippedGames.addSkippedGame(this, game)
+        SkippedVideos.addSkippedVideo(this, detail)
 
         // Get what would be our next video if that game were already skipped. getNextVideo does
         // that for us, even if we've skipped the currently playing video.
         val nextVideo = getNextVideo()
 
         // Update our cached lists
-        mDetailsByDate = SkippedGames.filterOutSkipped(this, mDetailsByDate)
-        mDetailsByGame = SkippedGames.filterOutSkipped(this, mDetailsByGame)
+        mDetailsByDate = SkippedVideos.filterOutSkipped(this, mDetailsByDate)
 
         // Update the adapter
-        mAdapter.details = getDetailsByPref()
+        mAdapter.details = mDetailsByDate
         mAdapter.notifyDataSetChanged()
         mEpisodeViewPagerAdapter.details = mAdapter.details
         mEpisodeViewPagerAdapter.notifyDataSetChanged()
 
 
-        if (!getDetailsByPref().contains(mCurrentlyPlayingVideoDetail)) {
+        if (!mDetailsByDate.contains(mCurrentlyPlayingVideoDetail)) {
             // The user skipped the currently playing video. Play the next video in the adapter if there is one.
             if (nextVideo != null) {
                 playVideo(nextVideo)
@@ -487,11 +439,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun unSkipAllGames() {
-        SkippedGames.unSkipAllGames(this)
+        SkippedVideos.unSkipAllVideos(this)
 
-        // Update our cached lists
+        // Update our cached list
         mDetailsByDate = mDetailsByDateIncludingSkipped
-        mDetailsByGame = mDetailsByGameIncludingSkipped
 
         if (mAdapterInitialized)
             refreshPlaylist()
@@ -499,14 +450,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     //endregion
 
     //region [preferences]
-    override fun onSharedPreferenceChanged(sp: SharedPreferences?, key: String?) {
-        if (key == getString(R.string.pref_playlistOrderKey)) {
-            if (sp != null) {
-                refreshPlaylist()
-            }
-        }
-    }
-
     val deleteCurrentVideoFromSharedPreferences: () -> Unit = {
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
         val editor = sharedPref.edit()
@@ -515,6 +458,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
     //endregion
 
+    // Filter the list of details by the search term in the title
     private fun filter(query: String) {
         var lowerCaseQuery = query.toLowerCase()
 
@@ -523,8 +467,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             lowerCaseQuery = lowerCaseQuery.substring(0, lowerCaseQuery.length - 1)
         }
 
-        val filteredNames = getDetailsByPref().filter {
-            it.game.toLowerCase().contains(lowerCaseQuery) ||
+        val filteredNames = mDetailsByDate.filter {
             it.title.toLowerCase().contains(lowerCaseQuery) }
 
         mAdapter.details = filteredNames.toList()
@@ -604,11 +547,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun getNextVideo() : Detail? {
-        // We need to know the list of skipped games so we make sure we don't play one that is
+        // We need to know the list of skipped videos so we make sure we don't play one that is
         // meant to be skipped. But when finding our current place in the playlist, we need to work
-        // with all games including the skipped ones in case the user just specified to skip a game
+        // with all videos including the skipped ones in case the user just specified to skip a video
         // they're currently playing
-        val skippedGames = SkippedGames.getAllSkippedGames(this)
+        val skippedVideos = SkippedVideos.getAllSkippedVideos(this)
 
         // This will be true once we found the current video. Once we have that, we keep looping
         // through all the videos until we find one that isn't specified as skipped
@@ -621,11 +564,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
             // As explained above, we need to search through all the videos, including skipped ones,
             // in order to find the currently playing video.
-            for (detail in getDetailsByPrefIncludingSkipped()) {
+            for (detail in mDetailsByDateIncludingSkipped) {
                 if (foundCurrentlyPlayingVideo) {
                     // Once we've found the current video, continue looping through
                     // all videos until we find one that wasn't skipped
-                    if (!skippedGames.contains(detail.game)) {
+                    if (!skippedVideos.contains(detail.videoId)) {
                         return detail
                     }
                 }
