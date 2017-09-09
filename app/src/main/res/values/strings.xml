@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Game Grumps Player</string>
+    <string name="app_name">ChronoPlayer</string>
     <string name="error_player">There was an error initializing the YouTubePlayer (%1$s)</string>
     <string name="thumbnail">Thumbnail</string>
     <string name="background">Background</string>

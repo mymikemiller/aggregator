@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mymikemiller.gamegrumpsplayer">
+    package="com.mymikemiller.chronoplayer">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -22,11 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".PreferencesActivity"></activity>
+        <activity android:name=".PreferencesActivity"/>
         <activity
             android:name=".WatchHistoryActivity"
             android:label="@string/title_activity_watch_history"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>
