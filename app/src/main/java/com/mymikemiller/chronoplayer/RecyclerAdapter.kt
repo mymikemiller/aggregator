@@ -110,7 +110,7 @@ class RecyclerAdapter(private val context: Context,
                         override fun onMenuItemClick(item: MenuItem): Boolean {
 
                             if (item.itemId == R.id.skip_video) {
-                                // Skip the clicked game
+                                // Skip the clicked video
                                 if (skipVideoCallback != null) {
                                     skipVideoCallback(detail)
                                 }

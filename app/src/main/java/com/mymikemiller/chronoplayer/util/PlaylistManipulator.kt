@@ -7,7 +7,7 @@ import com.mymikemiller.chronoplayer.Detail
 import com.mymikemiller.chronoplayer.R
 
 /**
- * This file manipulates playlist to be set in the RecylerAdapter, such as when ordering by game
+ * This file manipulates playlist to be set in the RecylerAdapter
  *
  */
 

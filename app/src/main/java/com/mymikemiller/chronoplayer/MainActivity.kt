@@ -62,10 +62,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
 
-    // These collections include the skipped games
+    // These collections include the skipped cideos
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
 
-    // These collections have the skipped games filtered out
+    // These collections have the skipped videos filtered out
     var mDetailsByDate = listOf<Detail>()
 
     // endregion
@@ -132,7 +132,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 run {
                     //TODO: we probably shouldn't be doing all this on the UI thread
                     runOnUiThread {
-                        // We first order by date to make sure the detilsByGame are in the right order
                         val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
 
                         mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
@@ -301,7 +300,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(contxt: Context?, intent: Intent?) {
                 when (intent?.action) {
-                    PreferencesActivity.UNSKIP_ALL -> unSkipAllGames()
+                    PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos()
                     PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity()
                 }
             }
@@ -388,12 +387,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
     //endregion
 
-    //region [handle skipped games]
+    //region [handle skipped videos]
     fun addSkippedVideo(detail: Detail) {
 
         SkippedVideos.addSkippedVideo(this, detail)
 
-        // Get what would be our next video if that game were already skipped. getNextVideo does
+        // Get what would be our next video if that video were already skipped. getNextVideo does
         // that for us, even if we've skipped the currently playing video.
         val nextVideo = getNextVideo()
 
@@ -438,7 +437,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun unSkipAllGames() {
+    fun unSkipAllVideos() {
         SkippedVideos.unSkipAllVideos(this)
 
         // Update our cached list
