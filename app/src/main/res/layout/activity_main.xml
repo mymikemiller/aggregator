@@ -40,7 +40,6 @@
             android:orientation="vertical"
             android:background="@drawable/grey_background_pattern">
 
-
             <!-- Holds all the top pane elements -->
             <LinearLayout
                 android:layout_width="match_parent"

@@ -49,7 +49,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     val recordCurrentTimeHandler: Handler = Handler()
     private lateinit var mPlaylist: RecyclerView
     private lateinit var mLinearLayoutManager: LinearLayoutManager
-    private lateinit var mAdapter: RecyclerAdapter
+    private var mAdapter: RecyclerAdapter = RecyclerAdapter(this, listOf(), {true}, {true}, null)
     private lateinit var mUpButton: ImageView
     private lateinit var mDownButton: ImageView
     private lateinit var mTargetButton: ImageView
@@ -591,8 +591,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             // Scroll with an offset so that the selected video is one item down in the list
             mLinearLayoutManager.scrollToPositionWithOffset(index - 1, 0)
         }
-
-
     }
 
     fun scrollToTop() {
@@ -602,7 +600,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
     fun scrollToBottom() {
-        val index = mPlaylist.adapter.itemCount - 1
+        val index = if (mPlaylist.adapter == null) -1 else mPlaylist.adapter.itemCount - 1
         if (index > -1) {
             runOnUiThread {
                 mLinearLayoutManager.scrollToPosition(index)
