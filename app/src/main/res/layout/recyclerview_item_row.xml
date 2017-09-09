@@ -48,9 +48,9 @@
 
     </LinearLayout>
 
-    <!-- The ... button for the "skip game" menu -->
+    <!-- The ... button for the "skip video" menu -->
     <ImageView
-        android:id="@+id/game_menu_button"
+        android:id="@+id/video_menu_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_more_vert_black_24dp"

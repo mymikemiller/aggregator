@@ -43,7 +43,7 @@ class RecyclerAdapter(private val context: Context,
             mDescription = v.findViewById<TextView>(R.id.description)
             mTitle = v.findViewById<TextView>(R.id.title)
             mDate = v.findViewById<TextView>(R.id.date)
-            mMenuButton = v.findViewById(R.id.game_menu_button)
+            mMenuButton = v.findViewById(R.id.video_menu_button)
             mTitleTextView = v.findViewById(R.id.title)
             mDescriptionTextView = v.findViewById(R.id.description)
             mDateTextView = v.findViewById(R.id.date)

@@ -35,7 +35,7 @@ class HistoryRecyclerAdapter(private val context: Context,
             mDescription = v.findViewById<TextView>(R.id.description)
             mTitle = v.findViewById<TextView>(R.id.title)
             mDate = v.findViewById<TextView>(R.id.date)
-            mMenu = v.findViewById<ImageView>(R.id.game_menu_button)
+            mMenu = v.findViewById<ImageView>(R.id.video_menu_button)
 
             v.setOnClickListener(this)
         }
