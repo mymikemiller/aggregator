@@ -3,7 +3,7 @@
     <string name="error_player">There was an error initializing the YouTubePlayer (%1$s)</string>
     <string name="thumbnail">Thumbnail</string>
     <string name="background">Background</string>
-    <string name="fetching">Fetching list of videos from YouTube:</string>
+    <string name="fetching">Gathering videos from YouTube</string>
     <string name="finalPageToken">FINAL_PAGE_TOKEN</string>
     <string name="currentVideoId">CURRENT_VIDEO_ID</string>
     <string name="currentVideoTimeMillis">CURRENT_VIDEO_TIME_MILLIS</string>
