@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">ChronoPlayer</string>
+    <string name="app_label">ChronoPlayer</string>
     <string name="error_player">There was an error initializing the YouTubePlayer (%1$s)</string>
     <string name="thumbnail">Thumbnail</string>
     <string name="background">Background</string>
@@ -24,5 +25,6 @@
     <string name="undo">Undo</string>
     <string name="title_activity_watch_history">Watch History</string>
     <string name="ellipsis">ellipsis</string>
+    <string name="search_hint">Search YouTube Channels</string>
 
 </resources>

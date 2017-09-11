@@ -7,6 +7,7 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.client.util.DateTime
+import com.mymikemiller.chronoplayer.Channel
 import com.mymikemiller.chronoplayer.Detail
 import com.mymikemiller.chronoplayer.DeveloperKey
 import java.util.*
@@ -24,7 +25,7 @@ class YouTubeAPI {
          * YouTube Data API requests.
          */
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
-                HttpRequestInitializer { }).setApplicationName("game-grumps-player").build()
+                HttpRequestInitializer { }).setApplicationName("chrono-player").build()
 
         // Hardcode Game Grumps values so we don't have to fetch them
         private var mChannelId = "UU9CuvdOVfMPvKCiwdGKL3cQ"
@@ -192,6 +193,47 @@ class YouTubeAPI {
 
                     callback(channelId, results, searchResponse.nextPageToken, stopAtDetail, setPercentageCallback, callbackWhenDone)
                 }
+            }
+        }
+
+        fun fetchChannels(query: String, callback: (channels: List<Channel>) -> Unit) {
+            FetchChannelsTask(query, callback).execute()
+        }
+
+        private class FetchChannelsTask(val query: String, val callback: (channels: List<Channel>) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+            override fun doInBackground(vararg params: Unit?) {
+                val parameters = hashMapOf<String, String>()
+                parameters.put("part", "snippet");
+                parameters.put("maxResults", "25");
+                parameters.put("q", query);
+                parameters.put("type", "channel");
+
+                val searchListByKeywordRequest = youtube.search().list(parameters.get("part").toString());
+                searchListByKeywordRequest.key = DeveloperKey.DEVELOPER_KEY
+
+                if (parameters.containsKey("maxResults")) {
+                    searchListByKeywordRequest.setMaxResults((parameters.get("maxResults").toString()).toLong());
+                }
+                if (parameters.containsKey("q") && parameters.get("q") != "") {
+                    searchListByKeywordRequest.setQ(parameters.get("q").toString());
+                }
+
+                if (parameters.containsKey("type") && parameters.get("type") != "") {
+                    searchListByKeywordRequest.setType(parameters.get("type").toString());
+                }
+                val response = searchListByKeywordRequest.execute();
+                System.out.println(response);
+
+                val channels = mutableListOf<Channel>()
+                for (item in response.items) {
+                    println(item)
+                    val channel = Channel(item.snippet.channelTitle,
+                            item.snippet.channelId,
+                            item.snippet.thumbnails.default.url)
+                    channels.add(channel)
+                }
+
+                callback(channels)
             }
         }
     }
