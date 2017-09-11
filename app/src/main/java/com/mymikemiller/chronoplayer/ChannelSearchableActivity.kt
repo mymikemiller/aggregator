@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.app.SearchManager
+import android.widget.ArrayAdapter
+import android.widget.SimpleAdapter
 import com.google.android.youtube.player.YouTubeApiServiceUtil
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
@@ -24,7 +26,12 @@ class ChannelSearchableActivity : ListActivity() {
         if (Intent.ACTION_SEARCH == intent.action) {
             val query = intent.getStringExtra(SearchManager.QUERY)
             YouTubeAPI.fetchChannels(query, {channels -> run {
-                println(channels)
+
+                val listAdapter = ChannelAdapter(this, channels)
+
+                runOnUiThread({
+                    setListAdapter(listAdapter)
+                })
             }})
         }
     }
