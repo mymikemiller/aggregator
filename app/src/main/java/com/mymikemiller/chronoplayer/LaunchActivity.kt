@@ -16,13 +16,6 @@ class LaunchActivity : Activity() {
 
         findViewById<Button>(R.id.search_button).setOnClickListener({
             onSearchRequested()
-
-            // Launch the main activity. Except don't do this here. Do it when a channel is chosen.
-//            val searchIntent = Intent(this, MainActivity::class.java);
-//            startActivity(searchIntent)
-
-            // prevent the user from getting back to this activity
-            //finish()
         })
     }
 }

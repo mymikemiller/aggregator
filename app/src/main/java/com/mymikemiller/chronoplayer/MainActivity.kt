@@ -30,10 +30,10 @@ import com.mymikemiller.chronoplayer.util.*
 class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubePlayer.OnFullscreenListener {
 
-    private val CHANNEL_NAME = "gamegrumps"
     val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
 
     //region [Variable definitions]
+    private lateinit var mChannel: Channel
     private lateinit var baseLayout: LinearLayout
     private lateinit var bar: LinearLayout
     private lateinit var slidingLayout: SlidingUpPanelLayout
@@ -74,7 +74,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //region [Variable initialization}
+        //region [Variable initialization]
+        mChannel = intent.getSerializableExtra("channel") as Channel
         baseLayout = findViewById<LinearLayout>(R.id.layout)
         bar = findViewById<LinearLayout>(R.id.bar)
         slidingLayout = findViewById(R.id.sliding_layout)
@@ -104,75 +105,73 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun setUpYouTubeFetch() {
-        YouTubeAPI.fetchChannelIdFromChannelName(CHANNEL_NAME, {channelId -> run {
-            // Get the details ordered by date uploaded and force an upgrade if necessary,
-            // which will call the deleteCurrentVideoFromSharedPreferences call if necessary.
-            val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDatabase(this,
-                    deleteCurrentVideoFromSharedPreferences))
+        // Get the details ordered by date uploaded and force an upgrade if necessary,
+        // which will call the deleteCurrentVideoFromSharedPreferences call if necessary.
+        val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDatabase(this,
+                deleteCurrentVideoFromSharedPreferences))
 
-            // This won't work until we've initialized these lists
-            val stopAtDetail = if (detailsFromDbByDate.size > 0) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
+        // This won't work until we've initialized these lists
+        val stopAtDetail = if (detailsFromDbByDate.size > 0) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
 
-            // Set up what happens when an playlist item is clicked
-            val onItemClick: (Detail) -> Unit = {detail ->
-                run {
-                    if (detail != mCurrentlyPlayingVideoDetail) {
-                        playVideo(detail, false)
+        // Set up what happens when an playlist item is clicked
+        val onItemClick: (Detail) -> Unit = {detail ->
+            run {
+                if (detail != mCurrentlyPlayingVideoDetail) {
+                    playVideo(detail, false)
+                }
+                // Hide the keyboard and collapse the slidingPanel if we click an item
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(mSearchEditText.getWindowToken(), 0)
+                slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+            }
+        }
+
+        // This happens once the details are fetched from YouTube. detailsList contains all the
+        // details, including those from the database, skipped or not.
+        val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
+            run {
+                //TODO: we probably shouldn't be doing all this on the UI thread
+                runOnUiThread {
+                    val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
+
+                    mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
+
+                    mDetailsByDate = SkippedVideos.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
+
+                    // Now that we've got a list of details, we can prepare the RecyclerView
+                    mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, skipVideo)
+                    mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate)
+                    mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
+
+                    mAdapterInitialized = true
+                    mPlaylist.setAdapter(mAdapter)
+                    mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
+                    fetchVideosProgressSection.visibility = View.GONE
+
+                    // Get the default first video (the channel's first video)
+                    val firstDetail = mDetailsByDate[0]
+
+                    // Get the last video we were playing (which will be the next video in the playlist
+                    // if it was queued at the end of the last watch session if it had time to try to load)
+                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                    val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
+
+                    var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
+                    if (detailToPlay == null) {
+                        // If we couldn't find a video to play, play the chronologicallly first video of the channel
+                        detailToPlay = firstDetail
                     }
-                    // Hide the keyboard and collapse the slidingPanel if we click an item
-                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                    imm.hideSoftInputFromWindow(mSearchEditText.getWindowToken(), 0)
-                    slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+
+                    playVideo(detailToPlay, true)
+
+                    scrollToCurrentlyPlayingVideo()
                 }
             }
+        }
 
-            // This happens once the details are fetched from YouTube. detailsList contains all the
-            // details, including those from the database, skipped or not.
-            val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
-                run {
-                    //TODO: we probably shouldn't be doing all this on the UI thread
-                    runOnUiThread {
-                        val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
-
-                        mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
-
-                        mDetailsByDate = SkippedVideos.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
-
-                        // Now that we've got a list of details, we can prepare the RecyclerView
-                        mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, skipVideo)
-                        mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate)
-                        mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
-
-                        mAdapterInitialized = true
-                        mPlaylist.setAdapter(mAdapter)
-                        mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
-                        fetchVideosProgressSection.visibility = View.GONE
-
-                        // Get the default first video (the channel's first video)
-                        val firstDetail = mDetailsByDate[0]
-
-                        // Get the last video we were playing (which will be the next video in the playlist
-                        // if it was queued at the end of the last watch session if it had time to try to load)
-                        val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                        val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
-
-                        var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
-                        if (detailToPlay == null) {
-                            // If we couldn't find a video to play, play the chronologicallly first video of the channel
-                            detailToPlay = firstDetail
-                        }
-
-                        playVideo(detailToPlay, true)
-
-                        scrollToCurrentlyPlayingVideo()
-                    }
-                }
-            }
-
-            VideoList.fetchAllDetailsByChannelId(this,
-                    deleteCurrentVideoFromSharedPreferences, channelId,
-                    stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
-        }})
+        VideoList.fetchAllDetailsByChannelId(this,
+                deleteCurrentVideoFromSharedPreferences, mChannel.uploadPlaylistId,
+                stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
     }
 
     val isSelected: (Detail) -> Boolean = {detail ->

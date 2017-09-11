@@ -6,7 +6,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.app.SearchManager
+import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.SimpleAdapter
 import com.google.android.youtube.player.YouTubeApiServiceUtil
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
@@ -32,6 +34,17 @@ class ChannelSearchableActivity : ListActivity() {
                 })
             }})
         }
+    }
+
+    override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long) {
+        super.onListItemClick(l, v, position, id)
+        val c = listAdapter.getItem(position) as Channel
+
+        // Launch the main activity
+        val mainIntent = Intent(this, MainActivity::class.java);
+        mainIntent.putExtra("channel", c)
+        startActivity(mainIntent)
+
     }
 
 

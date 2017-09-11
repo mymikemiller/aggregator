@@ -6,11 +6,9 @@ import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.client.util.DateTime
 import com.mymikemiller.chronoplayer.Channel
 import com.mymikemiller.chronoplayer.Detail
 import com.mymikemiller.chronoplayer.DeveloperKey
-import java.util.*
 
 val HTTP_TRANSPORT = NetHttpTransport()
 val JSON_FACTORY: JsonFactory = JacksonFactory()
@@ -27,21 +25,6 @@ class YouTubeAPI {
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
                 HttpRequestInitializer { }).setApplicationName("chrono-player").build()
 
-        // Hardcode Game Grumps values so we don't have to fetch them
-        private var mChannelId = "UU9CuvdOVfMPvKCiwdGKL3cQ"
-
-        fun fetchDetailForVideo(id: String, callback: (Detail) -> Unit) {
-            FetchDetailForVideoTask(id, callback).execute()
-        }
-
-        fun fetchChannelIdFromChannelName(channelName: String, callback: (channelId: String) -> Unit) {
-            if (mChannelId == "") {
-                FetchChannelIdFromChannelNameTask(channelName, callback).execute()
-            } else {
-                callback(mChannelId)
-            }
-        }
-
         fun fetchAllDetailsByChannelId(channelId: String,
                                        stopAtDetail: Detail?,
                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
@@ -52,59 +35,6 @@ class YouTubeAPI {
                     accumulate,
                     setPercentageCallback,
                     callback).execute()
-        }
-
-
-
-        private class FetchDetailForVideoTask(val id: String, val callback: (detail: Detail) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
-            override fun doInBackground(vararg params: Unit?) {
-                val videosListByIdRequest = youtube.videos().list("snippet,contentDetails,statistics")
-                videosListByIdRequest.id = id
-                videosListByIdRequest.key = DeveloperKey.DEVELOPER_KEY
-                videosListByIdRequest.maxResults = 1
-
-                // Call the API and print results.
-                val searchResponse = videosListByIdRequest.execute()
-                val searchResultList = searchResponse.getItems()
-                if (searchResultList != null && searchResultList.size == 1) {
-                    val video = searchResultList[0]
-
-                    val detail = Detail(
-                            video.id,
-                            video.snippet.title,
-                            video.snippet.description,
-                            video.snippet.thumbnails.default.url,
-                            video.snippet.publishedAt)
-
-                    callback(detail)
-                }
-            }
-        }
-
-        private class FetchChannelIdFromChannelNameTask(val channelName: String, val callback: (channelId: String) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
-            override fun doInBackground(vararg params: Unit?) {
-                val channelsListByUsernameRequest = youtube.channels().list("snippet,contentDetails,statistics")
-                channelsListByUsernameRequest.forUsername = channelName
-                channelsListByUsernameRequest.setKey(DeveloperKey.DEVELOPER_KEY)
-                channelsListByUsernameRequest.setMaxResults(1)
-
-                // Call the API and print results.
-                val searchResponse = channelsListByUsernameRequest.execute()
-                val searchResultList = searchResponse.getItems()
-                if (searchResultList != null && searchResultList.size == 1) {
-                    val channelInfo = searchResultList[0]
-
-                    // We have to replace the second character with a "U" for some reason
-                    val channelId = channelInfo.id
-                    val first = channelId.substring(0, 1)
-                    val last = channelId.substring(2, channelId.length)
-                    val actualChannelId = first + "U" + last
-
-                    // Cache the channelId so we don't have to find it again
-                    mChannelId = actualChannelId
-                    callback(actualChannelId)
-                }
-            }
         }
 
         val allDetails = mutableListOf<Detail>()
