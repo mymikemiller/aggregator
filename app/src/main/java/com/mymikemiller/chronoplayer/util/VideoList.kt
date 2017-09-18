@@ -17,7 +17,7 @@ import java.sql.SQLException
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 73
+        val DATABASE_VERSION: Int = 74
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -63,7 +63,7 @@ class VideoList {
 
 
             // Now that we have all details from the database, append the ones we find from YouTube
-            YouTubeAPI.fetchAllDetailsByChannelId(channelId, stopAtDetail, setPercentageCallback, {newDetails: List<Detail> ->
+            YouTubeAPI.fetchAllDetailsByUploadPlaylistId(channelId, stopAtDetail, setPercentageCallback, { newDetails: List<Detail> ->
                 run {
                     val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
 

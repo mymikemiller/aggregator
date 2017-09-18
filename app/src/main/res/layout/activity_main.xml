@@ -29,7 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="bottom"
-        sothree:umanoDragView="@id/bar">
+        sothree:umanoDragView="@+id/bar">
 
         <!-- Other Views (the top pane of the SlidingUpPanelLayout) -->
         <RelativeLayout
