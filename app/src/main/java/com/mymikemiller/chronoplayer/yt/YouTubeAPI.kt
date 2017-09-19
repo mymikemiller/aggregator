@@ -29,6 +29,9 @@ class YouTubeAPI {
                               stopAtDetail: Detail?,
                               setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                               callback: (details: List<Detail>) -> Unit) {
+
+            // Clear the details in preparation to fetch them all
+            allDetails = mutableListOf<Detail>()
             FetchNextDetailTask(channel,
                     "",
                     stopAtDetail,
@@ -37,7 +40,7 @@ class YouTubeAPI {
                     callback).execute()
         }
 
-        val allDetails = mutableListOf<Detail>()
+        var allDetails = mutableListOf<Detail>()
         var prevNextPageToken = ""
 
         val accumulate: (channel: Channel,
