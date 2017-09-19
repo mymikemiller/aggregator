@@ -9,19 +9,21 @@ import android.content.ContentValues.TAG
 import android.content.ContentValues
 import android.util.Log
 import com.google.api.client.util.DateTime
+import com.mymikemiller.chronoplayer.Channel
 import java.sql.SQLException
 
 /**
- * VideoList stores video Details in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
+ * VideoList stores video Details from the given channel in a local SQL database and manages talking to the YouTubeAPI to fetch videos from YouTube when necessary
  */
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 74
+        val DATABASE_VERSION: Int = 77
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
         // VideoList columns
+        val KEY_CHANNELID: String="Channel_Id"
         val KEY_VIDEOID: String="Video_Id"
         val KEY_TITLE: String = "Title"
         val KEY_DESCRIPTION: String = "Description"
@@ -30,6 +32,7 @@ class VideoList {
 
         private val DETAILS_TABLE_CREATE =
                 "CREATE TABLE " + DETAILS_TABLE_NAME + " (" +
+                        KEY_CHANNELID + " TEXT, " +
                         KEY_VIDEOID + " TEXT NOT NULL UNIQUE, " +
                         KEY_TITLE + " TEXT, " +
                         KEY_DESCRIPTION + " TEXT, " +
@@ -39,36 +42,37 @@ class VideoList {
         // This will return the number of Details currently in the database, and will call
         // the databaseUpgradeCallback if the database had to be upgraded to a new version by
         // incrementing the DATABASE_VERSION above
-        fun getNumDetailsInDatabase(context: Context, databaseUpgradedCallback: () -> Unit) : Int {
+        fun getNumDetailsInDb(context: Context, channel: Channel, databaseUpgradedCallback: () -> Unit) : Int {
             val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
-            return dbHelper.getAllDetailsFromDb().size
+            return dbHelper.getAllDetailsFromDb(channel).size
         }
 
         // This will return all the Details currently in the database, and will call
         // the databaseUpgradeCallback if the database had to be upgraded to a new version by
         // incrementing the DATABASE_VERSION above. The returned details are in an arbitrary order.
-        fun getAllDetailsFromDatabase(context: Context,
-                                       databaseUpgradedCallback: () -> Unit): List<Detail>{
+        fun getAllDetailsFromDb(context: Context,
+                                      channel: Channel,
+                                      databaseUpgradedCallback: () -> Unit): List<Detail>{
             val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
 
-            return dbHelper.getAllDetailsFromDb()
+            return dbHelper.getAllDetailsFromDb(channel)
         }
 
-        fun fetchAllDetailsByChannelId(context: Context,
-                                       databaseUpgradedCallback: () -> Unit,
-                                       channelId: String,
-                                       stopAtDetail: Detail?,
-                                       setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                                       callback: (details: List<Detail>) -> Unit) {
+        fun fetchAllDetails(context: Context,
+                            channel: Channel,
+                               databaseUpgradedCallback: () -> Unit,
+                               stopAtDetail: Detail?,
+                               setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
+                               callback: (details: List<Detail>) -> Unit) {
 
 
             // Now that we have all details from the database, append the ones we find from YouTube
-            YouTubeAPI.fetchAllDetailsByUploadPlaylistId(channelId, stopAtDetail, setPercentageCallback, { newDetails: List<Detail> ->
+            YouTubeAPI.fetchAllDetails(channel, stopAtDetail, setPercentageCallback, { newDetails: List<Detail> ->
                 run {
                     val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
 
                     // Get all Details from database
-                    val detailsFromDb = dbHelper.getAllDetailsFromDb().toMutableList()
+                    val detailsFromDb = dbHelper.getAllDetailsFromDb(channel).toMutableList()
 
                     // We got all the new Details from YouTube, so append them to the database.
                     // Remove duplicates before adding to the database.
@@ -91,8 +95,8 @@ class VideoList {
         }
 
 
-        fun getDetailFromVideoId(context: Context, videoId: String) : Detail? {
-            val details = getAllDetailsFromDatabase(context,
+        fun getDetailFromVideoId(context: Context, channel: Channel, videoId: String) : Detail? {
+            val details = getAllDetailsFromDb(context, channel,
                     {})
 
             var returnDetail:Detail? = null
@@ -148,11 +152,11 @@ class VideoList {
             }
         }
 
-        fun getAllDetailsFromDb(): List<Detail> {
+        fun getAllDetailsFromDb(channel: Channel): List<Detail> {
             val allDetails = mutableListOf<Detail>()
 
-            // SELECT * FROM DETAILS
-            val DETAILS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME"
+            // SELECT * FROM DETAILS WHERE ChannelId = $channel.id
+            val DETAILS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME WHERE $KEY_CHANNELID = ?"
             val db: SQLiteDatabase
 
             try {
@@ -163,7 +167,7 @@ class VideoList {
                 return listOf()
             }
 
-            val cursor = db.rawQuery(DETAILS_SELECT_QUERY, null)
+            val cursor = db.rawQuery(DETAILS_SELECT_QUERY, arrayOf(channel.channelId))
             try {
                 if (cursor.moveToFirst()) {
                     do {
@@ -174,7 +178,7 @@ class VideoList {
                         val dateUploaded = cursor.getString(cursor.getColumnIndex(KEY_DATE_UPLOADED))
                         val dateRfc3339 = DateTime.parseRfc3339(dateUploaded)
 
-                        val newDetail = Detail(videoId, title, description, thumbnail, dateRfc3339)
+                        val newDetail = Detail(channel, videoId, title, description, thumbnail, dateRfc3339)
                         allDetails.add(newDetail)
                     } while (cursor.moveToNext())
                 }

@@ -23,7 +23,9 @@ class WatchHistoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_watch_history)
         setSupportActionBar(toolbar)
-        mDetails = WatchHistory.getWatchHistory(this).reversed()
+
+        val channel = intent.getSerializableExtra("channel") as Channel
+        mDetails = WatchHistory.getWatchHistory(this, channel).reversed()
 
         mAdapter = HistoryRecyclerAdapter(this, mDetails, onItemClick)
 

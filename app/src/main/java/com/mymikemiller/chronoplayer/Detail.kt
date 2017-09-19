@@ -5,7 +5,8 @@ import com.google.api.client.util.DateTime
 /**
 *   Contains detailed information about the video, e.g. the thumbnail image, title and description
 */
-data class Detail(val videoId: String,
+data class Detail(val channel: Channel,
+                  val videoId: String,
                   val title: String,
                   val description: String,
                   val thumbnail: String,

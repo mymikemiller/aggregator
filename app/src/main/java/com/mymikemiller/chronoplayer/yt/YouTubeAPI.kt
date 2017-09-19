@@ -25,11 +25,11 @@ class YouTubeAPI {
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
                 HttpRequestInitializer { }).setApplicationName("chrono-player").build()
 
-        fun fetchAllDetailsByUploadPlaylistId(uploadPlaylistId: String,
-                                              stopAtDetail: Detail?,
-                                              setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                                              callback: (details: List<Detail>) -> Unit) {
-            FetchNextDetailByUploadPlaylistIdTask(uploadPlaylistId,
+        fun fetchAllDetails(channel: Channel,
+                              stopAtDetail: Detail?,
+                              setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
+                              callback: (details: List<Detail>) -> Unit) {
+            FetchNextDetailTask(channel,
                     "",
                     stopAtDetail,
                     accumulate,
@@ -40,13 +40,13 @@ class YouTubeAPI {
         val allDetails = mutableListOf<Detail>()
         var prevNextPageToken = ""
 
-        val accumulate: (uploadPlaylistId: String,
+        val accumulate: (channel: Channel,
                          detailList: List<Detail>,
                          nextPageToken: String,
                          stopAtDetail: Detail?,
                          setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                          callbackWhenDone: (detailList: List<Detail>) -> Unit
-        ) -> Unit = { uploadPlaylistId,
+        ) -> Unit = { channel,
                       detailsList,
                       nextPageToken,
                       stopAtDetail,
@@ -55,7 +55,7 @@ class YouTubeAPI {
             run {
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
-                FetchNextDetailByUploadPlaylistIdTask(uploadPlaylistId,
+                FetchNextDetailTask(channel,
                         nextPageToken,
                         stopAtDetail,
                         accumulate,
@@ -64,22 +64,22 @@ class YouTubeAPI {
             }
         }
 
-        private class FetchNextDetailByUploadPlaylistIdTask(val uploadPlaylistId: String,
-                                                            var pageToken: String,
-                                                            val stopAtDetail: Detail?,
-                                                            val callback: (uploadPlaylistId: String,
-                                                                     detailList: List<Detail>,
-                                                                     nextPageToken: String,
-                                                                     stopAtDetail: Detail?,
-                                                                     setPercentageCallback: (kotlin.Int, kotlin.Int) -> Unit,
-                                                                     callbackWhenDone: (detailList: List<Detail>) -> Unit) -> Unit,
-                                                            val setPercentageCallback: (totalVideos: kotlin.Int,
-                                                                          currentVideoNumber: kotlin.Int) -> Unit,
-                                                            val callbackWhenDone: (detailList: List<Detail>) -> Unit
+        private class FetchNextDetailTask(val channel: Channel,
+                                        var pageToken: String,
+                                        val stopAtDetail: Detail?,
+                                        val callback: (channel: Channel,
+                                                 detailList: List<Detail>,
+                                                 nextPageToken: String,
+                                                 stopAtDetail: Detail?,
+                                                 setPercentageCallback: (kotlin.Int, kotlin.Int) -> Unit,
+                                                 callbackWhenDone: (detailList: List<Detail>) -> Unit) -> Unit,
+                                        val setPercentageCallback: (totalVideos: kotlin.Int,
+                                                      currentVideoNumber: kotlin.Int) -> Unit,
+                                        val callbackWhenDone: (detailList: List<Detail>) -> Unit
                                               ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByUploadPlaylistIdRequest = youtube.PlaylistItems().list("snippet")
-                videosListByUploadPlaylistIdRequest.playlistId = uploadPlaylistId
+                videosListByUploadPlaylistIdRequest.playlistId = channel.uploadPlaylistId
                 videosListByUploadPlaylistIdRequest.key = (DeveloperKey.DEVELOPER_KEY)
                 videosListByUploadPlaylistIdRequest.maxResults = 50
                 videosListByUploadPlaylistIdRequest.pageToken = pageToken
@@ -92,7 +92,8 @@ class YouTubeAPI {
                     for (result in searchResultList) {
                         val thumbnail = if (result.snippet.thumbnails.standard != null) result.snippet.thumbnails.standard.url else result.snippet.thumbnails.high.url
 
-                        val d = Detail(result.snippet.resourceId.videoId,
+                        val d = Detail(channel,
+                                result.snippet.resourceId.videoId,
                                 result.snippet.title,
                                 result.snippet.description,
                                 thumbnail,
@@ -121,7 +122,7 @@ class YouTubeAPI {
                         return
                     }
 
-                    callback(uploadPlaylistId, results, searchResponse.nextPageToken, stopAtDetail, setPercentageCallback, callbackWhenDone)
+                    callback(channel, results, searchResponse.nextPageToken, stopAtDetail, setPercentageCallback, callbackWhenDone)
                 }
             }
         }
@@ -133,26 +134,26 @@ class YouTubeAPI {
         private class FetchChannelsTask(val query: String, val callback: (channels: List<Channel>) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val parameters = hashMapOf<String, String>()
-                parameters.put("part", "snippet");
-                parameters.put("maxResults", "25");
-                parameters.put("q", query);
-                parameters.put("type", "channel");
+                parameters.put("part", "snippet")
+                parameters.put("maxResults", "25")
+                parameters.put("q", query)
+                parameters.put("type", "channel")
 
-                val searchListByKeywordRequest = youtube.search().list(parameters.get("part").toString());
+                val searchListByKeywordRequest = youtube.search().list(parameters.get("part").toString())
                 searchListByKeywordRequest.key = DeveloperKey.DEVELOPER_KEY
 
                 if (parameters.containsKey("maxResults")) {
-                    searchListByKeywordRequest.setMaxResults((parameters.get("maxResults").toString()).toLong());
+                    searchListByKeywordRequest.setMaxResults((parameters.get("maxResults").toString()).toLong())
                 }
                 if (parameters.containsKey("q") && parameters.get("q") != "") {
-                    searchListByKeywordRequest.setQ(parameters.get("q").toString());
+                    searchListByKeywordRequest.setQ(parameters.get("q").toString())
                 }
 
                 if (parameters.containsKey("type") && parameters.get("type") != "") {
-                    searchListByKeywordRequest.setType(parameters.get("type").toString());
+                    searchListByKeywordRequest.setType(parameters.get("type").toString())
                 }
-                val response = searchListByKeywordRequest.execute();
-                System.out.println(response);
+                val response = searchListByKeywordRequest.execute()
+                System.out.println(response)
 
                 val channels = mutableListOf<Channel>()
                 for (item in response.items) {
@@ -180,20 +181,20 @@ class YouTubeAPI {
         private class FetchUploadPlaylistIdTask(val channelId: String, val callback: (uploadId: String) -> Unit) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val parameters = hashMapOf<String, String>()
-                parameters.put("part", "contentDetails");
-                parameters.put("id", channelId);
+                parameters.put("part", "contentDetails")
+                parameters.put("id", channelId)
 
-                val uploadIdRequest = youtube.channels().list(parameters.get("part").toString());
+                val uploadIdRequest = youtube.channels().list(parameters.get("part").toString())
                 uploadIdRequest.key = DeveloperKey.DEVELOPER_KEY
 
                 if (parameters.containsKey("part")) {
-                    uploadIdRequest.setPart((parameters.get("part").toString()));
+                    uploadIdRequest.setPart((parameters.get("part").toString()))
                 }
                 if (parameters.containsKey("id") && parameters.get("id") != "") {
-                    uploadIdRequest.setId(parameters.get("id").toString());
+                    uploadIdRequest.setId(parameters.get("id").toString())
                 }
 
-                val response = uploadIdRequest.execute();
+                val response = uploadIdRequest.execute()
                 val uploadPlaylistId = response.items[0].contentDetails.relatedPlaylists.uploads
 
                 callback(uploadPlaylistId)

@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import com.mymikemiller.chronoplayer.Detail
 import android.content.ContentValues.TAG
+import com.mymikemiller.chronoplayer.Channel
 import java.sql.SQLException
 
 /**
@@ -15,20 +16,22 @@ import java.sql.SQLException
 class SkippedVideos {
     companion object {
 
-        val DATABASE_VERSION: Int = 3
+        val DATABASE_VERSION: Int = 4
         val DATABASE_NAME: String = "SkippedVideos"
         val SKIPPED_VIDEOS_TABLE_NAME: String = "SkippedVideosTable"
 
         // VideoList columns
+        val KEY_CHANNELID: String = "ChannelId"
         val KEY_VIDEOID: String="VideoId"
 
         private val SKIPPED_VIDEOS_TABLE_CREATE =
                 "CREATE TABLE " + SKIPPED_VIDEOS_TABLE_NAME + " (" +
+                        KEY_CHANNELID + " TEXT NOT NULL, " +
                         KEY_VIDEOID + " TEXT NOT NULL UNIQUE);"
 
-        fun filterOutSkipped(context: Context, details: List<Detail>) : List<Detail> {
+        fun filterOutSkipped(context: Context, channel: Channel, details: List<Detail>) : List<Detail> {
             val dbHelper = skippedVideoOpenHelper(context.applicationContext)
-            val videoIdsToSkip = dbHelper.getSkippedVideoIdsFromDb()
+            val videoIdsToSkip = dbHelper.getSkippedVideoIdsFromDb(channel)
 
             val filteredDetails = details.filter {
                 !videoIdsToSkip.contains(it.videoId)
@@ -42,15 +45,16 @@ class SkippedVideos {
             dbHelper.addSkippedVideo(detail.videoId)
         }
 
-        fun getAllSkippedVideos(context: Context): List<String> {
+        fun getAllSkippedVideos(context: Context, channel: Channel
+        ): List<String> {
             val dbHelper = skippedVideoOpenHelper(context.applicationContext)
-            val skippedVideos = dbHelper.getSkippedVideoIdsFromDb()
+            val skippedVideos = dbHelper.getSkippedVideoIdsFromDb(channel)
             return skippedVideos
         }
 
-        fun unSkipAllVideos(context: Context) {
+        fun unSkipAllVideos(context: Context, channel: Channel) {
             val dbHelper = skippedVideoOpenHelper(context.applicationContext)
-            dbHelper.unskipAllVideos()
+            dbHelper.unskipAllVideos(channel)
         }
         fun unSkipVideo(context: Context, VideoId: String) {
             val dbHelper = skippedVideoOpenHelper(context.applicationContext)
@@ -113,11 +117,12 @@ class SkippedVideos {
             }
         }
 
-        fun getSkippedVideoIdsFromDb(): List<String> {
+        fun getSkippedVideoIdsFromDb(channel: Channel): List<String> {
             val videoIds = mutableListOf<String>()
 
-            // SELECT * FROM SkippedVideosTable
-            val SKIPPED_VIDEOS_SELECT_QUERY = "SELECT * FROM ${SkippedVideos.SKIPPED_VIDEOS_TABLE_NAME}"
+            // SELECT * FROM SkippedVideosTable WHERE ChannelId = channel.channelId
+            val SKIPPED_VIDEOS_SELECT_QUERY = "SELECT * FROM ${SkippedVideos.SKIPPED_VIDEOS_TABLE_NAME} " +
+                    "WHERE $KEY_CHANNELID = ?"
             val db: SQLiteDatabase
             try {
                 db = this.readableDatabase
@@ -127,7 +132,7 @@ class SkippedVideos {
                 return listOf()
             }
 
-            val cursor = db.rawQuery(SKIPPED_VIDEOS_SELECT_QUERY, null)
+            val cursor = db.rawQuery(SKIPPED_VIDEOS_SELECT_QUERY, arrayOf(channel.channelId))
             try {
                 if (cursor.moveToFirst()) {
                     do {
@@ -148,7 +153,7 @@ class SkippedVideos {
         }
 
 
-        fun unskipAllVideos() {
+        fun unskipAllVideos(channel: Channel) {
             val db: SQLiteDatabase
             try {
                 db = this.writableDatabase
@@ -159,7 +164,7 @@ class SkippedVideos {
             db.beginTransaction()
             try {
                 // Order of deletions is important when foreign key relationships exist.
-                db.delete(SkippedVideos.SKIPPED_VIDEOS_TABLE_NAME, null, null)
+                db.delete(SkippedVideos.SKIPPED_VIDEOS_TABLE_NAME, KEY_CHANNELID + "= ?", arrayOf(channel.channelId))
                 db.setTransactionSuccessful()
             } catch (e: Exception) {
                 Log.d(ContentValues.TAG, "Error while trying to delete all skipped videos")

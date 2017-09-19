@@ -9,7 +9,6 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import android.widget.*
-import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.support.v7.widget.LinearLayoutManager
@@ -107,7 +106,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private fun setUpYouTubeFetch() {
         // Get the details ordered by date uploaded and force an upgrade if necessary,
         // which will call the deleteCurrentVideoFromSharedPreferences call if necessary.
-        val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDatabase(this,
+        val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(this,
+                mChannel,
                 deleteCurrentVideoFromSharedPreferences))
 
         // This won't work until we've initialized these lists
@@ -136,7 +136,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
 
-                    mDetailsByDate = SkippedVideos.filterOutSkipped(this, mDetailsByDateIncludingSkipped)
+                    mDetailsByDate = SkippedVideos.filterOutSkipped(this, mChannel, mDetailsByDateIncludingSkipped)
 
                     // Now that we've got a list of details, we can prepare the RecyclerView
                     mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, skipVideo)
@@ -156,7 +156,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     val sharedPref = getPreferences(Context.MODE_PRIVATE)
                     val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
 
-                    var detailToPlay = VideoList.getDetailFromVideoId(this, videoIdToPlay)
+                    var detailToPlay = VideoList.getDetailFromVideoId(this, mChannel, videoIdToPlay)
                     if (detailToPlay == null) {
                         // If we couldn't find a video to play, play the chronologicallly first video of the channel
                         detailToPlay = firstDetail
@@ -169,8 +169,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         }
 
-        VideoList.fetchAllDetailsByChannelId(this,
-                deleteCurrentVideoFromSharedPreferences, mChannel.uploadPlaylistId,
+        VideoList.fetchAllDetails(this,
+                mChannel,
+                deleteCurrentVideoFromSharedPreferences,
                 stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
     }
 
@@ -291,16 +292,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
     private fun setUpPreferences() {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
-
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         mPreferencesButton.setOnClickListener {
             showPreferencesActivity()
         }
         mBroadcastReceiver = object : BroadcastReceiver() {
-            override fun onReceive(contxt: Context?, intent: Intent?) {
-                when (intent?.action) {
-                    PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos()
-                    PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity()
+            override fun onReceive(context: Context?, intent: Intent?) {
+
+                val currentlyPlaying = mCurrentlyPlayingVideoDetail
+                if (currentlyPlaying != null) {
+
+                    when (intent?.action) {
+                        PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
+                        PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
+                    }
                 }
             }
         }
@@ -318,7 +322,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
         run {
-            val numDetailsInDatabase = VideoList.getNumDetailsInDatabase(this, {})
+            val numDetailsInDatabase = VideoList.getNumDetailsInDb(this, mChannel, {})
             fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
             fetchVideosProgresBar.setProgress(currentVideoNumber)
         }
@@ -396,7 +400,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val nextVideo = getNextVideo()
 
         // Update our cached lists
-        mDetailsByDate = SkippedVideos.filterOutSkipped(this, mDetailsByDate)
+        mDetailsByDate = SkippedVideos.filterOutSkipped(this, detail.channel, mDetailsByDate)
 
         // Update the adapter
         mAdapter.details = mDetailsByDate
@@ -412,8 +416,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         }
     }
-    fun showWatchHistoryActivity() {
+    fun showWatchHistoryActivity(channel: Channel) {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
+        watchHistoryIntent.putExtra("channel", channel)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
     }
 
@@ -436,8 +441,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun unSkipAllVideos() {
-        SkippedVideos.unSkipAllVideos(this)
+    fun unSkipAllVideos(channel: Channel) {
+        SkippedVideos.unSkipAllVideos(this, channel)
 
         // Update our cached list
         mDetailsByDate = mDetailsByDateIncludingSkipped
@@ -545,20 +550,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun getNextVideo() : Detail? {
-        // We need to know the list of skipped videos so we make sure we don't play one that is
-        // meant to be skipped. But when finding our current place in the playlist, we need to work
-        // with all videos including the skipped ones in case the user just specified to skip a video
-        // they're currently playing
-        val skippedVideos = SkippedVideos.getAllSkippedVideos(this)
-
-        // This will be true once we found the current video. Once we have that, we keep looping
-        // through all the videos until we find one that isn't specified as skipped
-        var foundCurrentlyPlayingVideo = false
-        val currentlyPlayingVideoDetail = mCurrentlyPlayingVideoDetail
-
         // If we're currently playing a video, start the search. Otherwise return null because we
         // must be at the end of the playlist.
+        val currentlyPlayingVideoDetail = mCurrentlyPlayingVideoDetail
         if (currentlyPlayingVideoDetail != null) {
+
+            // We need to know the list of skipped videos so we make sure we don't play one that is
+            // meant to be skipped. But when finding our current place in the playlist, we need to work
+            // with all videos including the skipped ones in case the user just specified to skip a video
+            // they're currently playing
+            val skippedVideos = SkippedVideos.getAllSkippedVideos(this, currentlyPlayingVideoDetail.channel)
+
+            // This will be true once we found the current video. Once we have that, we keep looping
+            // through all the videos until we find one that isn't specified as skipped
+            var foundCurrentlyPlayingVideo = false
 
             // As explained above, we need to search through all the videos, including skipped ones,
             // in order to find the currently playing video.

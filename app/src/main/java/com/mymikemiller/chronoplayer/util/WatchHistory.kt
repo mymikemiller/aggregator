@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import com.google.api.client.util.DateTime
+import com.mymikemiller.chronoplayer.Channel
 import com.mymikemiller.chronoplayer.Detail
 import java.sql.SQLException
 
@@ -15,11 +16,12 @@ import java.sql.SQLException
 class WatchHistory {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 5
+        val DATABASE_VERSION: Int = 6
         val DATABASE_NAME: String = "WatchHistory"
-        val DETAILS_TABLE_NAME: String = "WatchHistoryTable"
+        val TABLE_NAME: String = "WatchHistoryTable"
 
-        // VideoList columns
+        // WatchHistory columns
+        val KEY_CHANNELID: String = "Channel_Id"
         val KEY_VIDEOID: String = "Video_Id"
         val KEY_TITLE: String = "Title"
         val KEY_DESCRIPTION: String = "Description"
@@ -27,19 +29,20 @@ class WatchHistory {
         val KEY_DATE_UPLOADED: String = "Date_Uploaded"
 
         private val DETAILS_TABLE_CREATE =
-                "CREATE TABLE " + DETAILS_TABLE_NAME + " (" +
+                "CREATE TABLE " + TABLE_NAME + " (" +
+                        KEY_CHANNELID + " TEXT, " +
                         KEY_VIDEOID + " TEXT, " +
                         KEY_TITLE + " TEXT, " +
                         KEY_DESCRIPTION + " TEXT, " +
                         KEY_THUMBNAIL + " TEXT, " +
                         KEY_DATE_UPLOADED + " TEXT);"
 
-        // This will return all the Details currently in the database. The returned details are
-        // in an oldest to newest order.
-        fun getWatchHistory(context: Context): List<Detail> {
+        // This will return all the Details from the specified channel currently in the database.
+        // in oldest to newest order.
+        fun getWatchHistory(context: Context, channel: Channel): List<Detail> {
             val dbHelper = DetailsOpenHelper(context.applicationContext)
 
-            return dbHelper.getAllDetailsFromDb()
+            return dbHelper.getAllDetailsFromDb(channel.channelId)
         }
 
         fun addDetail(context: Context, detail: Detail) {
@@ -53,7 +56,7 @@ class WatchHistory {
             override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
                 if (oldVersion != newVersion) {
                     // Simplest implementation is to drop all old tables and recreate them
-                    db.execSQL("DROP TABLE IF EXISTS " + DETAILS_TABLE_NAME)
+                    db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME)
                     onCreate(db)
                 }
             }
@@ -66,7 +69,7 @@ class WatchHistory {
             fun addDetail(detail: Detail) {
 
                 // Only add the detail if it's not the most recent video in the database
-                val existingDetials = getAllDetailsFromDb()
+                val existingDetials = getAllDetailsFromDb(detail.channel.channelId)
                 if (existingDetials.size > 0 && detail == existingDetials[existingDetials.size - 1])
                     return
 
@@ -86,7 +89,7 @@ class WatchHistory {
                     values.put(KEY_DATE_UPLOADED, detail.dateUploaded.toStringRfc3339())
 
                     // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
-                    db.insertOrThrow(DETAILS_TABLE_NAME, null, values)
+                    db.insertOrThrow(TABLE_NAME, null, values)
 
                     db.setTransactionSuccessful()
                 } catch (e: Exception) {
@@ -96,11 +99,18 @@ class WatchHistory {
                 }
             }
 
-            fun getAllDetailsFromDb(): List<Detail> {
+            fun getAllDetailsFromDb(channelId: String): List<Detail> {
                 val allDetails = mutableListOf<Detail>()
 
-                // SELECT * FROM DETAILS
-                val DETAILS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME"
+                // SELECT * FROM DETAILS WHERE ChannelId = channelId
+                val DETAILS_SELECT_QUERY = "SELECT * FROM $TABLE_NAME " +
+                        "WHERE $KEY_CHANNELID = ?"
+                    // If we need to know stuff from the VideoList table, we can join to it here.
+//                "SELECT * FROM $TABLE_NAME " +
+//                        "LEFT JOIN ${VideoList.DETAILS_TABLE_NAME}" +
+//                        "ON  = ${VideoList.DETAILS_TABLE_NAME}.${VideoList.KEY_CHANNELID} = " +
+//                        "${TABLE_NAME}.$KEY_CHANNELID"
+//                "WHERE $KEY_CHANNELID = $channelId"
                 val db: SQLiteDatabase
 
                 try {
@@ -111,7 +121,7 @@ class WatchHistory {
                     return listOf()
                 }
 
-                val cursor = db.rawQuery(DETAILS_SELECT_QUERY, null)
+                val cursor = db.rawQuery(DETAILS_SELECT_QUERY, arrayOf(channelId))
                 try {
                     if (cursor.moveToFirst()) {
                         do {
@@ -122,7 +132,11 @@ class WatchHistory {
                             val dateUploaded = cursor.getString(cursor.getColumnIndex(KEY_DATE_UPLOADED))
                             val dateRfc3339 = DateTime.parseRfc3339(dateUploaded)
 
-                            val newDetail = Detail(videoId, title, description, thumbnail, dateRfc3339)
+                            // We only need the channelId (we actually don't even need that)
+                            // here because we're not displaying anything else
+                            val newChannel = Channel("", channelId, "", thumbnail)
+
+                            val newDetail = Detail(newChannel, videoId, title, description, thumbnail, dateRfc3339)
                             allDetails.add(newDetail)
                         } while (cursor.moveToNext())
                     }
