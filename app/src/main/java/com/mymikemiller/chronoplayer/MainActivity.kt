@@ -104,11 +104,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun setUpYouTubeFetch() {
-        // Get the details ordered by date uploaded and force an upgrade if necessary,
-        // which will call the deleteCurrentVideoFromSharedPreferences call if necessary.
+        // Get the details ordered by date uploaded and force an upgrade if necessary,s
         val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(this,
-                mChannel,
-                deleteCurrentVideoFromSharedPreferences))
+                mChannel))
 
         // This won't work until we've initialized these lists
         val stopAtDetail = if (detailsFromDbByDate.size > 0) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
@@ -158,7 +156,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     var detailToPlay = VideoList.getDetailFromVideoId(this, mChannel, videoIdToPlay)
                     if (detailToPlay == null) {
-                        // If we couldn't find a video to play, play the chronologicallly first video of the channel
+                        // If we couldn't find a video to play, play the chronologically first video of the channel
                         detailToPlay = firstDetail
                     }
 
@@ -171,7 +169,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         VideoList.fetchAllDetails(this,
                 mChannel,
-                deleteCurrentVideoFromSharedPreferences,
                 stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
     }
 
@@ -322,7 +319,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
         run {
-            val numDetailsInDatabase = VideoList.getNumDetailsInDb(this, mChannel, {})
+            val numDetailsInDatabase = VideoList.getNumDetailsInDb(this, mChannel)
             fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
             fetchVideosProgresBar.setProgress(currentVideoNumber)
         }
@@ -449,15 +446,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         if (mAdapterInitialized)
             refreshPlaylist()
-    }
-    //endregion
-
-    //region [preferences]
-    val deleteCurrentVideoFromSharedPreferences: () -> Unit = {
-        val sharedPref = getPreferences(Context.MODE_PRIVATE)
-        val editor = sharedPref.edit()
-        editor.remove(getString(R.string.currentVideoId))
-        editor.apply()
     }
     //endregion
 

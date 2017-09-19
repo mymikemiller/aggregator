@@ -18,7 +18,7 @@ import java.sql.SQLException
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 77
+        val DATABASE_VERSION: Int = 78
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -42,8 +42,8 @@ class VideoList {
         // This will return the number of Details currently in the database, and will call
         // the databaseUpgradeCallback if the database had to be upgraded to a new version by
         // incrementing the DATABASE_VERSION above
-        fun getNumDetailsInDb(context: Context, channel: Channel, databaseUpgradedCallback: () -> Unit) : Int {
-            val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
+        fun getNumDetailsInDb(context: Context, channel: Channel) : Int {
+            val dbHelper = DetailsOpenHelper(context.applicationContext)
             return dbHelper.getAllDetailsFromDb(channel).size
         }
 
@@ -51,16 +51,14 @@ class VideoList {
         // the databaseUpgradeCallback if the database had to be upgraded to a new version by
         // incrementing the DATABASE_VERSION above. The returned details are in an arbitrary order.
         fun getAllDetailsFromDb(context: Context,
-                                      channel: Channel,
-                                      databaseUpgradedCallback: () -> Unit): List<Detail>{
-            val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
+                                      channel: Channel) : List<Detail>{
+            val dbHelper = DetailsOpenHelper(context.applicationContext)
 
             return dbHelper.getAllDetailsFromDb(channel)
         }
 
         fun fetchAllDetails(context: Context,
                             channel: Channel,
-                               databaseUpgradedCallback: () -> Unit,
                                stopAtDetail: Detail?,
                                setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                                callback: (details: List<Detail>) -> Unit) {
@@ -69,7 +67,7 @@ class VideoList {
             // Now that we have all details from the database, append the ones we find from YouTube
             YouTubeAPI.fetchAllDetails(channel, stopAtDetail, setPercentageCallback, { newDetails: List<Detail> ->
                 run {
-                    val dbHelper = DetailsOpenHelper(context.applicationContext, databaseUpgradedCallback)
+                    val dbHelper = DetailsOpenHelper(context.applicationContext)
 
                     // Get all Details from database
                     val detailsFromDb = dbHelper.getAllDetailsFromDb(channel).toMutableList()
@@ -96,8 +94,7 @@ class VideoList {
 
 
         fun getDetailFromVideoId(context: Context, channel: Channel, videoId: String) : Detail? {
-            val details = getAllDetailsFromDb(context, channel,
-                    {})
+            val details = getAllDetailsFromDb(context, channel)
 
             var returnDetail:Detail? = null
             for(detail in details) {
@@ -107,14 +104,13 @@ class VideoList {
         }
     }
 
-    class DetailsOpenHelper internal constructor(context: Context, val databaseUpgradedCallback: () -> Unit) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+    class DetailsOpenHelper internal constructor(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
             if (oldVersion != newVersion) {
                 // Simplest implementation is to drop all old tables and recreate them
                 db.execSQL("DROP TABLE IF EXISTS " + DETAILS_TABLE_NAME)
                 onCreate(db)
-                databaseUpgradedCallback()
             }
         }
 
@@ -135,6 +131,7 @@ class VideoList {
             try {
                 for(detail in details) {
                     val values = ContentValues()
+                    values.put(KEY_CHANNELID, detail.channel.channelId)
                     values.put(KEY_VIDEOID, detail.videoId)
                     values.put(KEY_TITLE, detail.title)
                     values.put(KEY_DESCRIPTION, detail.description)

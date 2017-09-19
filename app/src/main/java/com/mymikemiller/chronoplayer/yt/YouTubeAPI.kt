@@ -30,8 +30,9 @@ class YouTubeAPI {
                               setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
                               callback: (details: List<Detail>) -> Unit) {
 
-            // Clear the details in preparation to fetch them all
+            // Clear the details in preparation of fetching them all
             allDetails = mutableListOf<Detail>()
+
             FetchNextDetailTask(channel,
                     "",
                     stopAtDetail,
