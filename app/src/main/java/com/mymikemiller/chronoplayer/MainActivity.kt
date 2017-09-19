@@ -30,6 +30,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubePlayer.OnFullscreenListener {
 
     val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
+    val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
 
     //region [Variable definitions]
     private lateinit var mChannel: Channel
@@ -146,23 +147,31 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
                     fetchVideosProgressSection.visibility = View.GONE
 
-                    // Get the default first video (the channel's first video)
-                    val firstDetail = mDetailsByDate[0]
+                    // If the channel has no videos, don't play anything.
+                    if (mDetailsByDate.size > 0) {
 
-                    // Get the last video we were playing (which will be the next video in the playlist
-                    // if it was queued at the end of the last watch session if it had time to try to load)
-                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                    val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
+                        // Get the default first video (the channel's first video)
+                        val firstVideoId = mDetailsByDate[0].videoId
 
-                    var detailToPlay = VideoList.getDetailFromVideoId(this, mChannel, videoIdToPlay)
-                    if (detailToPlay == null) {
-                        // If we couldn't find a video to play, play the chronologically first video of the channel
-                        detailToPlay = firstDetail
+                        // Get the last video we were playing (which will be the next video in the playlist
+                        // if it was queued at the end of the last watch session if it had time to try to load)
+                        var videoIdToPlay = LastPlayedVideo.getLastPlayedVideoId(this, mChannel)
+                        if (videoIdToPlay == "") {
+                            videoIdToPlay = firstVideoId
+                        }
+
+                        //val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
+
+                        var detailToPlay = VideoList.getDetailFromVideoId(this, mChannel, videoIdToPlay)
+                        if (detailToPlay == null) {
+                            // If we couldn't find a video to play, play the chronologically first video of the channel
+                            detailToPlay = VideoList.getDetailFromVideoId(this, mChannel, videoIdToPlay)
+                        }
+
+                        playVideo(detailToPlay, true)
+
+                        scrollToCurrentlyPlayingVideo()
                     }
-
-                    playVideo(detailToPlay, true)
-
-                    scrollToCurrentlyPlayingVideo()
                 }
             }
         }
@@ -301,6 +310,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     when (intent?.action) {
                         PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
+                        PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
                     }
                 }
             }
@@ -310,6 +320,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.WATCH_HISTORY))
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.CHANNEL_SELECT))
     }
 
     fun showPreferencesActivity() {
@@ -417,6 +429,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
         watchHistoryIntent.putExtra("channel", channel)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
+    }
+
+    fun showChannelSelectActivity(channel: Channel) {
+        val launchActivityIntent = Intent(this, LaunchActivity::class.java)
+        launchActivityIntent.putExtra("channel", channel)
+        startActivity(launchActivityIntent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
@@ -625,11 +643,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 mPlaylist.adapter.notifyDataSetChanged()
             }
 
-            // Save the Detail to SharedPreference so we can start there next time
-            val preferences = getPreferences(Context.MODE_PRIVATE)
-            val editor = preferences.edit()
-            editor.putString(getString(R.string.currentVideoId), detail.videoId)
-            editor.apply()
+            // TODO: This should be in a database rather than SharedPreferences because now we have to track every one in the database
+            // Save the Detail to the database so we can start there next time
+            // this database uses ChannelId for the key and VideoId for the value
+            LastPlayedVideo.addOrUpdateLastPlayedVideo(this, mChannel, detail)
+
+
             if (centerPlaylistItem)
                 scrollToCurrentlyPlayingVideo()
 

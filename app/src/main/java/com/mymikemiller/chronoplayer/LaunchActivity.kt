@@ -14,7 +14,13 @@ class LaunchActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_launch)
 
+        var channel: Channel? = null
+
+        if (intent.hasExtra("channel")) {
+            channel = intent.getSerializableExtra("channel") as Channel
+        }
         findViewById<Button>(R.id.search_button).setOnClickListener({
+            println(channel?.channelId)
             onSearchRequested()
         })
     }

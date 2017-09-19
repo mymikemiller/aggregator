@@ -18,9 +18,13 @@
     <string name="pref_unskip_all_videos_title">Unskip All</string>
     <string name="pref_unskip_all_videos_description">Unskip all videos</string>
     <string name="pref_watchHistoryKey">watchHistoryButton</string>
+    <string name="pref_channelSelectKey">channelSelectsButton</string>
     <string name="pref_watch_history_title">Watch History</string>
+    <string name="pref_channel_select_title">Select Channel</string>
     <string name="pref_watch_history_description">See recently watched videos</string>
+    <string name="pref_channel_select_description">Change the YouTube channel</string>
     <string name="watchHistory">watchHistory</string>
+    <string name="channelSelect">channelSelect</string>
     <string name="videosUnskipped">All videos are now available</string>
     <string name="undo">Undo</string>
     <string name="title_activity_watch_history">Watch History</string>
