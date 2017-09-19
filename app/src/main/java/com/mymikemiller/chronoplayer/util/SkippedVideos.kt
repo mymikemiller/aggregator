@@ -42,7 +42,7 @@ class SkippedVideos {
 
         fun addSkippedVideo(context: Context, detail: Detail) {
             val dbHelper = skippedVideoOpenHelper(context.applicationContext)
-            dbHelper.addSkippedVideo(detail.videoId)
+            dbHelper.addSkippedVideo(detail)
         }
 
         fun getAllSkippedVideos(context: Context, channel: Channel
@@ -77,7 +77,7 @@ class SkippedVideos {
         }
 
         // Insert a Video into the database
-        fun addSkippedVideo(videoId: String) {
+        fun addSkippedVideo(detail: Detail) {
 
             // Create and/or open the database for writing
             val db = writableDatabase
@@ -88,7 +88,8 @@ class SkippedVideos {
 
             try {
                 val values = ContentValues()
-                values.put(SkippedVideos.KEY_VIDEOID, videoId)
+                values.put(SkippedVideos.KEY_CHANNELID, detail.channel.channelId)
+                values.put(SkippedVideos.KEY_VIDEOID, detail.videoId)
 
                 // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
                 db.insertOrThrow(SKIPPED_VIDEOS_TABLE_NAME, null, values)

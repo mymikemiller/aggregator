@@ -16,7 +16,7 @@ import java.sql.SQLException
 class WatchHistory {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 6
+        val DATABASE_VERSION: Int = 8
         val DATABASE_NAME: String = "WatchHistory"
         val TABLE_NAME: String = "WatchHistoryTable"
 
@@ -82,6 +82,7 @@ class WatchHistory {
 
                 try {
                     val values = ContentValues()
+                    values.put(KEY_CHANNELID, detail.channel.channelId)
                     values.put(KEY_VIDEOID, detail.videoId)
                     values.put(KEY_TITLE, detail.title)
                     values.put(KEY_DESCRIPTION, detail.description)
