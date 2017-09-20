@@ -18,22 +18,30 @@ class LaunchActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_launch)
 
-        // Find the last watched ChannelId in SharedPreferences. If it's there, use the new channel
-        // database to launch the MainActivity specifying the channel in the intent. If it's not there,
-        // let self launch with the button.
-        val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
-        val channelId = preferences.getString(getString(R.string.launchChannel), "")
-        if (channelId != "") {
-            // We have a last watched chanel, so launch the MainActivity
-            // Search the database for the specified channelId
-            // There should definitely be a channel in Channels for the channelId stored in
-            // sharedPreferences, but if there isn't we just continue loading
-            val channel = Channels.getChannel(applicationContext, channelId)
-            if (channel != null) {
-                // Launch the main activity
-                val mainIntent = Intent(this, MainActivity::class.java);
-                mainIntent.putExtra("channel", channel)
-                startActivity(mainIntent)
+        // Don't automatically load the last channel if we came from the settings menu to switch
+        // channels. Instead, load the search dialog.
+        if (intent.hasExtra(getString(R.string.launchedFromSettings))) {
+            onSearchRequested()
+        } else {
+
+            // Find the last watched ChannelId in SharedPreferences. If it's there, use the new channel
+            // database to launch the MainActivity specifying the channel in the intent. If it's not there,
+            // let self launch with the button.
+            val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
+            val channelId = preferences.getString(getString(R.string.launchChannel), "")
+
+            if (channelId != "") {
+                // We have a last watched chanel, so launch the MainActivity
+                // Search the database for the specified channelId
+                // There should definitely be a channel in Channels for the channelId stored in
+                // sharedPreferences, but if there isn't we just continue loading
+                val channel = Channels.getChannel(applicationContext, channelId)
+                if (channel != null) {
+                    // Launch the main activity
+                    val mainIntent = Intent(this, MainActivity::class.java);
+                    mainIntent.putExtra("channel", channel)
+                    startActivity(mainIntent)
+                }
             }
         }
 

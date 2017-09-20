@@ -449,8 +449,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun showChannelSelectActivity(channel: Channel) {
         val launchActivityIntent = Intent(this, LaunchActivity::class.java)
-        // Don't do this because the only way LaunchActivity wil show up is for there to be no channel in the intent
-        //launchActivityIntent.putExtra("channel", channel)
+
+        // Specify to the LaunchActivity that we came from settings so it doesn't automatically
+        // load the channel we're currently on
+        launchActivityIntent.putExtra(getString(R.string.launchedFromSettings), true)
         startActivity(launchActivityIntent)
     }
 
