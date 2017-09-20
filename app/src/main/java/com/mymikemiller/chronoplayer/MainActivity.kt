@@ -20,6 +20,7 @@ import android.view.inputmethod.InputMethodManager
 import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.view.ViewPager
 import android.content.Intent
+import android.util.Log
 import com.mymikemiller.chronoplayer.util.*
 
 
@@ -109,14 +110,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     private fun saveLaunchChannel(channel: Channel) {
         // Store the channel in shared preferences so we can go right to MainAcivity when we start up next time
-        val preferences = getPreferences(Context.MODE_PRIVATE)
+        val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
         val editor = preferences.edit()
         editor.putString(getString(R.string.launchChannel), channel.channelId)
         editor.apply()
 
         // insert the Channel into the Channels database (or do nothing if it's already there).
         // We'll need it to launch MainActivity right away the next time LaunchActivity loads
-        Channels.addChannel(channel)
+        Channels.addChannel(applicationContext, channel)
     }
 
     private fun setUpYouTubeFetch() {
@@ -177,10 +178,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                         //val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
 
-                        var detailToPlay = VideoList.getDetailFromVideoId(this, mChannel, videoIdToPlay)
+                        var detailToPlay = VideoList.getDetail(this, mChannel, videoIdToPlay)
                         if (detailToPlay == null) {
                             // If we couldn't find a video to play, play the chronologically first video of the channel
-                            detailToPlay = VideoList.getDetailFromVideoId(this, mChannel, videoIdToPlay)
+                            detailToPlay = VideoList.getDetail(this, mChannel, videoIdToPlay)
                         }
 
                         playVideo(detailToPlay, true)

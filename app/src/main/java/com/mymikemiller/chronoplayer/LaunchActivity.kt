@@ -4,7 +4,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
+import com.mymikemiller.chronoplayer.util.Channels
 import com.mymikemiller.chronoplayer.util.VideoList
 
 /**
@@ -19,22 +21,20 @@ class LaunchActivity : Activity() {
         // Find the last watched ChannelId in SharedPreferences. If it's there, use the new channel
         // database to launch the MainActivity specifying the channel in the intent. If it's not there,
         // let self launch with the button.
-        val preferences = getPreferences(Context.MODE_PRIVATE)
+        val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
         val channelId = preferences.getString(getString(R.string.launchChannel), "")
         if (channelId != "") {
             // We have a last watched chanel, so launch the MainActivity
             // Search the database for the specified channelId
             // There should definitely be a channel in Channels for the channelId stored in
             // sharedPreferences, but if there isn't we just continue loading
-            val channel = Channels.getChannel(channelId)
+            val channel = Channels.getChannel(applicationContext, channelId)
             if (channel != null) {
                 // Launch the main activity
                 val mainIntent = Intent(this, MainActivity::class.java);
                 mainIntent.putExtra("channel", channel)
                 startActivity(mainIntent)
             }
-
-
         }
 
         findViewById<Button>(R.id.search_button).setOnClickListener({

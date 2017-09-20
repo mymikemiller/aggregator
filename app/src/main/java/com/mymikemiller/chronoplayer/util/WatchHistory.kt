@@ -108,8 +108,8 @@ class WatchHistory {
                         "WHERE $KEY_CHANNELID = ?"
                     // If we need to know stuff from the VideoList table, we can join to it here.
 //                "SELECT * FROM $TABLE_NAME " +
-//                        "LEFT JOIN ${VideoList.DETAILS_TABLE_NAME}" +
-//                        "ON  = ${VideoList.DETAILS_TABLE_NAME}.${VideoList.KEY_CHANNELID} = " +
+//                        "LEFT JOIN ${VideoList.CHANNELS_TABLE_NAME}" +
+//                        "ON  = ${VideoList.CHANNELS_TABLE_NAME}.${VideoList.KEY_CHANNELID} = " +
 //                        "${TABLE_NAME}.$KEY_CHANNELID"
 //                "WHERE $KEY_CHANNELID = $channelId"
                 val db: SQLiteDatabase
@@ -138,7 +138,7 @@ class WatchHistory {
 
                             // We only need the channelId (we actually don't even need that) and thumbnail
                             // here because we're not displaying anything else
-                            val newChannel = Channel("", channelId, "", thumbnail)
+                            val newChannel = Channel(channelId,"", "", thumbnail)
 
                             val newDetail = Detail(newChannel, videoId, title, description, thumbnail, dateRfc3339)
                             allDetails.add(newDetail)

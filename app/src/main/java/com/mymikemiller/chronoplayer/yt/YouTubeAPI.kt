@@ -157,15 +157,15 @@ class YouTubeAPI {
                     searchListByKeywordRequest.setType(parameters.get("type").toString())
                 }
                 val response = searchListByKeywordRequest.execute()
-                System.out.println(response)
 
                 val channels = mutableListOf<Channel>()
                 for (item in response.items) {
                     fetchUploadPlaylistId(item.snippet.channelId, { uploadPlaylistId ->
                         run {
 
-                            val channel = Channel(item.snippet.channelTitle,
+                            val channel = Channel(
                                     item.snippet.channelId,
+                                    item.snippet.channelTitle,
                                     uploadPlaylistId,
                                     item.snippet.thumbnails.default.url)
                             channels.add(channel)

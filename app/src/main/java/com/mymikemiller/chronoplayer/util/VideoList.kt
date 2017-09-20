@@ -91,7 +91,7 @@ class VideoList {
         }
 
 
-        fun getDetailFromVideoId(context: Context, channel: Channel, videoId: String) : Detail? {
+        fun getDetail(context: Context, channel: Channel, videoId: String) : Detail? {
             val details = getAllDetailsFromDb(context, channel)
 
             var returnDetail:Detail? = null
@@ -211,7 +211,7 @@ class VideoList {
                 db.delete(DETAILS_TABLE_NAME, null, null)
                 db.setTransactionSuccessful()
             } catch (e: Exception) {
-                Log.d(TAG, "Error while trying to delete all posts and users")
+                Log.d(TAG, "Error while trying to delete all details")
             } finally {
                 db.endTransaction()
             }
