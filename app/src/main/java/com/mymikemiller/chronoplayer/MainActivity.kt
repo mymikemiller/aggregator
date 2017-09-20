@@ -96,12 +96,27 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mEpisodePager = findViewById(R.id.episodeViewPager)
         // endregion
 
+        // Save the launch channel to sharedPreferences so we c
+        saveLaunchChannel(mChannel)
+
         setUpYouTubeFetch()
         setUpPlayer()
         setUpEpisodePager()
         setUpPlaylist()
         setUpSearch()
         setUpPreferences()
+    }
+
+    private fun saveLaunchChannel(channel: Channel) {
+        // Store the channel in shared preferences so we can go right to MainAcivity when we start up next time
+        val preferences = getPreferences(Context.MODE_PRIVATE)
+        val editor = preferences.edit()
+        editor.putString(getString(R.string.launchChannel), channel.channelId)
+        editor.apply()
+
+        // insert the Channel into the Channels database (or do nothing if it's already there).
+        // We'll need it to launch MainActivity right away the next time LaunchActivity loads
+        Channels.addChannel(channel)
     }
 
     private fun setUpYouTubeFetch() {
@@ -433,7 +448,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun showChannelSelectActivity(channel: Channel) {
         val launchActivityIntent = Intent(this, LaunchActivity::class.java)
-        launchActivityIntent.putExtra("channel", channel)
+        // Don't do this because the only way LaunchActivity wil show up is for there to be no channel in the intent
+        //launchActivityIntent.putExtra("channel", channel)
         startActivity(launchActivityIntent)
     }
 

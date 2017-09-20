@@ -38,13 +38,12 @@ class ChannelSearchableActivity : ListActivity() {
 
     override fun onListItemClick(l: ListView?, v: View?, position: Int, id: Long) {
         super.onListItemClick(l, v, position, id)
-        val c = listAdapter.getItem(position) as Channel
+        val channel = listAdapter.getItem(position) as Channel
 
         // Launch the main activity
         val mainIntent = Intent(this, MainActivity::class.java);
-        mainIntent.putExtra("channel", c)
+        mainIntent.putExtra("channel", channel)
         startActivity(mainIntent)
-
     }
 
 

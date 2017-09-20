@@ -25,6 +25,7 @@
     <string name="pref_channel_select_description">Change the YouTube channel</string>
     <string name="watchHistory">watchHistory</string>
     <string name="channelSelect">channelSelect</string>
+    <string name="launchChannel">launchChannels</string>
     <string name="videosUnskipped">All videos are now available</string>
     <string name="undo">Undo</string>
     <string name="title_activity_watch_history">Watch History</string>

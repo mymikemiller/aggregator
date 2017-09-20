@@ -47,9 +47,7 @@ class VideoList {
             return dbHelper.getAllDetailsFromDb(channel).size
         }
 
-        // This will return all the Details currently in the database, and will call
-        // the databaseUpgradeCallback if the database had to be upgraded to a new version by
-        // incrementing the DATABASE_VERSION above. The returned details are in an arbitrary order.
+        // Returns all Details in the database that belong to the given channel
         fun getAllDetailsFromDb(context: Context,
                                       channel: Channel) : List<Detail>{
             val dbHelper = DetailsOpenHelper(context.applicationContext)
@@ -149,6 +147,7 @@ class VideoList {
             }
         }
 
+        // Get all Details from the database that belong to the given channel
         fun getAllDetailsFromDb(channel: Channel): List<Detail> {
             val allDetails = mutableListOf<Detail>()
 
