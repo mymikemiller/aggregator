@@ -36,7 +36,7 @@ class WatchHistoryActivity : AppCompatActivity() {
         mHistoryView.setLayoutManager(mLinearLayoutManager)
     }
 
-    // Set up what happens when an playlist item is clicked
+    // Set up what happens when a playlist item is clicked
     val onItemClick: (Detail) -> Unit = {detail ->
         run {
             val result = Intent()

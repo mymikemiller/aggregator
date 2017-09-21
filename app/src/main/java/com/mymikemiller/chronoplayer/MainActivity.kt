@@ -76,7 +76,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         setContentView(R.layout.activity_main)
 
         //region [Variable initialization]
-        mChannel = intent.getSerializableExtra("channel") as Channel
         baseLayout = findViewById<LinearLayout>(R.id.layout)
         bar = findViewById<LinearLayout>(R.id.bar)
         slidingLayout = findViewById(R.id.sliding_layout)
@@ -97,7 +96,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mEpisodePager = findViewById(R.id.episodeViewPager)
         // endregion
 
-        // Save the launch channel to sharedPreferences so we c
+        setUp(intent)
+    }
+
+    override fun onNewIntent(newIntent: Intent?) {
+        super.onNewIntent(newIntent)
+        if (newIntent != null) {
+            setUp(newIntent)
+        }
+    }
+
+    fun setUp(theIntent: Intent) {
+        mChannel = theIntent.getSerializableExtra("channel") as Channel
+
+        // Save the launch channel to sharedPreferences so we start there next time
         saveLaunchChannel(mChannel)
 
         setUpYouTubeFetch()
@@ -454,10 +466,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Specify to the LaunchActivity that we came from settings so it doesn't automatically
         // load the channel we're currently on
         launchActivityIntent.putExtra(getString(R.string.launchedFromSettings), true)
+        launchActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         startActivity(launchActivityIntent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        super.onActivityResult(requestCode, resultCode, data)
 
         // Check which request we're responding to
         if (requestCode == WATCH_HISTORY_REQUEST) {

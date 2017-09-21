@@ -44,6 +44,7 @@ class LaunchActivity : Activity() {
                 if (channel != null) {
                     // Launch the main activity
                     val mainIntent = Intent(this, MainActivity::class.java);
+                    mainIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
                     mainIntent.putExtra("channel", channel)
                     startActivity(mainIntent)
                     finish()

@@ -22,7 +22,6 @@ class ChannelSearchableActivity : ListActivity() {
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val intent = intent
         if (Intent.ACTION_SEARCH == intent.action) {
             val query = intent.getStringExtra(SearchManager.QUERY)
             YouTubeAPI.fetchChannels(query, {channels -> run {
@@ -42,6 +41,7 @@ class ChannelSearchableActivity : ListActivity() {
 
         // Launch the main activity
         val mainIntent = Intent(this, MainActivity::class.java);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         mainIntent.putExtra("channel", channel)
         startActivity(mainIntent)
     }
