@@ -17,12 +17,15 @@ class LaunchActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_launch)
+    }
+
+    fun launchCorrectActivity() {
 
         // Don't automatically load the last channel if we came from the settings menu to switch
         // channels. Instead, load the search dialog.
         if (intent.hasExtra(getString(R.string.launchedFromSettings))) {
             onSearchRequested()
-            // Don't "finish" here or it goes back to main activity when selecting "Cange Channel" in the settings
+            // Don't "finish" here or it goes back to main activity when selecting "Change Channel" in the settings
             // finish()
         } else {
 
@@ -56,5 +59,17 @@ class LaunchActivity : Activity() {
             onSearchRequested()
             finish()
         })
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+
+        launchCorrectActivity()
+
     }
 }
