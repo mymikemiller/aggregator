@@ -22,6 +22,9 @@ import android.support.v4.view.ViewPager
 import android.content.Intent
 import android.util.Log
 import com.mymikemiller.chronoplayer.util.*
+import android.content.IntentFilter
+
+
 
 
 /**
@@ -96,7 +99,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mEpisodePager = findViewById(R.id.episodeViewPager)
         // endregion
 
+        // Run all the setup functions
         setUp(intent)
+
+        // Register for broadcast intents from settings
+        val filter = IntentFilter(PreferencesActivity.UNSKIP_ALL)
+        filter.addAction(PreferencesActivity.WATCH_HISTORY)
+        filter.addAction(PreferencesActivity.CHANNEL_SELECT)
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(mBroadcastReceiver, filter)
+
     }
 
     override fun onNewIntent(newIntent: Intent?) {
@@ -140,7 +152,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // This won't work until we've initialized these lists
         val stopAtDetail = if (detailsFromDbByDate.size > 0) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
 
-        // Set up what happens when an playlist item is clicked
+        // Set up what happens when a playlist item is clicked
         val onItemClick: (Detail) -> Unit = {detail ->
             run {
                 if (detail != mCurrentlyPlayingVideoDetail) {
@@ -341,15 +353,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
                     }
                 }
+
             }
         }
-
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.UNSKIP_ALL))
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.WATCH_HISTORY))
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(mBroadcastReceiver, IntentFilter(PreferencesActivity.CHANNEL_SELECT))
     }
 
     fun showPreferencesActivity() {
@@ -395,8 +401,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 .unregisterReceiver(mBroadcastReceiver)
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         if (mPlayerInitialized)
             recordCurrentTime()
     }
@@ -456,7 +462,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     fun showWatchHistoryActivity(channel: Channel) {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
         watchHistoryIntent.putExtra("channel", channel)
-        watchHistoryIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
     }
 
@@ -466,7 +471,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Specify to the LaunchActivity that we came from settings so it doesn't automatically
         // load the channel we're currently on
         launchActivityIntent.putExtra(getString(R.string.launchedFromSettings), true)
-        launchActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         startActivity(launchActivityIntent)
     }
 

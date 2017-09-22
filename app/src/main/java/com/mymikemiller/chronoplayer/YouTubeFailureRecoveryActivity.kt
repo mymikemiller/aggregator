@@ -40,7 +40,7 @@ abstract class YouTubeFailureRecoveryActivity : YouTubeBaseActivity(), YouTubePl
         }
     }
 
-    override protected fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         if (requestCode == RECOVERY_DIALOG_REQUEST) {
             // Retry initialization if user performed a recovery action
             youTubePlayerProvider.initialize(DeveloperKey.DEVELOPER_KEY, this)

@@ -26,7 +26,7 @@ class LaunchActivity : Activity() {
         if (intent.hasExtra(getString(R.string.launchedFromSettings))) {
             onSearchRequested()
             // Don't "finish" here or it goes back to main activity when selecting "Change Channel" in the settings
-            // finish()
+            //finish()
         } else {
 
             // Find the last watched ChannelId in SharedPreferences. If it's there, use the new channel
@@ -44,7 +44,6 @@ class LaunchActivity : Activity() {
                 if (channel != null) {
                     // Launch the main activity
                     val mainIntent = Intent(this, MainActivity::class.java);
-                    mainIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
                     mainIntent.putExtra("channel", channel)
                     startActivity(mainIntent)
                     finish()
@@ -53,6 +52,7 @@ class LaunchActivity : Activity() {
                 // We couldn't find a last-watched-channel (launch channel) in the shared
                 // preferences, so pop up the search dialog
                 onSearchRequested()
+                finish()
             }
         }
 
