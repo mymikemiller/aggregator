@@ -145,7 +145,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun setUpYouTubeFetch() {
-        // Get the details ordered by date uploaded and force an upgrade if necessary,s
+        // Show the fetch progress section
+        fetchVideosProgressSection.visibility = View.VISIBLE
+
+        // Get the details ordered by date uploaded and force an upgrade if necessary
         val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(this,
                 mChannel))
 
@@ -321,6 +324,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 }
             }
         })
+
+        // Make sure the playlist starts out collapsed (e.g. when we receive a new intent from
+        // the select channel screen)
+        slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
     }
 
     private fun setUpSearch() {
