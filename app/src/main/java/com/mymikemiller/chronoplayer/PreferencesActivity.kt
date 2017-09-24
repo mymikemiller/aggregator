@@ -16,6 +16,7 @@ import android.widget.Toast
  */
 class PreferencesActivity : PreferenceActivity() {
     companion object {
+        const val CLEAR_VIDEO_CACHES = "com.example.mymikemiller.CLEAR_VIDEO_CACHES"
         const val UNSKIP_ALL = "com.example.mymikemiller.UNSKIP_ALL"
         const val WATCH_HISTORY = "com.example.mymikemiller.WATCH_HISTORY"
         const val CHANNEL_SELECT = "com.example.mymikemiller.CHANNEL_SELECT"
@@ -24,7 +25,6 @@ class PreferencesActivity : PreferenceActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         fragmentManager.beginTransaction().replace(android.R.id.content, MyPreferenceFragment()).commit()
     }
 
@@ -32,6 +32,19 @@ class PreferencesActivity : PreferenceActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
+
+            val clearVideoCachesButton = findPreference(getString(R.string.pref_clearVideoCachesKey))
+            clearVideoCachesButton.setOnPreferenceClickListener({
+
+                val intent = Intent()
+                intent.action = CLEAR_VIDEO_CACHES
+                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
+
+                Toast.makeText(getActivity(), getString(R.string.videoCachesCleared),
+                        Toast.LENGTH_SHORT).show()
+
+                true
+            })
 
             val unskipAllVideosButton = findPreference(getString(R.string.pref_unskipAllVideosKey))
             unskipAllVideosButton.setOnPreferenceClickListener({

@@ -16,6 +16,9 @@
     <string name="skipVideo">Skip Video</string>
     <string name="launchedFromSettings">launchedFromSettings</string>
     <string name="sharedPrefsName">SharedPrefs</string>
+    <string name="pref_clearVideoCachesKey">clearVideoCachesButton</string>
+    <string name="pref_clear_video_caches_title">Clear All Video Caches</string>
+    <string name="pref_clear_video_caches_description">Force app to re-fetch video lists from YouTube for all channels</string>
     <string name="pref_unskipAllVideosKey">unskipAllVideosButton</string>
     <string name="pref_unskip_all_videos_title">Unskip All</string>
     <string name="pref_unskip_all_videos_description">Unskip all videos</string>
@@ -28,6 +31,7 @@
     <string name="watchHistory">watchHistory</string>
     <string name="channelSelect">channelSelect</string>
     <string name="launchChannel">launchChannels</string>
+    <string name="videoCachesCleared">Video list caches cleared</string>
     <string name="videosUnskipped">All videos are now available</string>
     <string name="undo">Undo</string>
     <string name="title_activity_watch_history">Watch History</string>

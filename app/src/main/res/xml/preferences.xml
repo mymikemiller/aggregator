@@ -4,6 +4,11 @@
     android:layout_width="match_parent">
 
     <Preference
+        android:title="@string/pref_clear_video_caches_title"
+        android:summary="@string/pref_clear_video_caches_description"
+        android:key="@string/pref_clearVideoCachesKey"/>
+
+    <Preference
         android:title="@string/pref_unskip_all_videos_title"
         android:summary="@string/pref_unskip_all_videos_description"
         android:key="@string/pref_unskipAllVideosKey"/>

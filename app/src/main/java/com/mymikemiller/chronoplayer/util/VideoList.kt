@@ -51,8 +51,13 @@ class VideoList {
         fun getAllDetailsFromDb(context: Context,
                                       channel: Channel) : List<Detail>{
             val dbHelper = DetailsOpenHelper(context.applicationContext)
-
             return dbHelper.getAllDetailsFromDb(channel)
+        }
+
+        // Returns all Details in the database that belong to the given channel
+        fun clearDatabase(context: Context) {
+            val dbHelper = DetailsOpenHelper(context.applicationContext)
+            return dbHelper.deleteAllDetails()
         }
 
         fun fetchAllDetails(context: Context,

@@ -103,7 +103,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         setUp(intent)
 
         // Register for broadcast intents from settings
-        val filter = IntentFilter(PreferencesActivity.UNSKIP_ALL)
+        val filter = IntentFilter(PreferencesActivity.CLEAR_VIDEO_CACHES)
+        filter.addAction(PreferencesActivity.UNSKIP_ALL)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
         filter.addAction(PreferencesActivity.CHANNEL_SELECT)
         LocalBroadcastManager.getInstance(this)
@@ -355,6 +356,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 if (currentlyPlaying != null) {
 
                     when (intent?.action) {
+                        PreferencesActivity.CLEAR_VIDEO_CACHES -> clearVideoCaches()
                         PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
                         PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
@@ -500,6 +502,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 showPreferencesActivity()
             }
         }
+    }
+
+    fun clearVideoCaches() {
+        VideoList.clearDatabase(this)
+
+        // Restart MainActivity so we have to re-fetch the channel's videos
+        finish();
+        startActivity(getIntent());
     }
 
     fun unSkipAllVideos(channel: Channel) {
