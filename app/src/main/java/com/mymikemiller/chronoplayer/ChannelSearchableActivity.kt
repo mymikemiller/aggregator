@@ -66,6 +66,7 @@ class ChannelSearchableActivity : ListActivity() {
             }})
         } else {
             // pop up the search dialog if we're sent a new intent that doesn't have a search query
+            // (e.g. when popping up from the search button in preferences)
             onSearchRequested()
         }
     }

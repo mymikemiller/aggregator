@@ -653,9 +653,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     fun scrollToCurrentlyPlayingVideo() {
         val index = mAdapter.details.indexOf(mCurrentlyPlayingVideoDetail)
 
+        // Scroll to one behind the selected video to show the selected video second. And scroll
+        // to 0, not negative one, if we're on the first video
+        val scrollTo = Math.max(index - 1, 0)
+
         runOnUiThread {
             // Scroll with an offset so that the selected video is one item down in the list
-            mLinearLayoutManager.scrollToPositionWithOffset(index - 1, 0)
+            mLinearLayoutManager.scrollToPositionWithOffset(scrollTo, 0)
         }
     }
 
