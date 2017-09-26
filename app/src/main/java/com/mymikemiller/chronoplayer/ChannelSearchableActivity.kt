@@ -45,8 +45,6 @@ class ChannelSearchableActivity : ListActivity() {
             // We couldn't find a last-watched-channel (launch channel) in the shared
             // preferences, so pop up the search dialog
             onSearchRequested()
-            //TODO: delete this
-            //finish()
         }
     }
 
@@ -66,6 +64,9 @@ class ChannelSearchableActivity : ListActivity() {
                     setListAdapter(listAdapter)
                 })
             }})
+        } else {
+            // pop up the search dialog if we're sent a new intent that doesn't have a search query
+            onSearchRequested()
         }
     }
 
