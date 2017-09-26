@@ -471,6 +471,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     fun showWatchHistoryActivity(channel: Channel) {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
         watchHistoryIntent.putExtra("channel", channel)
+        watchHistoryIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
     }
 
