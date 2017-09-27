@@ -9,44 +9,66 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!--Episode Title-->
-        <me.grantland.widget.AutofitTextView
-            android:id="@+id/episodeTitle"
+        <!-- The top bar for the title and left/right arrows -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="false"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            autofit:minTextSize="16sp"
-            android:padding="@dimen/text_padding"
-            android:textColor="@color/colorPrimary"
-            android:shadowColor="@color/colorPrimaryDark"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            android:shadowRadius="0"
-            android:textAlignment="center" />
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:orientation="horizontal">
 
-        <!-- Thumbnail -->
-        <ImageView
-            android:id="@+id/thumbnail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/text_padding"
-            android:contentDescription="@string/thumbnail"/>
+            <!-- Left Arrow -->
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="10"
+                android:src="@drawable/ic_keyboard_arrow_left_black_24dp"
+                android:contentDescription="@string/left_arrow"/>
+
+            <!-- Thumbnail -->
+            <ImageView
+                android:id="@+id/thumbnail"
+                android:layout_width="@dimen/thumbnail_width"
+                android:layout_height="@dimen/title_bar_height"
+                android:layout_weight="15"
+                android:paddingTop="0dp"
+                android:paddingBottom="0dp"
+                android:contentDescription="@string/thumbnail"/>
+
+            <!--Episode Title-->
+            <TextView
+                android:id="@+id/episodeTitle"
+                android:layout_width="@dimen/title_bar_height"
+                android:layout_height="wrap_content"
+                android:layout_weight="65"
+                android:textColor="#222"
+                android:singleLine="false"
+                android:maxLines="3"
+                android:textSize="@dimen/text_size"
+                android:textStyle="bold"
+                android:ellipsize="end"
+                android:padding="@dimen/text_padding"/>
+
+            <!-- Right Arrow -->
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="10"
+                android:src="@drawable/ic_keyboard_arrow_right_black_24dp"
+                android:contentDescription="@string/right_arrow"/>
+
+
+        </LinearLayout>
 
         <!-- Episode Description -->
         <TextView
             android:id="@+id/episodeDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textColor="@color/dark_gray"
             android:singleLine="false"
             android:padding="@dimen/text_padding"
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimary"
-            android:shadowColor="@color/colorPrimaryDark"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            android:shadowRadius="0"
-            android:textAlignment="center" />
+            android:textSize="@dimen/text_size"/>
+
     </LinearLayout>
 </ScrollView>

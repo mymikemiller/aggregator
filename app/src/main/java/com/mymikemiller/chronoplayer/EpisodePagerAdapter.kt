@@ -24,7 +24,7 @@ class EpisodePagerAdapter(private val mActivity: MainActivity, var details: List
         val standartTypeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/HelveticaNeueBd.ttf")
         val boldTypeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/HelveticaNeueMed.ttf")
 
-        val title:AutofitTextView = layout.findViewById<AutofitTextView>(R.id.episodeTitle)
+        val title:TextView = layout.findViewById<TextView>(R.id.episodeTitle)
         title.setText(detail.title)
         title.setTypeface(boldTypeface)
 

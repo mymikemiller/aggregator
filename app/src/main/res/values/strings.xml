@@ -37,5 +37,7 @@
     <string name="title_activity_watch_history">Watch History</string>
     <string name="ellipsis">ellipsis</string>
     <string name="search_hint">Search YouTube Channels</string>
+    <string name="left_arrow">Left Arrow</string>
+    <string name="right_arrow">Right Arrow</string>
 
 </resources>
