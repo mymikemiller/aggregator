@@ -20,7 +20,6 @@ import android.view.inputmethod.InputMethodManager
 import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.view.ViewPager
 import android.content.Intent
-import android.util.Log
 import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
 
@@ -480,7 +479,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun showChannelSelectActivity(channel: Channel) {
-        val channelSearchActivityIntent = Intent(this, ChannelSearchableActivity::class.java)
+        val channelSearchActivityIntent = Intent(this, ChannelSearchActivity::class.java)
 
         // Specify to the LaunchActivity that we came from settings so it doesn't automatically
         // load the channel we're currently on
@@ -612,7 +611,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Record the time we paused at so we can restore it when the app reloads
         val d: Detail? = mCurrentlyPlayingVideoDetail
         if (d != null) {
-            WatchedMillis.addOrUpdateWatchedMillis(this, d, player.currentTimeMillis)
+            if (mPlayerInitialized) {
+                WatchedMillis.addOrUpdateWatchedMillis(this, d, player.currentTimeMillis)
+            }
         }
     }
 

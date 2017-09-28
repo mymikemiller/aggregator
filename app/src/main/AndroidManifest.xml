@@ -14,7 +14,7 @@
 
         <!-- this SearchableActivity performs youtube channel searches
              and displays the results in a ListView-->
-        <activity android:name=".ChannelSearchableActivity"
+        <activity android:name=".ChannelSearchActivity"
             android:launchMode="singleTop">
 
             <intent-filter>
