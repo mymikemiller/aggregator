@@ -1,5 +1,6 @@
 package com.mymikemiller.chronoplayer
 
+import android.content.Context
 import android.graphics.Typeface
 import android.view.ViewGroup
 import android.view.LayoutInflater
@@ -13,27 +14,36 @@ import me.grantland.widget.AutofitTextView
 /**
  *
  */
-class EpisodePagerAdapter(private val mActivity: MainActivity, var details: List<Detail>) : PagerAdapter() {
+class EpisodePagerAdapter(private val mContext: Context, var details: List<Detail>, val leftArrowClickCallback: () -> Unit, val rightArrowClickCallback: () -> Unit) : PagerAdapter() {
 
     override fun instantiateItem(collection: ViewGroup, position: Int): Any {
-        val inflater = LayoutInflater.from(mActivity)
+        val inflater = LayoutInflater.from(mContext)
         val layout = inflater.inflate(R.layout.episode_view, collection, false) as ViewGroup
-
         val detail = details[position]
 
-        val standartTypeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/HelveticaNeueBd.ttf")
-        val boldTypeface: Typeface = Typeface.createFromAsset(mActivity.getAssets(), "fonts/HelveticaNeueMed.ttf")
+        val standardTypeface: Typeface = Typeface.createFromAsset(mContext.getAssets(), "fonts/HelveticaNeueBd.ttf")
+        val boldTypeface: Typeface = Typeface.createFromAsset(mContext.getAssets(), "fonts/HelveticaNeueMed.ttf")
 
-        val title:TextView = layout.findViewById<TextView>(R.id.episodeTitle)
+        val title: TextView = layout.findViewById<TextView>(R.id.episodeTitle)
         title.setText(detail.title)
-        title.setTypeface(boldTypeface)
+        title.setTypeface(standardTypeface)
 
         val description = layout.findViewById<TextView>(R.id.episodeDescription)
         description.setText(detail.description)
-        description.setTypeface(standartTypeface)
+        description.setTypeface(boldTypeface)
 
         val thumbnail = layout.findViewById<ImageView>(R.id.thumbnail)
-        Picasso.with(mActivity).load(detail.thumbnail).into(thumbnail)
+
+        val leftArrow = layout.findViewById<ImageView>(R.id.leftArrow)
+        val rightArrow = layout.findViewById<ImageView>(R.id.rightArrow)
+        leftArrow.setOnClickListener {
+            leftArrowClickCallback()
+        }
+        rightArrow.setOnClickListener {
+            rightArrowClickCallback()
+        }
+
+        Picasso.with(mContext).load(detail.thumbnail).into(thumbnail)
 
         collection.addView(layout)
         return layout

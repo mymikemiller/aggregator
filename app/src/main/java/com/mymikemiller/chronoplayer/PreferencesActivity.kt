@@ -76,10 +76,6 @@ class PreferencesActivity : PreferenceActivity() {
             val channelSelectButton = findPreference(getString(R.string.pref_channelSelectKey))
             channelSelectButton.setOnPreferenceClickListener({
 
-                // Close the preferences pane so we go directly back to the main activity when we
-                // select a video to play
-                activity.finish()
-
                 val intent = Intent()
                 intent.action = CHANNEL_SELECT
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)

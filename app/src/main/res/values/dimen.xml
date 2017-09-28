@@ -7,5 +7,5 @@
     <dimen name="small_font">20dp</dimen>
     <dimen name="title_bar_height">80dp</dimen>
     <dimen name="thumbnail_width">80dp</dimen>
-    <dimen name="text_size">20sp</dimen>
+    <dimen name="text_size">14sp</dimen>
 </resources>

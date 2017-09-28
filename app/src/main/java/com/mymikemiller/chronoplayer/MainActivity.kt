@@ -183,7 +183,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     // Now that we've got a list of details, we can prepare the RecyclerView
                     mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, skipVideo)
-                    mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate)
+                    mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate, {
+                        mEpisodePager.setCurrentItem(mEpisodePager.currentItem - 1, true);
+                    }, {
+                        mEpisodePager.setCurrentItem(mEpisodePager.currentItem + 1, true);
+                    })
                     mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
 
                     mAdapterInitialized = true
