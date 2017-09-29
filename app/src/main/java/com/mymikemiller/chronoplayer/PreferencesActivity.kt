@@ -56,6 +56,7 @@ class PreferencesActivity : PreferenceActivity() {
                 Toast.makeText(getActivity(), getString(R.string.videosUnskipped),
                         Toast.LENGTH_SHORT).show()
 
+
                 true
             })
 
@@ -79,6 +80,8 @@ class PreferencesActivity : PreferenceActivity() {
                 val intent = Intent()
                 intent.action = CHANNEL_SELECT
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
+
+                activity.finish()
 
                 true
             })
