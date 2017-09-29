@@ -33,19 +33,6 @@ class PreferencesActivity : PreferenceActivity() {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
 
-            val clearVideoCachesButton = findPreference(getString(R.string.pref_clearVideoCachesKey))
-            clearVideoCachesButton.setOnPreferenceClickListener({
-
-                val intent = Intent()
-                intent.action = CLEAR_VIDEO_CACHES
-                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
-
-                Toast.makeText(getActivity(), getString(R.string.videoCachesCleared),
-                        Toast.LENGTH_SHORT).show()
-
-                true
-            })
-
             val unskipAllVideosButton = findPreference(getString(R.string.pref_unskipAllVideosKey))
             unskipAllVideosButton.setOnPreferenceClickListener({
 

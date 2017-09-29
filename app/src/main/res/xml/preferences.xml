@@ -4,14 +4,10 @@
     android:layout_width="match_parent">
 
     <Preference
-        android:title="@string/pref_clear_video_caches_title"
-        android:summary="@string/pref_clear_video_caches_description"
-        android:key="@string/pref_clearVideoCachesKey"/>
+        android:title="@string/pref_channel_select_title"
+        android:summary="@string/pref_channel_select_description"
+        android:key="@string/pref_channelSelectKey"/>
 
-    <Preference
-        android:title="@string/pref_unskip_all_videos_title"
-        android:summary="@string/pref_unskip_all_videos_description"
-        android:key="@string/pref_unskipAllVideosKey"/>
 
     <Preference
         android:title="@string/pref_watch_history_title"
@@ -19,8 +15,7 @@
         android:key="@string/pref_watchHistoryKey"/>
 
     <Preference
-        android:title="@string/pref_channel_select_title"
-        android:summary="@string/pref_channel_select_description"
-        android:key="@string/pref_channelSelectKey"/>
-
+        android:title="@string/pref_unskip_all_videos_title"
+        android:summary="@string/pref_unskip_all_videos_description"
+        android:key="@string/pref_unskipAllVideosKey"/>
 </PreferenceScreen>
