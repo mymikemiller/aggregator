@@ -22,20 +22,29 @@ import android.support.v4.view.ViewPager
 import android.content.Intent
 import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
-
-
-
+import android.util.Log
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInResult
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.api.GoogleApiClient
 
 /**
  * A video player allowing users to watch YouTube episodes in chronological order while providing the ability to skip videos.
  */
 class MainActivity : YouTubeFailureRecoveryActivity(),
-        YouTubePlayer.OnFullscreenListener {
+        YouTubePlayer.OnFullscreenListener,
+        GoogleApiClient.ConnectionCallbacks {
+
+    val TAG = "ChronoPlayer"
 
     val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
     val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
+    val RC_SIGN_IN = 3 // The request code for google sign in
 
     //region [Variable definitions]
+    private lateinit var mGoogleApiClient: GoogleApiClient
     private lateinit var mChannel: Channel
     private lateinit var baseLayout: LinearLayout
     private lateinit var bar: LinearLayout
@@ -102,12 +111,35 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         setUp(intent)
 
         // Register for broadcast intents from settings
-        val filter = IntentFilter(PreferencesActivity.UNSKIP_ALL)
+        val filter = IntentFilter(PreferencesActivity.CHANNEL_SELECT)
+        filter.addAction(PreferencesActivity.SIGN_IN)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
-        filter.addAction(PreferencesActivity.CHANNEL_SELECT)
+        filter.addAction(PreferencesActivity.UNSKIP_ALL)
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, filter)
 
+
+        // Configure sign-in to request the user's ID, email address, and basic
+        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build()
+
+        // Build a GoogleApiClient with access to the Google Sign-In API and the
+        // options specified by gso.
+        mGoogleApiClient = GoogleApiClient.Builder(this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .addConnectionCallbacks(this).build()
+    }
+
+    override fun onConnected(p0: Bundle?) {
+        Toast.makeText(this, getString(R.string.connection_failure),
+                Toast.LENGTH_LONG).show();
+    }
+
+    override fun onConnectionSuspended(p0: Int) {
+        Toast.makeText(this, getString(R.string.connection_failure),
+                Toast.LENGTH_LONG).show();
     }
 
     override fun onNewIntent(newIntent: Intent?) {
@@ -361,9 +393,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
                         PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
+                        PreferencesActivity.SIGN_IN -> signIn()
                     }
                 }
-
             }
         }
     }
@@ -411,10 +443,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 .unregisterReceiver(mBroadcastReceiver)
     }
 
+    override fun onStart() {
+        super.onStart()
+        mGoogleApiClient.connect();
+    }
+
     override fun onStop() {
         super.onStop()
-        if (mPlayerInitialized)
-            recordCurrentTime()
+        mGoogleApiClient.disconnect();
     }
     //endregion
 
@@ -486,12 +522,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         startActivity(channelSearchActivityIntent)
     }
 
+    fun signIn() {
+
+        val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
+        startActivityForResult(signInIntent, RC_SIGN_IN)
+
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         super.onActivityResult(requestCode, resultCode, data)
 
         // Check which request we're responding to
         if (requestCode == WATCH_HISTORY_REQUEST) {
-            if (resultCode == Activity.RESULT_OK ) {
+            if (resultCode == Activity.RESULT_OK) {
                 // We clicked a video.  Find it and play it.
                 val videoId = data.getStringExtra(WatchHistoryActivity.WATCH_HISTORY_DETAIL)
                 val detailToPlay = mDetailsByDateIncludingSkipped.find { it.videoId == videoId }
@@ -503,6 +546,23 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // Launch the preferences pane so it looks like we went back to it from the warch history
                 showPreferencesActivity()
             }
+        }
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            val result: GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleSignInResult(result);
+        }
+    }
+    fun handleSignInResult(result: GoogleSignInResult) : Unit {
+        Log.d(TAG, "handleSignInResult:" + result.isSuccess());
+        if (result.isSuccess()) {
+
+            Toast.makeText(this, "Signed in successfully",
+                    Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "Failed to sign in",
+                    Toast.LENGTH_LONG).show();
         }
     }
 

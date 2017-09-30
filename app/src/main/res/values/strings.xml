@@ -16,29 +16,36 @@
     <string name="skipVideo">Skip Video</string>
     <string name="launchedFromSettings">launchedFromSettings</string>
     <string name="sharedPrefsName">SharedPrefs</string>
-    <string name="pref_clearVideoCachesKey">clearVideoCachesButton</string>
-    <string name="pref_clear_video_caches_title">Clear All Video Caches</string>
-    <string name="pref_clear_video_caches_description">Force app to re-fetch video lists from YouTube for all channels</string>
+
     <string name="pref_unskipAllVideosKey">unskipAllVideosButton</string>
     <string name="pref_unskip_all_videos_title">Unskip All</string>
     <string name="pref_unskip_all_videos_description">Unskip all videos</string>
-    <string name="pref_watchHistoryKey">watchHistoryButton</string>
-    <string name="pref_channelSelectKey">channelSelectsButton</string>
-    <string name="pref_watch_history_title">Watch History</string>
-    <string name="pref_channel_select_title">Select Channel</string>
-    <string name="pref_watch_history_description">See the channel\'s recently watched videos</string>
-    <string name="pref_channel_select_description">Change the YouTube channel</string>
-    <string name="watchHistory">watchHistory</string>
-    <string name="channelSelect">channelSelect</string>
-    <string name="launchChannel">launchChannels</string>
-    <string name="videoCachesCleared">Video list caches cleared</string>
     <string name="videosUnskipped">All videos are now available</string>
-    <string name="undo">Undo</string>
+
+    <string name="pref_channel_select_title">Select Channel</string>
+    <string name="pref_channelSelectKey">channelSelectsButton</string>
+    <string name="pref_channel_select_description">Change the YouTube channel</string>
+    <string name="channelSelect">channelSelect</string>
+
+    <string name="pref_sign_in_title">Sign in</string>
+    <string name="pref_signInKey">signInButton</string>
+    <string name="pref_sign_in_description">Sign in to Google to enable advanced features</string>
+    <string name="signIn">signIn</string>
+
+    <string name="pref_watch_history_title">Watch History</string>
+    <string name="pref_watch_history_description">See the channel\'s recently watched videos</string>
+    <string name="pref_watchHistoryKey">watchHistoryButton</string>
+    <string name="watchHistory">watchHistory</string>
     <string name="title_activity_watch_history">Watch History</string>
+
+    <string name="launchChannel">launchChannels</string>
+    <string name="undo">Undo</string>
     <string name="ellipsis">ellipsis</string>
     <string name="search_hint">Search YouTube Channels</string>
     <string name="channel_search_hint">Search by Channel Name</string>
     <string name="left_arrow">Left Arrow</string>
     <string name="right_arrow">Right Arrow</string>
+    <string name="connection_failure">Connection to Google suspended</string>
+    <string name="connected">Connected to Google</string>
 
 </resources>

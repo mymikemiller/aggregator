@@ -16,10 +16,10 @@ import android.widget.Toast
  */
 class PreferencesActivity : PreferenceActivity() {
     companion object {
-        const val CLEAR_VIDEO_CACHES = "com.example.mymikemiller.CLEAR_VIDEO_CACHES"
+        const val CHANNEL_SELECT = "com.example.mymikemiller.CHANNEL_SELECT"
+        const val SIGN_IN = "com.example.mymikemiller.SIGN_IN"
         const val UNSKIP_ALL = "com.example.mymikemiller.UNSKIP_ALL"
         const val WATCH_HISTORY = "com.example.mymikemiller.WATCH_HISTORY"
-        const val CHANNEL_SELECT = "com.example.mymikemiller.CHANNEL_SELECT"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,16 +33,26 @@ class PreferencesActivity : PreferenceActivity() {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
 
-            val unskipAllVideosButton = findPreference(getString(R.string.pref_unskipAllVideosKey))
-            unskipAllVideosButton.setOnPreferenceClickListener({
+            val channelSelectButton = findPreference(getString(R.string.pref_channelSelectKey))
+            channelSelectButton.setOnPreferenceClickListener({
 
                 val intent = Intent()
-                intent.action = UNSKIP_ALL
+                intent.action = CHANNEL_SELECT
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
-                Toast.makeText(getActivity(), getString(R.string.videosUnskipped),
-                        Toast.LENGTH_SHORT).show()
+                //activity.finish()
 
+                true
+            })
+
+            val signInButton = findPreference(getString(R.string.pref_signInKey))
+            signInButton.setOnPreferenceClickListener({
+
+                val intent = Intent()
+                intent.action = SIGN_IN
+                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
+
+                activity.finish()
 
                 true
             })
@@ -61,14 +71,16 @@ class PreferencesActivity : PreferenceActivity() {
                 true
             })
 
-            val channelSelectButton = findPreference(getString(R.string.pref_channelSelectKey))
-            channelSelectButton.setOnPreferenceClickListener({
+            val unskipAllVideosButton = findPreference(getString(R.string.pref_unskipAllVideosKey))
+            unskipAllVideosButton.setOnPreferenceClickListener({
 
                 val intent = Intent()
-                intent.action = CHANNEL_SELECT
+                intent.action = UNSKIP_ALL
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
-                activity.finish()
+                Toast.makeText(getActivity(), getString(R.string.videosUnskipped),
+                        Toast.LENGTH_SHORT).show()
+
 
                 true
             })
