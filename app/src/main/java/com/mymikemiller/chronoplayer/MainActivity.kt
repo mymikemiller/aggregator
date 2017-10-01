@@ -27,8 +27,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInResult
-import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.api.services.youtube.model.Playlist
+import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
 /**
  * A video player allowing users to watch YouTube episodes in chronological order while providing the ability to skip videos.
@@ -59,7 +60,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var playbackEventListener: MyPlaybackEventListener
     private var mCurrentlyPlayingVideoDetail: Detail? = null
     val recordCurrentTimeHandler: Handler = Handler()
-    private lateinit var mPlaylist: RecyclerView
+    private lateinit var mPlaylistRecyclerView: RecyclerView
     private lateinit var mLinearLayoutManager: LinearLayoutManager
     private var mAdapter: RecyclerAdapter = RecyclerAdapter(this, listOf(), {true}, {true}, null)
     private lateinit var mUpButton: ImageView
@@ -73,6 +74,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mBroadcastReceiver: BroadcastReceiver
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
+    private var mPlaylist: Playlist? = null
 
     // These collections include the skipped cideos
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
@@ -102,7 +104,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mSearchEditText = findViewById(R.id.searchEditText)
         mExpandButton = findViewById(R.id.expand_button)
         mPreferencesButton = findViewById(R.id.preferences_button)
-        mPlaylist = findViewById(R.id.playlist)
+        mPlaylistRecyclerView = findViewById(R.id.playlist)
         mLinearLayoutManager = LinearLayoutManager(this)
         mEpisodePager = findViewById(R.id.episodeViewPager)
         // endregion
@@ -130,15 +132,22 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .addConnectionCallbacks(this).build()
+
     }
 
+    // The user is now authenticated, so get their playlist
     override fun onConnected(p0: Bundle?) {
-        Toast.makeText(this, getString(R.string.connection_failure),
+        Toast.makeText(this, getString(R.string.connection_success),
                 Toast.LENGTH_LONG).show();
+
+        // todo: move this into YouTubeAPI and return a new Playlist object
+        YouTubeAPI.getPlaylist("gamegrumps", {playlist ->
+            mPlaylist = playlist
+        })
     }
 
     override fun onConnectionSuspended(p0: Int) {
-        Toast.makeText(this, getString(R.string.connection_failure),
+        Toast.makeText(this, getString(R.string.connection_suspended),
                 Toast.LENGTH_LONG).show();
     }
 
@@ -221,7 +230,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
 
                     mAdapterInitialized = true
-                    mPlaylist.setAdapter(mAdapter)
+                    mPlaylistRecyclerView.setAdapter(mAdapter)
                     mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
                     fetchVideosProgressSection.visibility = View.GONE
 
@@ -277,7 +286,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             val iDetail = mAdapter.details[i]
             if (detail == iDetail) {
                 // Make the RecyclerView items scroll up to fill in the space
-                mPlaylist.adapter.notifyItemRemoved(i)
+                mPlaylistRecyclerView.adapter.notifyItemRemoved(i)
             }
         }
     }
@@ -300,7 +309,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         })
     }
     private fun setUpPlaylist() {
-        mPlaylist.setLayoutManager(mLinearLayoutManager)
+        mPlaylistRecyclerView.setLayoutManager(mLinearLayoutManager)
 
         // Respond to keyboard up/down events
         val activityRootView = findViewById<LinearLayout>(R.id.layout)
@@ -554,12 +563,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             handleSignInResult(result);
         }
     }
+
+    // This happens as a result of signing in for the first time by selecting a user
     fun handleSignInResult(result: GoogleSignInResult) : Unit {
         Log.d(TAG, "handleSignInResult:" + result.isSuccess());
         if (result.isSuccess()) {
 
             Toast.makeText(this, "Signed in successfully",
                     Toast.LENGTH_LONG).show();
+
+            // todo: move this into YouTubeAPI and return a new Playlist object
+            YouTubeAPI.getPlaylist("gamegrumps", {playlist ->
+                mPlaylist = playlist
+            })
+
         } else {
             Toast.makeText(this, "Failed to sign in",
                     Toast.LENGTH_LONG).show();
@@ -726,7 +743,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
     fun scrollToBottom() {
-        val index = if (mPlaylist.adapter == null) -1 else mPlaylist.adapter.itemCount - 1
+        val index = if (mPlaylistRecyclerView.adapter == null) -1 else mPlaylistRecyclerView.adapter.itemCount - 1
         if (index > -1) {
             runOnUiThread {
                 mLinearLayoutManager.scrollToPosition(index)
@@ -756,7 +773,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     player.loadVideo(detail.videoId, startTimeMillis)
 
                 // Refresh the RecyclerAdapter to get the currently playing highlight right
-                mPlaylist.adapter.notifyDataSetChanged()
+                mPlaylistRecyclerView.adapter.notifyDataSetChanged()
             }
 
             // TODO: This should be in a database rather than SharedPreferences because now we have to track every one in the database

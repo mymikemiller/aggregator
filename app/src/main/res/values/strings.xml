@@ -45,7 +45,8 @@
     <string name="channel_search_hint">Search by Channel Name</string>
     <string name="left_arrow">Left Arrow</string>
     <string name="right_arrow">Right Arrow</string>
-    <string name="connection_failure">Connection to Google suspended</string>
+    <string name="connection_suspended">Connection to Google suspended</string>
+    <string name="connection_success">Connection to Google succeeded</string>
     <string name="connected">Connected to Google</string>
 
 </resources>

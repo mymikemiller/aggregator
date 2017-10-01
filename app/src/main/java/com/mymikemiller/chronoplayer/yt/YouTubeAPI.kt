@@ -1,11 +1,14 @@
 package com.mymikemiller.chronoplayer.yt
 
 import android.os.AsyncTask
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.api.services.youtube.YouTube
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.youtube.model.Playlist
+import com.google.api.services.youtube.model.PlaylistListResponse
 import com.mymikemiller.chronoplayer.Channel
 import com.mymikemiller.chronoplayer.Detail
 import com.mymikemiller.chronoplayer.DeveloperKey
@@ -23,7 +26,7 @@ class YouTubeAPI {
          * YouTube Data API requests.
          */
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
-                HttpRequestInitializer { }).setApplicationName("chrono-player").build()
+                HttpRequestInitializer { }).setApplicationName("chronoplayer").build()
 
         fun fetchAllDetails(channel: Channel,
                               stopAtDetail: Detail?,
@@ -202,6 +205,49 @@ class YouTubeAPI {
                 val uploadPlaylistId = response.items[0].contentDetails.relatedPlaylists.uploads
 
                 callback(uploadPlaylistId)
+            }
+        }
+
+            //=========================//
+          //      Authenticated       //
+        //===========================//
+
+        fun getPlaylist(title: String, callback: (playlist: Playlist?) -> Unit) {
+            getPlaylistTask(title, callback).execute()
+        }
+
+        private class getPlaylistTask(val title: String, val callback: (playlist: Playlist?) -> Unit) : AsyncTask<Unit, Unit, Unit>()  {
+            override fun doInBackground(vararg params: Unit?) {
+                var nextPageToken: String? = ""
+                val playlists = mutableListOf<Playlist>()
+
+                while (nextPageToken != null) {
+
+                    val part = "snippet,contentDetails"
+
+                    val playlistsListByChannelIdRequest: YouTube.Playlists.List = youtube.playlists().list(part);
+
+                    playlistsListByChannelIdRequest.setPart(part)
+                    playlistsListByChannelIdRequest.setMine(true)
+                    playlistsListByChannelIdRequest.setMaxResults(25)
+                    playlistsListByChannelIdRequest.setKey(DeveloperKey.DEVELOPER_KEY)
+
+                    val response: PlaylistListResponse = playlistsListByChannelIdRequest.execute();
+                    playlists.addAll(response.items)
+
+                    nextPageToken = response.nextPageToken
+
+                    if (nextPageToken == null) {
+                        val playlist: Playlist? = response.items.find { it.snippet.title == title }
+
+                        if (playlist != null) {
+                            callback(playlist)
+                        }
+                    }
+                }
+
+                // No playlist was found with the given title
+                callback(null)
             }
         }
     }
