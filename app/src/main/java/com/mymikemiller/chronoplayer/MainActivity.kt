@@ -41,6 +41,7 @@ import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.youtube.YouTube
+import com.google.api.services.youtube.model.PlaylistListResponse
 import com.google.api.services.youtube.model.Subscription
 import com.google.api.services.youtube.model.SubscriptionListResponse
 import java.io.IOException
@@ -111,13 +112,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     /**
      * AsyncTask that uses the credentials from Google Sign In to access Youtube subscription API.
      */
-    private class GetSubscriptionTask(val context: Context, val YOUTUBE_SCOPE: String) : AsyncTask<Account, Unit, List<Subscription>>() {
+    private class GetSubscriptionTask(val context: Context, val YOUTUBE_SCOPE: String) : AsyncTask<Account, Unit, List<Playlist>>() {
 
         protected override fun onPreExecute(): Unit {
             //showProgressDialog();
         }
 
-        override fun doInBackground(vararg params: Account?): List<Subscription>? {
+        override fun doInBackground(vararg params: Account?): List<Playlist>? {
             try {
                 val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
                         context,
@@ -142,7 +143,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         .setMine(true)
                         .execute();
 
-                return connectionsResponse.getItems();
+                val playlistsListByChannelIdResponse: PlaylistListResponse = youtube
+                        .playlists()
+                        .list("snippet")
+                        .setMine(true)
+                        .execute();
+
+                return playlistsListByChannelIdResponse.getItems();
             } catch (userRecoverableException: UserRecoverableAuthIOException) {
 //                Log.w(TAG, "getSubscription:recoverable exception", userRecoverableException);
 //                startActivityForResult(userRecoverableException.getIntent(), RC_RECOVERABLE);
@@ -153,14 +160,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             return null;
         }
 
-        override fun onPostExecute(subscriptions: List<Subscription>): Unit {
+        override fun onPostExecute(playlists: List<Playlist>): Unit {
 //            hideProgressDialog();
 
-            if (subscriptions != null) {
+            if (playlists != null) {
 //                Log.d(TAG, "subscriptions : size=" + subscriptions.size());
 
                 // Get names of all connections
-                for (sub in subscriptions) {
+                for (playlist in playlists) {
                     // Got the subscriptions
                     println()
                 }
