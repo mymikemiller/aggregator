@@ -19,7 +19,7 @@ val JSON_FACTORY: JsonFactory = JacksonFactory()
 /**
  *  A helper class that communicates with YouTube to make requests and return data
  */
-class YouTubeAPI {
+class YouTubeAPI() {
     companion object {
         /**
          * Define a global instance of a YouTube object, which will be used to make

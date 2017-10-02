@@ -105,24 +105,29 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     // endregion
 
-    private fun getSubscription() {
-        GetSubscriptionTask(this, YOUTUBE_SCOPE).execute(mAccount)
+    private fun getPlaylist(title: String, callback: (Playlist?) -> Unit) {
+        GetPlaylistTask(this, title, YOUTUBE_SCOPE, { playlist ->
+            run {
+                callback(playlist)
+            }
+        }).execute(mAccount)
     }
 
     /**
      * AsyncTask that uses the credentials from Google Sign In to access Youtube subscription API.
      */
-    private class GetSubscriptionTask(val context: Context, val YOUTUBE_SCOPE: String) : AsyncTask<Account, Unit, List<Playlist>>() {
+    private class GetPlaylistTask(val context: Context, val title: String, val YOUTUBE_SCOPE: String, val callback: (Playlist?) -> Unit) : AsyncTask<Account, Unit, Playlist?>() {
 
         protected override fun onPreExecute(): Unit {
             //showProgressDialog();
         }
 
-        override fun doInBackground(vararg params: Account?): List<Playlist>? {
+        override fun doInBackground(vararg params: Account?): Playlist? {
             try {
+                // todo: move this out of here into the YouTubeAPI constructor
                 val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
                         context,
-                Collections.singleton(this@GetSubscriptionTask.YOUTUBE_SCOPE));
+                Collections.singleton(this@GetPlaylistTask.YOUTUBE_SCOPE));
                 credential.setSelectedAccount(params[0]);
 
 
@@ -136,20 +141,25 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         .setApplicationName("ChronoPlayer")
                         .build();
 
-                val connectionsResponse: SubscriptionListResponse = youtube
-                        .subscriptions()
-                        .list("snippet")
-//                        .setChannelId("UCfyuWgCPu5WneQwuLBWd7Pg")
-                        .setMine(true)
-                        .execute();
-
                 val playlistsListByChannelIdResponse: PlaylistListResponse = youtube
                         .playlists()
                         .list("snippet")
                         .setMine(true)
                         .execute();
 
-                return playlistsListByChannelIdResponse.getItems();
+                val playlists = playlistsListByChannelIdResponse.getItems()
+
+                // Get names of all connections
+                for (playlist in playlists) {
+                    // Got the subscriptions
+                    println()
+                    if (playlist.snippet.title == title) {
+                        callback(playlist)
+                    }
+                }
+
+                callback(null)
+
             } catch (userRecoverableException: UserRecoverableAuthIOException) {
 //                Log.w(TAG, "getSubscription:recoverable exception", userRecoverableException);
 //                startActivityForResult(userRecoverableException.getIntent(), RC_RECOVERABLE);
@@ -160,17 +170,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             return null;
         }
 
-        override fun onPostExecute(playlists: List<Playlist>): Unit {
+        override fun onPostExecute(playlist: Playlist?): Unit {
 //            hideProgressDialog();
 
-            if (playlists != null) {
+            if (playlist != null) {
 //                Log.d(TAG, "subscriptions : size=" + subscriptions.size());
 
-                // Get names of all connections
-                for (playlist in playlists) {
-                    // Got the subscriptions
-                    println()
-                }
             } else {
                 // failed
                 println()
@@ -677,7 +682,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // Store the account from the result
                 mAccount = account.getAccount()
 
-                getSubscription()
+                getPlaylist("gamegrumps", { playlist ->
+                    run {
+                        // Store the playlist so we can add videos to it
+                        mPlaylist = playlist
+                    }
+                })
+                println()
             }
 
             // todo: move this into YouTubeAPI and return a new Playlist object
