@@ -61,9 +61,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
     val RC_SIGN_IN = 3 // The request code for google sign in
 
-    // Scope for reading user's contacts
-    val YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube";
-
     //region [Variable definitions]
     private lateinit var mGoogleApiClient: GoogleApiClient
     private lateinit var mChannel: Channel
@@ -96,6 +93,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
     private var mPlaylist: Playlist? = null
     private var mAccount: Account? = null
+    private var mYouTubeAPI: YouTubeAPI? = null
 
     // These collections include the skipped cideos
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
@@ -105,83 +103,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     // endregion
 
-    private fun getPlaylist(title: String, callback: (Playlist?) -> Unit) {
-        GetPlaylistTask(this, title, YOUTUBE_SCOPE, { playlist ->
-            run {
-                callback(playlist)
-            }
-        }).execute(mAccount)
-    }
-
-    /**
-     * AsyncTask that uses the credentials from Google Sign In to access Youtube subscription API.
-     */
-    private class GetPlaylistTask(val context: Context, val title: String, val YOUTUBE_SCOPE: String, val callback: (Playlist?) -> Unit) : AsyncTask<Account, Unit, Playlist?>() {
-
-        protected override fun onPreExecute(): Unit {
-            //showProgressDialog();
-        }
-
-        override fun doInBackground(vararg params: Account?): Playlist? {
-            try {
-                // todo: move this out of here into the YouTubeAPI constructor
-                val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
-                        context,
-                Collections.singleton(this@GetPlaylistTask.YOUTUBE_SCOPE));
-                credential.setSelectedAccount(params[0]);
-
-
-                // Global instance of the HTTP transport
-                val HTTP_TRANSPORT: HttpTransport = AndroidHttp.newCompatibleTransport();
-
-                // Global instance of the JSON factory
-                val JSON_FACTORY: JsonFactory = JacksonFactory.getDefaultInstance();
-
-                val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-                        .setApplicationName("ChronoPlayer")
-                        .build();
-
-                val playlistsListByChannelIdResponse: PlaylistListResponse = youtube
-                        .playlists()
-                        .list("snippet")
-                        .setMine(true)
-                        .execute();
-
-                val playlists = playlistsListByChannelIdResponse.getItems()
-
-                // Get names of all connections
-                for (playlist in playlists) {
-                    // Got the subscriptions
-                    println()
-                    if (playlist.snippet.title == title) {
-                        callback(playlist)
-                    }
-                }
-
-                callback(null)
-
-            } catch (userRecoverableException: UserRecoverableAuthIOException) {
-//                Log.w(TAG, "getSubscription:recoverable exception", userRecoverableException);
-//                startActivityForResult(userRecoverableException.getIntent(), RC_RECOVERABLE);
-            } catch (e: IOException) {
-//                Log.w(TAG, "getSubscription:exception", e);
-            }
-
-            return null;
-        }
-
-        override fun onPostExecute(playlist: Playlist?): Unit {
-//            hideProgressDialog();
-
-            if (playlist != null) {
-//                Log.d(TAG, "subscriptions : size=" + subscriptions.size());
-
-            } else {
-                // failed
-                println()
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -224,7 +145,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestScopes(Scope(Scopes.PLUS_LOGIN))
-                .requestScopes(Scope(YOUTUBE_SCOPE))
+                .requestScopes(Scope(YouTubeAPI.YOUTUBE_SCOPE))
                 .requestEmail()
                 .build()
 
@@ -682,7 +603,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // Store the account from the result
                 mAccount = account.getAccount()
 
-                getPlaylist("gamegrumps", { playlist ->
+                mYouTubeAPI = YouTubeAPI(this, mAccount!!)
+
+                val youTubeAPI = mYouTubeAPI
+
+                youTubeAPI!!.getPlaylist("gamegrumps", { playlist: Playlist? ->
                     run {
                         // Store the playlist so we can add videos to it
                         mPlaylist = playlist

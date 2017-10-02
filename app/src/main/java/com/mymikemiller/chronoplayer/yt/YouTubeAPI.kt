@@ -1,9 +1,15 @@
 package com.mymikemiller.chronoplayer.yt
 
+import android.accounts.Account
+import android.content.Context
 import android.os.AsyncTask
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.api.client.extensions.android.http.AndroidHttp
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.youtube.YouTube
 import com.google.api.client.http.HttpRequestInitializer
+import com.google.api.client.http.HttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.JsonFactory
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -12,15 +18,109 @@ import com.google.api.services.youtube.model.PlaylistListResponse
 import com.mymikemiller.chronoplayer.Channel
 import com.mymikemiller.chronoplayer.Detail
 import com.mymikemiller.chronoplayer.DeveloperKey
+import java.io.IOException
+import java.util.*
 
 val HTTP_TRANSPORT = NetHttpTransport()
 val JSON_FACTORY: JsonFactory = JacksonFactory()
 
 /**
- *  A helper class that communicates with YouTube to make requests and return data
+ *  A helper class that communicates with YouTube to make requests and return data. To use
+ *  authenticated requests, an instance of YouTubeAPI must be constructed. Otherwise, the static
+ *  methods may be used.
  */
-class YouTubeAPI() {
+class YouTubeAPI(context: Context, account: Account) {
+    private val mYouTube: YouTube
+
+    init {
+        val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
+                context,
+                Collections.singleton(YOUTUBE_SCOPE));
+        credential.setSelectedAccount(account);
+
+        // Global instance of the HTTP transport
+        val HTTP_TRANSPORT: HttpTransport = AndroidHttp.newCompatibleTransport();
+
+        // Global instance of the JSON factory
+        val JSON_FACTORY: JsonFactory = JacksonFactory.getDefaultInstance();
+
+        mYouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+                .setApplicationName("ChronoPlayer")
+                .build();
+    }
+
+    fun getPlaylist(title: String, callback: (Playlist?) -> Unit) {
+        if (mYouTube == null) {
+            // We're not authorized, so call the callback specifying null
+            callback(null)
+        } else {
+            GetPlaylistTask(mYouTube, title, YOUTUBE_SCOPE, { playlist ->
+                run {
+                    callback(playlist)
+                }
+            }).execute()
+        }
+    }
+
+    /**
+     * AsyncTask that uses the specified AuthYoutube playlist API.
+     */
+    private class GetPlaylistTask(val authenticatedYoutube: YouTube, val title: String, val YOUTUBE_SCOPE: String, val callback: (Playlist?) -> Unit) : AsyncTask<Account, Unit, Playlist?>() {
+
+        protected override fun onPreExecute(): Unit {
+            //showProgressDialog();
+        }
+
+        override fun doInBackground(vararg params: Account?): Playlist? {
+            try {
+                val playlistsListByChannelIdResponse: PlaylistListResponse = authenticatedYoutube
+                        .playlists()
+                        .list("snippet")
+                        .setMine(true)
+                        .execute();
+
+                val playlists = playlistsListByChannelIdResponse.getItems()
+
+                // Get names of all connections
+                for (playlist in playlists) {
+                    // Got the subscriptions
+                    println()
+                    if (playlist.snippet.title == title) {
+                        callback(playlist)
+                    }
+                }
+
+                // we didn't find a playlist with the give title. Run the callback specifying null.
+                callback(null)
+
+            } catch (userRecoverableException: UserRecoverableAuthIOException) {
+//                Log.w(TAG, "getSubscription:recoverable exception", userRecoverableException);
+//                startActivityForResult(userRecoverableException.getIntent(), RC_RECOVERABLE);
+            } catch (e: IOException) {
+//                Log.w(TAG, "getSubscription:exception", e);
+            }
+
+            return null;
+        }
+
+        override fun onPostExecute(playlist: Playlist?): Unit {
+//            hideProgressDialog();
+
+            if (playlist != null) {
+//                Log.d(TAG, "subscriptions : size=" + subscriptions.size());
+
+            } else {
+                // failed
+                println()
+            }
+        }
+    }
+
+    // Static functions that don't require authoriation
     companion object {
+        // Scope for modifying the user's private data
+        val YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube";
+
         /**
          * Define a global instance of a YouTube object, which will be used to make
          * YouTube Data API requests.
@@ -205,50 +305,6 @@ class YouTubeAPI() {
                 val uploadPlaylistId = response.items[0].contentDetails.relatedPlaylists.uploads
 
                 callback(uploadPlaylistId)
-            }
-        }
-
-            //=========================//
-          //      Authenticated       //
-        //===========================//
-
-        fun getPlaylist(title: String, callback: (playlist: Playlist?) -> Unit) {
-            getPlaylistTask(title, callback).execute()
-        }
-
-        private class getPlaylistTask(val title: String, val callback: (playlist: Playlist?) -> Unit) : AsyncTask<Unit, Unit, Unit>()  {
-            override fun doInBackground(vararg params: Unit?) {
-                var nextPageToken: String? = ""
-                val playlists = mutableListOf<Playlist>()
-
-                while (nextPageToken != null) {
-
-                    val part = "snippet,contentDetails"
-
-                    val playlistsListByChannelIdRequest: YouTube.Playlists.List = youtube.playlists().list(part);
-
-                    playlistsListByChannelIdRequest.setPart(part)
-                    playlistsListByChannelIdRequest.setMine(true)
-                    playlistsListByChannelIdRequest.setMaxResults(25)
-                    playlistsListByChannelIdRequest.onBehalfOfContentOwnerChannel = "true"
-                    playlistsListByChannelIdRequest.setKey(DeveloperKey.DEVELOPER_KEY)
-
-                    val response: PlaylistListResponse = playlistsListByChannelIdRequest.execute();
-                    playlists.addAll(response.items)
-
-                    nextPageToken = response.nextPageToken
-
-                    if (nextPageToken == null) {
-                        val playlist: Playlist? = response.items.find { it.snippet.title == title }
-
-                        if (playlist != null) {
-                            callback(playlist)
-                        }
-                    }
-                }
-
-                // No playlist was found with the given title
-                callback(null)
             }
         }
     }
