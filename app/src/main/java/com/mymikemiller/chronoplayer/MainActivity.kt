@@ -32,21 +32,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.Scope
-import com.google.api.client.extensions.android.http.AndroidHttp
-import com.google.api.services.youtube.model.Playlist
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import com.google.api.client.http.HttpTransport
-import com.google.api.client.json.JsonFactory
-import com.google.api.client.json.jackson2.JacksonFactory
-import com.google.api.services.youtube.YouTube
-import com.google.api.services.youtube.model.PlaylistListResponse
-import com.google.api.services.youtube.model.Subscription
-import com.google.api.services.youtube.model.SubscriptionListResponse
-import java.io.IOException
-import java.util.*
-
 
 /**
  * A video player allowing users to watch YouTube episodes in chronological order while providing the ability to skip videos.
@@ -91,8 +77,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mBroadcastReceiver: BroadcastReceiver
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
-    private var mPlaylist: Playlist? = null
-    private var mAccount: Account? = null
     private var mYouTubeAPI: YouTubeAPI? = null
 
     // These collections include the skipped cideos
@@ -159,15 +143,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     }
 
-    // The user is now authenticated, so get their playlist
+    // The user is now authenticated
     override fun onConnected(p0: Bundle?) {
         Toast.makeText(this, getString(R.string.connection_success),
                 Toast.LENGTH_LONG).show();
-
-        // todo: move this into YouTubeAPI and return a new Playlist object
-//        YouTubeAPI.getPlaylist("gamegrumps", {playlist ->
-//            mPlaylist = playlist
-//        })
     }
 
     override fun onConnectionSuspended(p0: Int) {
@@ -600,33 +579,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             val account: GoogleSignInAccount? = result.signInAccount
 
             if (account != null) {
-                // Store the account from the result
-                mAccount = account.getAccount()
-
-                mYouTubeAPI = YouTubeAPI(this, mAccount!!)
-
-                val youTubeAPI = mYouTubeAPI
-
-                youTubeAPI!!.getPlaylist("gamegrumps", { playlist: Playlist? ->
-                    run {
-                        // Store the playlist so we can add videos to it
-                        mPlaylist = playlist
-                    }
-                })
-                println()
+                mYouTubeAPI = YouTubeAPI(this, account.account!!)
             }
-
-            // todo: move this into YouTubeAPI and return a new Playlist object
-//            YouTubeAPI.getPlaylist("gamegrumps", {playlist ->
-//                mPlaylist = playlist
-//            })
-
         } else {
             Toast.makeText(this, "Failed to sign in",
                     Toast.LENGTH_LONG).show();
 
-            // Clear the local account
-            mAccount = null;
+            // Clear mYouTubeApi so we don't try to use authenticated functions
+            mYouTubeAPI = null;
         }
     }
 

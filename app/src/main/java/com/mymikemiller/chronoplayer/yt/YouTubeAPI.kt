@@ -31,6 +31,7 @@ val JSON_FACTORY: JsonFactory = JacksonFactory()
  */
 class YouTubeAPI(context: Context, account: Account) {
     private val mYouTube: YouTube
+    private var mPlaylist: Playlist? = null
 
     init {
         val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
@@ -47,14 +48,24 @@ class YouTubeAPI(context: Context, account: Account) {
         mYouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                 .setApplicationName("ChronoPlayer")
                 .build();
+
+        getPlaylist("gamegrumps", { playlist: Playlist? ->
+            run {
+                // Store the playlist so we can add videos to it
+                mPlaylist = playlist
+            }
+        })
+        println()
+
+
     }
 
-    fun getPlaylist(title: String, callback: (Playlist?) -> Unit) {
+    private fun getPlaylist(title: String, callback: (Playlist?) -> Unit) {
         if (mYouTube == null) {
             // We're not authorized, so call the callback specifying null
             callback(null)
         } else {
-            GetPlaylistTask(mYouTube, title, YOUTUBE_SCOPE, { playlist ->
+            GetPlaylistTask(mYouTube, title, { playlist ->
                 run {
                     callback(playlist)
                 }
@@ -65,13 +76,13 @@ class YouTubeAPI(context: Context, account: Account) {
     /**
      * AsyncTask that uses the specified AuthYoutube playlist API.
      */
-    private class GetPlaylistTask(val authenticatedYoutube: YouTube, val title: String, val YOUTUBE_SCOPE: String, val callback: (Playlist?) -> Unit) : AsyncTask<Account, Unit, Playlist?>() {
+    private class GetPlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist?) -> Unit) : AsyncTask<Account, Unit, Unit>() {
 
         protected override fun onPreExecute(): Unit {
             //showProgressDialog();
         }
 
-        override fun doInBackground(vararg params: Account?): Playlist? {
+        override fun doInBackground(vararg params: Account?) {
             try {
                 val playlistsListByChannelIdResponse: PlaylistListResponse = authenticatedYoutube
                         .playlists()
@@ -87,6 +98,7 @@ class YouTubeAPI(context: Context, account: Account) {
                     println()
                     if (playlist.snippet.title == title) {
                         callback(playlist)
+                        return
                     }
                 }
 
@@ -94,26 +106,15 @@ class YouTubeAPI(context: Context, account: Account) {
                 callback(null)
 
             } catch (userRecoverableException: UserRecoverableAuthIOException) {
-//                Log.w(TAG, "getSubscription:recoverable exception", userRecoverableException);
-//                startActivityForResult(userRecoverableException.getIntent(), RC_RECOVERABLE);
+                callback(null)
             } catch (e: IOException) {
-//                Log.w(TAG, "getSubscription:exception", e);
+                callback(null)
             }
 
-            return null;
+            return;
         }
 
-        override fun onPostExecute(playlist: Playlist?): Unit {
-//            hideProgressDialog();
-
-            if (playlist != null) {
-//                Log.d(TAG, "subscriptions : size=" + subscriptions.size());
-
-            } else {
-                // failed
-                println()
-            }
-        }
+        override fun onPostExecute(result: Unit?) {}
     }
 
     // Static functions that don't require authoriation
