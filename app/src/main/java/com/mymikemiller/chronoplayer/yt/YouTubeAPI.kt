@@ -230,6 +230,7 @@ class YouTubeAPI {
                     playlistsListByChannelIdRequest.setPart(part)
                     playlistsListByChannelIdRequest.setMine(true)
                     playlistsListByChannelIdRequest.setMaxResults(25)
+                    playlistsListByChannelIdRequest.onBehalfOfContentOwnerChannel = "true"
                     playlistsListByChannelIdRequest.setKey(DeveloperKey.DEVELOPER_KEY)
 
                     val response: PlaylistListResponse = playlistsListByChannelIdRequest.execute();

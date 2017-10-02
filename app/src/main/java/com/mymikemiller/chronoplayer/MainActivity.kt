@@ -5,6 +5,7 @@ import android.content.*
 import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
 
+import android.accounts.Account;
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
@@ -22,14 +23,29 @@ import android.support.v4.view.ViewPager
 import android.content.Intent
 import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
+import android.os.AsyncTask
 import android.util.Log
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInResult
+import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.Scope
+import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.services.youtube.model.Playlist
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.google.api.client.http.HttpTransport
+import com.google.api.client.json.JsonFactory
+import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.youtube.YouTube
+import com.google.api.services.youtube.model.Subscription
+import com.google.api.services.youtube.model.SubscriptionListResponse
+import java.io.IOException
+import java.util.*
+
 
 /**
  * A video player allowing users to watch YouTube episodes in chronological order while providing the ability to skip videos.
@@ -43,6 +59,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
     val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
     val RC_SIGN_IN = 3 // The request code for google sign in
+
+    // Scope for reading user's contacts
+    val YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube";
 
     //region [Variable definitions]
     private lateinit var mGoogleApiClient: GoogleApiClient
@@ -75,6 +94,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
     private var mPlaylist: Playlist? = null
+    private var mAccount: Account? = null
 
     // These collections include the skipped cideos
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
@@ -83,6 +103,73 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     var mDetailsByDate = listOf<Detail>()
 
     // endregion
+
+    private fun getSubscription() {
+        GetSubscriptionTask(this, YOUTUBE_SCOPE).execute(mAccount)
+    }
+
+    /**
+     * AsyncTask that uses the credentials from Google Sign In to access Youtube subscription API.
+     */
+    private class GetSubscriptionTask(val context: Context, val YOUTUBE_SCOPE: String) : AsyncTask<Account, Unit, List<Subscription>>() {
+
+        protected override fun onPreExecute(): Unit {
+            //showProgressDialog();
+        }
+
+        override fun doInBackground(vararg params: Account?): List<Subscription>? {
+            try {
+                val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
+                        context,
+                Collections.singleton(this@GetSubscriptionTask.YOUTUBE_SCOPE));
+                credential.setSelectedAccount(params[0]);
+
+
+                // Global instance of the HTTP transport
+                val HTTP_TRANSPORT: HttpTransport = AndroidHttp.newCompatibleTransport();
+
+                // Global instance of the JSON factory
+                val JSON_FACTORY: JsonFactory = JacksonFactory.getDefaultInstance();
+
+                val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+                        .setApplicationName("ChronoPlayer")
+                        .build();
+
+                val connectionsResponse: SubscriptionListResponse = youtube
+                        .subscriptions()
+                        .list("snippet")
+//                        .setChannelId("UCfyuWgCPu5WneQwuLBWd7Pg")
+                        .setMine(true)
+                        .execute();
+
+                return connectionsResponse.getItems();
+            } catch (userRecoverableException: UserRecoverableAuthIOException) {
+//                Log.w(TAG, "getSubscription:recoverable exception", userRecoverableException);
+//                startActivityForResult(userRecoverableException.getIntent(), RC_RECOVERABLE);
+            } catch (e: IOException) {
+//                Log.w(TAG, "getSubscription:exception", e);
+            }
+
+            return null;
+        }
+
+        override fun onPostExecute(subscriptions: List<Subscription>): Unit {
+//            hideProgressDialog();
+
+            if (subscriptions != null) {
+//                Log.d(TAG, "subscriptions : size=" + subscriptions.size());
+
+                // Get names of all connections
+                for (sub in subscriptions) {
+                    // Got the subscriptions
+                    println()
+                }
+            } else {
+                // failed
+                println()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,6 +211,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Configure sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(Scope(Scopes.PLUS_LOGIN))
+                .requestScopes(Scope(YOUTUBE_SCOPE))
                 .requestEmail()
                 .build()
 
@@ -133,6 +222,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .addConnectionCallbacks(this).build()
 
+//        getSubscription()
+
     }
 
     // The user is now authenticated, so get their playlist
@@ -141,9 +232,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 Toast.LENGTH_LONG).show();
 
         // todo: move this into YouTubeAPI and return a new Playlist object
-        YouTubeAPI.getPlaylist("gamegrumps", {playlist ->
-            mPlaylist = playlist
-        })
+//        YouTubeAPI.getPlaylist("gamegrumps", {playlist ->
+//            mPlaylist = playlist
+//        })
     }
 
     override fun onConnectionSuspended(p0: Int) {
@@ -572,14 +663,27 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             Toast.makeText(this, "Signed in successfully",
                     Toast.LENGTH_LONG).show();
 
+            // Get the account from the sign in result
+            val account: GoogleSignInAccount? = result.signInAccount
+
+            if (account != null) {
+                // Store the account from the result
+                mAccount = account.getAccount()
+
+                getSubscription()
+            }
+
             // todo: move this into YouTubeAPI and return a new Playlist object
-            YouTubeAPI.getPlaylist("gamegrumps", {playlist ->
-                mPlaylist = playlist
-            })
+//            YouTubeAPI.getPlaylist("gamegrumps", {playlist ->
+//                mPlaylist = playlist
+//            })
 
         } else {
             Toast.makeText(this, "Failed to sign in",
                     Toast.LENGTH_LONG).show();
+
+            // Clear the local account
+            mAccount = null;
         }
     }
 
