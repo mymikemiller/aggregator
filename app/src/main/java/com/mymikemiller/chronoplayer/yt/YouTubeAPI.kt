@@ -32,6 +32,7 @@ val JSON_FACTORY: JsonFactory = JacksonFactory()
 class YouTubeAPI(context: Context, account: Account) {
     private val mYouTube: YouTube
     private var mPlaylist: Playlist? = null
+    var isAuthenticated = false
 
     init {
         val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
@@ -49,17 +50,21 @@ class YouTubeAPI(context: Context, account: Account) {
                 .setApplicationName("ChronoPlayer")
                 .build();
 
-        getPlaylist("gamegrumps", { playlist: Playlist? ->
+        setPlaylist("gamegrumps")
+    }
+
+    fun setPlaylist(title: String) {
+        isAuthenticated = false
+        getPlaylist(title, { playlist: Playlist? ->
             run {
                 // Store the playlist so we can add videos to it
                 mPlaylist = playlist
+                isAuthenticated = true
             }
         })
-        println()
-
-
     }
 
+    // todo: change this to getOrCreatePlaylist
     private fun getPlaylist(title: String, callback: (Playlist?) -> Unit) {
         if (mYouTube == null) {
             // We're not authorized, so call the callback specifying null
