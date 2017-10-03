@@ -527,7 +527,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun commitPlaylist() {
-        println()
+        if (mYouTubeAPI != null) {
+            if (mYouTubeAPI!!.isAuthenticated) {
+                mYouTubeAPI!!.commitPlaylist(mDetailsByDate, {
+                    // Todo: Allow the user to exit the settings and toast that commiting is complete
+                })
+            }
+        }
+
+        // TODO: inform user that the user isn't authenticated
     }
 
     fun showChannelSelectActivity(channel: Channel) {

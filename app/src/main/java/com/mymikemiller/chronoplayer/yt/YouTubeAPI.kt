@@ -122,6 +122,20 @@ class YouTubeAPI(context: Context, account: Account) {
         override fun onPostExecute(result: Unit?) {}
     }
 
+    fun commitPlaylist(details: List<Detail>, callback: () -> Unit) {
+        CommitPlaylistTask(details, mPlaylist, callback).execute()
+    }
+
+    private class CommitPlaylistTask(val detailsToCommit: List<Detail>, val playlistToCommitTo: Playlist?, val callback: () -> Unit) : AsyncTask<Playlist?, Unit, Unit>() {
+
+
+        override fun doInBackground(vararg params: Playlist?) {
+
+
+            callback()
+        }
+    }
+
     // Static functions that don't require authoriation
     companion object {
         // Scope for modifying the user's private data
