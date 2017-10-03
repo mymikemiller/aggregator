@@ -126,10 +126,8 @@ class YouTubeAPI(context: Context, account: Account) {
         CommitPlaylistTask(details, mPlaylist, callback).execute()
     }
 
-    private class CommitPlaylistTask(val detailsToCommit: List<Detail>, val playlistToCommitTo: Playlist?, val callback: () -> Unit) : AsyncTask<Playlist?, Unit, Unit>() {
-
-
-        override fun doInBackground(vararg params: Playlist?) {
+    private class CommitPlaylistTask(val detailsToCommit: List<Detail>, val playlistToCommitTo: Playlist?, val callback: () -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+        override fun doInBackground(vararg params: Unit) {
 
 
             callback()

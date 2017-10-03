@@ -15,9 +15,9 @@ import java.sql.SQLException
 class LastPlayedVideo {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 1
+        val DATABASE_VERSION: Int = 2
         val DATABASE_NAME: String = "LastPlayedVideo"
-        val LAST_PLAYED_VIDEO_TABLE_NAME: String = "LastPlaedVideoTables"
+        val LAST_PLAYED_VIDEO_TABLE_NAME: String = "LastPlayedVideoTable"
 
         // VideoList columns
         val KEY_CHANNEL_ID: String="Channel_Id"
