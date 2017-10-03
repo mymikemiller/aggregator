@@ -119,6 +119,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Register for broadcast intents from settings
         val filter = IntentFilter(PreferencesActivity.CHANNEL_SELECT)
         filter.addAction(PreferencesActivity.SIGN_IN)
+        filter.addAction(PreferencesActivity.COMMIT_PLAYLIST)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
         filter.addAction(PreferencesActivity.UNSKIP_ALL)
         LocalBroadcastManager.getInstance(this)
@@ -404,6 +405,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     when (intent?.action) {
                         PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
+                        PreferencesActivity.COMMIT_PLAYLIST -> commitPlaylist()
                         PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
                         PreferencesActivity.SIGN_IN -> signIn()
                     }
@@ -522,6 +524,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         watchHistoryIntent.putExtra("channel", channel)
         watchHistoryIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
+    }
+
+    fun commitPlaylist() {
+        println()
     }
 
     fun showChannelSelectActivity(channel: Channel) {

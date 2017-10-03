@@ -14,6 +14,12 @@
         android:key="@string/pref_signInKey"/>
 
     <Preference
+        android:title="@string/pref_commit_playlist_title"
+        android:summary="@string/pref_commit_playlist_description"
+        android:key="@string/pref_commitPlaylistKey"/>
+
+
+    <Preference
         android:title="@string/pref_watch_history_title"
         android:summary="@string/pref_watch_history_description"
         android:key="@string/pref_watchHistoryKey"/>

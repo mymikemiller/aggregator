@@ -16,10 +16,11 @@ import android.widget.Toast
  */
 class PreferencesActivity : PreferenceActivity() {
     companion object {
-        const val CHANNEL_SELECT = "com.example.mymikemiller.CHANNEL_SELECT"
-        const val SIGN_IN = "com.example.mymikemiller.SIGN_IN"
-        const val UNSKIP_ALL = "com.example.mymikemiller.UNSKIP_ALL"
-        const val WATCH_HISTORY = "com.example.mymikemiller.WATCH_HISTORY"
+        const val CHANNEL_SELECT = "com.mymikemiller.chronoplayer.CHANNEL_SELECT"
+        const val SIGN_IN = "com.mymikemiller.chronoplayer.SIGN_IN"
+        const val COMMIT_PLAYLIST = "com.mymikemiller.chronoplayer.COMMIT_PLAYLIST"
+        const val UNSKIP_ALL = "com.mymikemiller.chronoplayer.UNSKIP_ALL"
+        const val WATCH_HISTORY = "com.mymikemiller.chronoplayer.WATCH_HISTORY"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +51,18 @@ class PreferencesActivity : PreferenceActivity() {
 
                 val intent = Intent()
                 intent.action = SIGN_IN
+                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
+
+                activity.finish()
+
+                true
+            })
+
+            val commitPlaylistButton = findPreference(getString(R.string.pref_commitPlaylistKey))
+            commitPlaylistButton.setOnPreferenceClickListener({
+
+                val intent = Intent()
+                intent.action = COMMIT_PLAYLIST
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
                 activity.finish()
