@@ -17,9 +17,9 @@ import java.sql.SQLException
 class Channels {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 3
+        val DATABASE_VERSION: Int = 6
         val DATABASE_NAME: String = "Channels"
-        val CHANNELS_TABLE_NAME: String = "ChannesTable"
+        val CHANNELS_TABLE_NAME: String = "ChannelsTable"
 
         // Channels columns
         //val name: String, val channelId: String, val uploadPlaylistId: String, val thumbnail: String) : Serializable {}
