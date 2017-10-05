@@ -32,6 +32,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.Scope
+import com.google.api.services.youtube.YouTube
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
 /**
@@ -120,6 +121,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val filter = IntentFilter(PreferencesActivity.CHANNEL_SELECT)
         filter.addAction(PreferencesActivity.SIGN_IN)
         filter.addAction(PreferencesActivity.COMMIT_PLAYLIST)
+        filter.addAction(PreferencesActivity.CHANGE_PLAYLIST_NAME)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
         filter.addAction(PreferencesActivity.UNSKIP_ALL)
         LocalBroadcastManager.getInstance(this)
@@ -139,9 +141,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .addConnectionCallbacks(this).build()
-
-//        getSubscription()
-
     }
 
     // The user is now authenticated
@@ -164,6 +163,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun setUp(theIntent: Intent) {
         mChannel = theIntent.getSerializableExtra("channel") as Channel
+
+        // Save the channel's name as the youtube commit playlist name if there is no entry in the database
+        if (CommitPlaylists.getCommitPlaylistTitle(this, mChannel).isBlank()) {
+            changePlaylistName(mChannel.name)
+        }
 
         // Save the launch channel to sharedPreferences so we start there next time
         saveLaunchChannel(mChannel)
@@ -394,18 +398,20 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private fun setUpPreferences() {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         mPreferencesButton.setOnClickListener {
+
             showPreferencesActivity()
         }
         mBroadcastReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
+            override fun onReceive(context: Context?, theIntent: Intent?) {
 
                 val currentlyPlaying = mCurrentlyPlayingVideoDetail
                 if (currentlyPlaying != null) {
 
-                    when (intent?.action) {
+                    when (theIntent?.action) {
                         PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
                         PreferencesActivity.COMMIT_PLAYLIST -> commitPlaylist()
+                        PreferencesActivity.CHANGE_PLAYLIST_NAME -> changePlaylistName(theIntent.extras.getString("playlistName"))
                         PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
                         PreferencesActivity.SIGN_IN -> signIn()
                     }
@@ -416,6 +422,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun showPreferencesActivity() {
         val i = Intent(this, PreferencesActivity::class.java)
+        // Send in the playlist name so we know what text to display for the Change Playlist Name description
+        var playlistName = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
+        if (playlistName.isBlank()) {
+            playlistName = mChannel.name
+        }
+
+        i.putExtra("playlistName", playlistName)
+
         startActivity(i)
     }
 
@@ -536,6 +550,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
 
         // TODO: inform user that the user isn't authenticated
+    }
+
+
+    fun changePlaylistName(playlistName: String) {
+        // Save the playlist name to the database
+        CommitPlaylists.addOrUpdateCommitPlaylistTitle(this, mChannel, playlistName)
+        val name = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
+        println()
     }
 
     fun showChannelSelectActivity(channel: Channel) {

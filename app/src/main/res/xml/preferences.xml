@@ -18,6 +18,10 @@
         android:summary="@string/pref_commit_playlist_description"
         android:key="@string/pref_commitPlaylistKey"/>
 
+    <EditTextPreference
+        android:title="@string/pref_change_playlist_name_title"
+        android:summary="@string/pref_change_playlist_name_description"
+        android:key="@string/pref_changePlaylistNameKey"/>
 
     <Preference
         android:title="@string/pref_watch_history_title"

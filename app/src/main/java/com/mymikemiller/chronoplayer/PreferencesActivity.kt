@@ -4,12 +4,12 @@ import android.app.Activity
 import android.os.Bundle
 import android.preference.PreferenceFragment
 import android.preference.PreferenceActivity
-import android.preference.ListPreference
-import android.content.SharedPreferences
 import android.content.Intent
+import android.preference.EditTextPreference
 import android.support.v4.content.LocalBroadcastManager
 import android.widget.Toast
-
+import android.preference.Preference
+import android.util.Log
 
 /**
  * The settings activity
@@ -19,6 +19,7 @@ class PreferencesActivity : PreferenceActivity() {
         const val CHANNEL_SELECT = "com.mymikemiller.chronoplayer.CHANNEL_SELECT"
         const val SIGN_IN = "com.mymikemiller.chronoplayer.SIGN_IN"
         const val COMMIT_PLAYLIST = "com.mymikemiller.chronoplayer.COMMIT_PLAYLIST"
+        const val CHANGE_PLAYLIST_NAME = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_NAME"
         const val UNSKIP_ALL = "com.mymikemiller.chronoplayer.UNSKIP_ALL"
         const val WATCH_HISTORY = "com.mymikemiller.chronoplayer.WATCH_HISTORY"
     }
@@ -33,6 +34,16 @@ class PreferencesActivity : PreferenceActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
+
+            // Change the playlist name description text to mention the playlist name sent in
+            val playlistName = activity.intent.extras.getString("playlistName")
+            val changePlaylistNamePref: EditTextPreference = findPreference(
+                    getString(R.string.pref_changePlaylistNameKey)) as EditTextPreference;
+            changePlaylistNamePref.setSummary(playlistName);
+            changePlaylistNamePref.setTitle(getString(R.string.changePlaylistNameTitle))
+
+            // Also change the text in the EditText to match what was sent in
+            changePlaylistNamePref.editText.setText(playlistName)
 
             val channelSelectButton = findPreference(getString(R.string.pref_channelSelectKey))
             channelSelectButton.setOnPreferenceClickListener({
@@ -69,6 +80,31 @@ class PreferencesActivity : PreferenceActivity() {
 
                 true
             })
+
+            this.findPreference(getString(R.string.pref_changePlaylistNameKey))
+                    .onPreferenceChangeListener = android.preference.Preference
+                    .OnPreferenceChangeListener { preference, newValue ->
+
+                        if (newValue.toString().length > 0) {
+
+                            // Change the description text to mention the new playlist name
+                            val customPref: Preference = findPreference(getString(R.string.pref_changePlaylistNameKey));
+                            customPref.setSummary(newValue.toString());
+
+                            // Get the playlist name from the EditText
+                            val changePlaylistNamePref: EditTextPreference = findPreference(
+                                    getString(R.string.pref_changePlaylistNameKey)) as EditTextPreference
+                            val playlistName = changePlaylistNamePref.editText.text.toString()
+
+                            val theIntent = Intent()
+                            theIntent.action = CHANGE_PLAYLIST_NAME
+                            theIntent.putExtra("playlistName", playlistName)
+                            LocalBroadcastManager.getInstance(activity).sendBroadcast(theIntent)
+
+                            return@OnPreferenceChangeListener true
+                        }
+                        return@OnPreferenceChangeListener false
+                    }
 
             val watchHistoryButton = findPreference(getString(R.string.pref_watchHistoryKey))
             watchHistoryButton.setOnPreferenceClickListener({
