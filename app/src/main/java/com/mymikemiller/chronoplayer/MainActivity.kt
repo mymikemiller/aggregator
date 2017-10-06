@@ -542,11 +542,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun commitPlaylist() {
         if (mYouTubeAPI != null) {
-            if (mYouTubeAPI!!.isAuthenticated) {
-                mYouTubeAPI!!.commitPlaylist(mDetailsByDate, {
-                    // Todo: Allow the user to exit the settings and toast that commiting is complete
-                })
-            }
+            mYouTubeAPI!!.addVideosToPlayList("gamegrumps_new", mDetailsByDate)
         }
 
         // TODO: inform user that the user isn't authenticated

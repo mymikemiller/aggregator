@@ -3,6 +3,7 @@ package com.mymikemiller.chronoplayer.yt
 import android.accounts.Account
 import android.content.Context
 import android.os.AsyncTask
+import android.util.Log
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -18,8 +19,21 @@ import com.google.api.services.youtube.model.PlaylistListResponse
 import com.mymikemiller.chronoplayer.Channel
 import com.mymikemiller.chronoplayer.Detail
 import com.mymikemiller.chronoplayer.DeveloperKey
+import com.mymikemiller.chronoplayer.util.CommitPlaylists
 import java.io.IOException
 import java.util.*
+import com.google.api.services.youtube.model.PlaylistStatus
+import com.google.api.services.youtube.model.PlaylistSnippet
+import com.mymikemiller.chronoplayer.R.id.playlist
+import com.google.api.services.youtube.model.PlaylistItem
+import com.google.api.services.youtube.model.ResourceId
+import com.google.api.services.youtube.model.PlaylistItemSnippet
+
+
+
+
+
+
 
 val HTTP_TRANSPORT = NetHttpTransport()
 val JSON_FACTORY: JsonFactory = JacksonFactory()
@@ -31,8 +45,6 @@ val JSON_FACTORY: JsonFactory = JacksonFactory()
  */
 class YouTubeAPI(context: Context, account: Account) {
     private val mYouTube: YouTube
-    private var mPlaylist: Playlist? = null
-    var isAuthenticated = false
 
     init {
         val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
@@ -50,27 +62,26 @@ class YouTubeAPI(context: Context, account: Account) {
                 .setApplicationName("ChronoPlayer")
                 .build();
 
-        setPlaylist("gamegrumps")
+//        setPlaylist("gamegrumps")
     }
 
-    fun setPlaylist(title: String) {
-        isAuthenticated = false
-        getPlaylist(title, { playlist: Playlist? ->
-            run {
-                // Store the playlist so we can add videos to it
-                mPlaylist = playlist
-                isAuthenticated = true
-            }
-        })
-    }
+//    fun setPlaylist(title: String) {
+//        isAuthenticated = false
+//        getPlaylist(title, { playlist: Playlist? ->
+//            run {
+//                // Store the playlist so we can add videos to it
+//                mPlaylist = playlist
+//                isAuthenticated = true
+//            }
+//        })
+//    }
 
-    // todo: change this to getOrCreatePlaylist
-    private fun getPlaylist(title: String, callback: (Playlist?) -> Unit) {
+    private fun getOrCreatePlaylist(title: String, callback: (Playlist) -> Unit) {
         if (mYouTube == null) {
-            // We're not authorized, so call the callback specifying null
-            callback(null)
+            // We're not authorized
+            Log.e("Playlist Creation", "Not authorized when getting/creating playlist")
         } else {
-            GetPlaylistTask(mYouTube, title, { playlist ->
+            GetOrCreatePlaylistTask(mYouTube, title, { playlist ->
                 run {
                     callback(playlist)
                 }
@@ -81,58 +92,115 @@ class YouTubeAPI(context: Context, account: Account) {
     /**
      * AsyncTask that uses the specified AuthYoutube playlist API.
      */
-    private class GetPlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist?) -> Unit) : AsyncTask<Account, Unit, Unit>() {
+    private class GetOrCreatePlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist) -> Unit) : AsyncTask<String, Unit, Unit>() {
 
-        protected override fun onPreExecute(): Unit {
-            //showProgressDialog();
-        }
+        protected override fun onPreExecute(): Unit {}
 
-        override fun doInBackground(vararg params: Account?) {
+        override fun doInBackground(vararg params: String) {
             try {
-                val playlistsListByChannelIdResponse: PlaylistListResponse = authenticatedYoutube
+                val playlistsList: PlaylistListResponse = authenticatedYoutube
                         .playlists()
                         .list("snippet")
                         .setMine(true)
                         .execute();
 
-                val playlists = playlistsListByChannelIdResponse.getItems()
+                val playlists = playlistsList.getItems()
 
                 // Get names of all connections
                 for (playlist in playlists) {
-                    // Got the subscriptions
-                    println()
                     if (playlist.snippet.title == title) {
                         callback(playlist)
                         return
                     }
                 }
 
-                // we didn't find a playlist with the give title. Run the callback specifying null.
-                callback(null)
+                // we didn't find a playlist with the give title. Create one!
+                val playlist = createPlaylist(authenticatedYoutube, title)
+                callback(playlist)
 
             } catch (userRecoverableException: UserRecoverableAuthIOException) {
-                callback(null)
+                Log.e("playlist creation", "userRecoverableException")
             } catch (e: IOException) {
-                callback(null)
+                Log.e("playlist creation", "IOException")
             }
 
-            return;
+            return
         }
 
         override fun onPostExecute(result: Unit?) {}
-    }
 
-    fun commitPlaylist(details: List<Detail>, callback: () -> Unit) {
-        CommitPlaylistTask(details, mPlaylist, callback).execute()
-    }
 
-    private class CommitPlaylistTask(val detailsToCommit: List<Detail>, val playlistToCommitTo: Playlist?, val callback: () -> Unit) : AsyncTask<Unit, Unit, Unit>() {
-        override fun doInBackground(vararg params: Unit) {
+        fun createPlaylist(authenticatedYoutube: YouTube, title: String): Playlist{
+            val playlist = Playlist()
+            val snippet = PlaylistSnippet()
+            val status = PlaylistStatus()
 
-            // Todo: Commit the playlist to YouTube
+            playlist.snippet = snippet
+            playlist.snippet.title = title
+            playlist.status = status
 
-            callback()
+            val playlistsInsertRequest = authenticatedYoutube.playlists().insert("snippet,status", playlist)
+
+            val response = playlistsInsertRequest.execute()
+            return response
         }
+    }
+
+
+//    fun commitPlaylist(details: List<Detail>, playlist: Playlist, callback: () -> Unit) {
+//        CommitPlaylistTask(mYouTube, details, playlist,  callback).execute()
+//    }
+//
+//    private class CommitPlaylistTask(val authenticatedYouTube: YouTube, val detailsToCommit: List<Detail>, val playlistToCommitTo: Playlist, val callback: () -> Unit) : AsyncTask<Unit, Unit, Unit>() {
+//        override fun doInBackground(vararg params: Unit) {
+//
+//            val playlistItem = PlaylistItem()
+//            val snippet = PlaylistItemSnippet()
+//            for (detail in detailsToCommit) {
+//                val videoId = detail.videoId
+//
+//                val resourceId = ResourceId()
+//                resourceId.set("videoId", "M7FIvfx5J10")
+//
+//                snippet.resourceId = resourceId
+//                playlistItem.snippet = snippet
+//
+//                val playlistItemsInsertRequest = youtube.playlistItems().insert(parameters.get("part").toString(), playlistItem)
+//
+//                if (parameters.containsKey("onBehalfOfContentOwner") && parameters.get("onBehalfOfContentOwner") !== "") {
+//                    playlistItemsInsertRequest.onBehalfOfContentOwner = parameters.get("onBehalfOfContentOwner").toString()
+//                }
+//
+//                val response = playlistItemsInsertRequest.execute()
+//                println(response)
+//            }
+//
+//            callback()
+//        }
+//    }
+
+    fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>)
+    {
+        getOrCreatePlaylist(playlistTitle, { playlist -> kotlin.run {
+            for (detail in detailsToCommit) {
+                var videoId = detail.videoId;
+
+                val playlistItem = PlaylistItem()
+                val snippet = PlaylistItemSnippet()
+                snippet.playlistId = playlist.id
+                val resourceId = ResourceId()
+                resourceId.set("kind", "youtube#video")
+                resourceId.set("videoId", videoId)
+
+                snippet.resourceId = resourceId
+                playlistItem.snippet = snippet
+
+                var request = mYouTube.playlistItems().insert("snippet", playlistItem);
+                request.execute()
+            }
+        }
+        })
+
     }
 
     // Static functions that don't require authoriation
