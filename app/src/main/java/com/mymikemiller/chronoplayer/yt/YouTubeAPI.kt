@@ -174,10 +174,12 @@ class YouTubeAPI(context: Context, account: Account) {
 //        }
 //    }
 
-    fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>)
+    fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
+                            setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit)
     {
         getOrCreatePlaylist(playlistTitle, { playlist -> kotlin.run {
-            for (detail in detailsToCommit) {
+            for (index in 0..detailsToCommit.size) {
+                val detail = detailsToCommit[index]
                 val videoId = detail.videoId
 
                 val playlistItem = PlaylistItem()
@@ -192,10 +194,10 @@ class YouTubeAPI(context: Context, account: Account) {
 
                 var request = mYouTube.playlistItems().insert("snippet", playlistItem)
                 request.execute()
+                setPercentageCallback(detailsToCommit.size, index)
             }
         }
         })
-
     }
 
     // Static functions that don't require authoriation

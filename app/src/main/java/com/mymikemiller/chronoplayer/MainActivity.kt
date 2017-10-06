@@ -541,12 +541,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun commitPlaylist() {
         if (mYouTubeAPI != null) {
-            mYouTubeAPI!!.addVideosToPlayList("gamegrumps_new", mDetailsByDate)
+            val playlistName = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
+            mYouTubeAPI!!.addVideosToPlayList(playlistName, mDetailsByDate, setPrecentageOfVideosAdded)
         }
 
         // TODO: inform user that the user isn't authenticated
     }
-
+    val setPrecentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
+        run {
+            Log.d("progress", currentVideoNumber.toString() + "/" + totalVideos)
+        }
+    }
 
     fun changePlaylistName(playlistName: String) {
         // Save the playlist name to the database
@@ -597,7 +602,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     // This happens as a result of signing in for the first time by selecting a user
     fun handleSignInResult(result: GoogleSignInResult) : Unit {
-        Log.d(TAG, "handleSignInResult:" + result.isSuccess())
+        Log.d(TAG, "handleSignInResult: " + result.isSuccess())
         if (result.isSuccess()) {
 
             Toast.makeText(this, "Signed in successfully",

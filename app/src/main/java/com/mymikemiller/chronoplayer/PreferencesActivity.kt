@@ -64,7 +64,7 @@ class PreferencesActivity : PreferenceActivity() {
                 intent.action = SIGN_IN
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
-                activity.finish()
+//                activity.finish()
 
                 true
             })
