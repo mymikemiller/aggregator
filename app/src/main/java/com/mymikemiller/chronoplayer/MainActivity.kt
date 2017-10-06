@@ -5,7 +5,6 @@ import android.content.*
 import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
 
-import android.accounts.Account;
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
@@ -146,12 +145,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     // The user is now authenticated
     override fun onConnected(p0: Bundle?) {
         Toast.makeText(this, getString(R.string.connection_success),
-                Toast.LENGTH_LONG).show();
+                Toast.LENGTH_LONG).show()
     }
 
     override fun onConnectionSuspended(p0: Int) {
         Toast.makeText(this, getString(R.string.connection_suspended),
-                Toast.LENGTH_LONG).show();
+                Toast.LENGTH_LONG).show()
     }
 
     override fun onNewIntent(newIntent: Intent?) {
@@ -201,7 +200,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 mChannel))
 
         // This won't work until we've initialized these lists
-        val stopAtDetail = if (detailsFromDbByDate.size > 0) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
+        val stopAtDetail = if (detailsFromDbByDate.isNotEmpty()) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
 
         // Set up what happens when a playlist item is clicked
         val onItemClick: (Detail) -> Unit = {detail ->
@@ -231,9 +230,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     // Now that we've got a list of details, we can prepare the RecyclerView
                     mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, skipVideo)
                     mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate, {
-                        mEpisodePager.setCurrentItem(mEpisodePager.currentItem - 1, true);
+                        mEpisodePager.setCurrentItem(mEpisodePager.currentItem - 1, true)
                     }, {
-                        mEpisodePager.setCurrentItem(mEpisodePager.currentItem + 1, true);
+                        mEpisodePager.setCurrentItem(mEpisodePager.currentItem + 1, true)
                     })
                     mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
 
@@ -243,7 +242,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     fetchVideosProgressSection.visibility = View.GONE
 
                     // If the channel has no videos, don't play anything.
-                    if (mDetailsByDate.size > 0) {
+                    if (mDetailsByDate.isNotEmpty()) {
 
                         // Get the default first video (the channel's first video)
                         val firstVideoId = mDetailsByDate[0].videoId
@@ -473,12 +472,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     override fun onStart() {
         super.onStart()
-        mGoogleApiClient.connect();
+        mGoogleApiClient.connect()
     }
 
     override fun onStop() {
         super.onStop()
-        mGoogleApiClient.disconnect();
+        mGoogleApiClient.disconnect()
     }
     //endregion
 
@@ -552,8 +551,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     fun changePlaylistName(playlistName: String) {
         // Save the playlist name to the database
         CommitPlaylists.addOrUpdateCommitPlaylistTitle(this, mChannel, playlistName)
-        val name = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
-        println()
     }
 
     fun showChannelSelectActivity(channel: Channel) {
@@ -593,18 +590,18 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
-            val result: GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleSignInResult(result);
+            val result: GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
+            handleSignInResult(result)
         }
     }
 
     // This happens as a result of signing in for the first time by selecting a user
     fun handleSignInResult(result: GoogleSignInResult) : Unit {
-        Log.d(TAG, "handleSignInResult:" + result.isSuccess());
+        Log.d(TAG, "handleSignInResult:" + result.isSuccess())
         if (result.isSuccess()) {
 
             Toast.makeText(this, "Signed in successfully",
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_LONG).show()
 
             // Get the account from the sign in result
             val account: GoogleSignInAccount? = result.signInAccount
@@ -614,10 +611,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         } else {
             Toast.makeText(this, "Failed to sign in",
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_LONG).show()
 
             // Clear mYouTubeApi so we don't try to use authenticated functions
-            mYouTubeAPI = null;
+            mYouTubeAPI = null
         }
     }
 

@@ -49,18 +49,18 @@ class YouTubeAPI(context: Context, account: Account) {
     init {
         val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
                 context,
-                Collections.singleton(YOUTUBE_SCOPE));
-        credential.setSelectedAccount(account);
+                Collections.singleton(YOUTUBE_SCOPE))
+        credential.setSelectedAccount(account)
 
         // Global instance of the HTTP transport
-        val HTTP_TRANSPORT: HttpTransport = AndroidHttp.newCompatibleTransport();
+        val HTTP_TRANSPORT: HttpTransport = AndroidHttp.newCompatibleTransport()
 
         // Global instance of the JSON factory
-        val JSON_FACTORY: JsonFactory = JacksonFactory.getDefaultInstance();
+        val JSON_FACTORY: JsonFactory = JacksonFactory.getDefaultInstance()
 
         mYouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                 .setApplicationName("ChronoPlayer")
-                .build();
+                .build()
 
 //        setPlaylist("gamegrumps")
     }
@@ -77,16 +77,11 @@ class YouTubeAPI(context: Context, account: Account) {
 //    }
 
     private fun getOrCreatePlaylist(title: String, callback: (Playlist) -> Unit) {
-        if (mYouTube == null) {
-            // We're not authorized
-            Log.e("Playlist Creation", "Not authorized when getting/creating playlist")
-        } else {
-            GetOrCreatePlaylistTask(mYouTube, title, { playlist ->
-                run {
-                    callback(playlist)
-                }
-            }).execute()
-        }
+        GetOrCreatePlaylistTask(mYouTube, title, { playlist ->
+            run {
+                callback(playlist)
+            }
+        }).execute()
     }
 
     /**
@@ -94,7 +89,7 @@ class YouTubeAPI(context: Context, account: Account) {
      */
     private class GetOrCreatePlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist) -> Unit) : AsyncTask<String, Unit, Unit>() {
 
-        protected override fun onPreExecute(): Unit {}
+        override fun onPreExecute(): Unit {}
 
         override fun doInBackground(vararg params: String) {
             try {
@@ -102,7 +97,7 @@ class YouTubeAPI(context: Context, account: Account) {
                         .playlists()
                         .list("snippet")
                         .setMine(true)
-                        .execute();
+                        .execute()
 
                 val playlists = playlistsList.getItems()
 
@@ -183,7 +178,7 @@ class YouTubeAPI(context: Context, account: Account) {
     {
         getOrCreatePlaylist(playlistTitle, { playlist -> kotlin.run {
             for (detail in detailsToCommit) {
-                var videoId = detail.videoId;
+                val videoId = detail.videoId
 
                 val playlistItem = PlaylistItem()
                 val snippet = PlaylistItemSnippet()
@@ -195,7 +190,7 @@ class YouTubeAPI(context: Context, account: Account) {
                 snippet.resourceId = resourceId
                 playlistItem.snippet = snippet
 
-                var request = mYouTube.playlistItems().insert("snippet", playlistItem);
+                var request = mYouTube.playlistItems().insert("snippet", playlistItem)
                 request.execute()
             }
         }
@@ -206,7 +201,7 @@ class YouTubeAPI(context: Context, account: Account) {
     // Static functions that don't require authoriation
     companion object {
         // Scope for modifying the user's private data
-        val YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube";
+        val YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube"
 
         /**
          * Define a global instance of a YouTube object, which will be used to make
