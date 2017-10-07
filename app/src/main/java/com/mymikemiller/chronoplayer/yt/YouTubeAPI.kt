@@ -141,39 +141,6 @@ class YouTubeAPI(context: Context, account: Account) {
         }
     }
 
-
-//    fun commitPlaylist(details: List<Detail>, playlist: Playlist, callback: () -> Unit) {
-//        CommitPlaylistTask(mYouTube, details, playlist,  callback).execute()
-//    }
-//
-//    private class CommitPlaylistTask(val authenticatedYouTube: YouTube, val detailsToCommit: List<Detail>, val playlistToCommitTo: Playlist, val callback: () -> Unit) : AsyncTask<Unit, Unit, Unit>() {
-//        override fun doInBackground(vararg params: Unit) {
-//
-//            val playlistItem = PlaylistItem()
-//            val snippet = PlaylistItemSnippet()
-//            for (detail in detailsToCommit) {
-//                val videoId = detail.videoId
-//
-//                val resourceId = ResourceId()
-//                resourceId.set("videoId", "M7FIvfx5J10")
-//
-//                snippet.resourceId = resourceId
-//                playlistItem.snippet = snippet
-//
-//                val playlistItemsInsertRequest = youtube.playlistItems().insert(parameters.get("part").toString(), playlistItem)
-//
-//                if (parameters.containsKey("onBehalfOfContentOwner") && parameters.get("onBehalfOfContentOwner") !== "") {
-//                    playlistItemsInsertRequest.onBehalfOfContentOwner = parameters.get("onBehalfOfContentOwner").toString()
-//                }
-//
-//                val response = playlistItemsInsertRequest.execute()
-//                println(response)
-//            }
-//
-//            callback()
-//        }
-//    }
-
     fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
                             setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit)
     {

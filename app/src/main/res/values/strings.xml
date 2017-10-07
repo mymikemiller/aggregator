@@ -32,6 +32,11 @@
     <string name="pref_sign_in_description">Sign in to Google to enable advanced features</string>
     <string name="signIn">signIn</string>
 
+    <string name="pref_sign_out_title">Sign out</string>
+    <string name="pref_signOutKey">signOutButton</string>
+    <string name="pref_sign_out_description">Sign out of googoe (and disable advanced features)</string>
+    <string name="signOut">signOut</string>
+
     <string name="pref_commit_playlist_title">Commit Playlist</string>
     <string name="pref_commitPlaylistKey">commitPlaylistButton</string>
     <string name="pref_commit_playlist_description">Commit the playlist to your YouTube channel</string>

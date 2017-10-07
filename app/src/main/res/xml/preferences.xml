@@ -14,6 +14,11 @@
         android:key="@string/pref_signInKey"/>
 
     <Preference
+        android:title="@string/pref_sign_out_title"
+        android:summary="@string/pref_sign_out_description"
+        android:key="@string/pref_signOutKey"/>
+
+    <Preference
         android:title="@string/pref_commit_playlist_title"
         android:summary="@string/pref_commit_playlist_description"
         android:key="@string/pref_commitPlaylistKey"/>

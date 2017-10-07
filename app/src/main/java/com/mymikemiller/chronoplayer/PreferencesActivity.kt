@@ -18,6 +18,7 @@ class PreferencesActivity : PreferenceActivity() {
     companion object {
         const val CHANNEL_SELECT = "com.mymikemiller.chronoplayer.CHANNEL_SELECT"
         const val SIGN_IN = "com.mymikemiller.chronoplayer.SIGN_IN"
+        const val SIGN_OUT = "com.mymikemiller.chronoplayer.SIGN_OUT"
         const val COMMIT_PLAYLIST = "com.mymikemiller.chronoplayer.COMMIT_PLAYLIST"
         const val CHANGE_PLAYLIST_NAME = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_NAME"
         const val UNSKIP_ALL = "com.mymikemiller.chronoplayer.UNSKIP_ALL"
@@ -68,6 +69,19 @@ class PreferencesActivity : PreferenceActivity() {
 
                 true
             })
+
+            val signOutButton = findPreference(getString(R.string.pref_signInKey))
+            signInButton.setOnPreferenceClickListener({
+
+                val intent = Intent()
+                intent.action = SIGN_OUT
+                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
+
+//                activity.finish()
+
+                true
+            })
+
 
             val commitPlaylistButton = findPreference(getString(R.string.pref_commitPlaylistKey))
             commitPlaylistButton.setOnPreferenceClickListener({

@@ -30,7 +30,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.ResultCallback
 import com.google.android.gms.common.api.Scope
+import com.google.android.gms.common.api.Status
 import com.google.api.services.youtube.YouTube
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
@@ -119,6 +121,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Register for broadcast intents from settings
         val filter = IntentFilter(PreferencesActivity.CHANNEL_SELECT)
         filter.addAction(PreferencesActivity.SIGN_IN)
+        filter.addAction(PreferencesActivity.SIGN_OUT)
         filter.addAction(PreferencesActivity.COMMIT_PLAYLIST)
         filter.addAction(PreferencesActivity.CHANGE_PLAYLIST_NAME)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
@@ -413,6 +416,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         PreferencesActivity.CHANGE_PLAYLIST_NAME -> changePlaylistName(theIntent.extras.getString("playlistName"))
                         PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
                         PreferencesActivity.SIGN_IN -> signIn()
+                        PreferencesActivity.SIGN_OUT -> signOut()
                     }
                 }
             }
@@ -569,9 +573,17 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun signIn() {
-
         val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
         startActivityForResult(signInIntent, RC_SIGN_IN)
+    }
+
+    fun signOut() {
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback {
+            // Clear mYouTubeAPI so we don't try to make any authenticated calls
+            mYouTubeAPI = null
+
+            // Todo: use intents to let PreferencesActivity know we've become deactivated
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
@@ -612,7 +624,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             val account: GoogleSignInAccount? = result.signInAccount
 
             if (account != null) {
+                // Initialize mYouTubeAPI because we're now authenticated and can call the
+                // authenticated calls
                 mYouTubeAPI = YouTubeAPI(this, account.account!!)
+
+                // todo: use intents to Let PreferencesActivity know we've become authenicated
+
             }
         } else {
             Toast.makeText(this, "Failed to sign in",
