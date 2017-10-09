@@ -1,5 +1,6 @@
 package com.mymikemiller.chronoplayer
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.preference.PreferenceFragment
 import android.preference.PreferenceActivity
@@ -19,6 +20,13 @@ import com.google.android.gms.common.api.Scope
 import com.mymikemiller.chronoplayer.util.CommitPlaylists
 import com.mymikemiller.chronoplayer.util.VideoList
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
+import android.app.ProgressDialog
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.ProgressBar
+import android.widget.TextView
+
 
 /**
  * The settings activity
@@ -37,6 +45,9 @@ class PreferencesActivity : PreferenceActivity(),
 
         private var mYouTubeAPI: YouTubeAPI? = null
         private lateinit var mGoogleApiClient: GoogleApiClient
+
+        private lateinit var mProgressTitle: TextView
+        private lateinit var mProgressBar: ProgressBar
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -252,8 +263,23 @@ class PreferencesActivity : PreferenceActivity(),
             if (isSignedIn()) {
 
                 val channel = activity.intent.getSerializableExtra("channel") as Channel
+
+                // We can't use the intent to pass in the list of details because it's too big.
+                // Instead, get the list of details from the database
                 val details = VideoList.getAllDetailsFromDb(activity, channel)
                 val playlistName = CommitPlaylists.getCommitPlaylistTitle(activity, channel)
+
+                val inflater =  activity.getSystemService (Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+                val view: View = inflater.inflate(R.layout.progress_dialog, null);
+
+                mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
+                mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
+
+                val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
+                builder.setView(view);
+                val dialog = builder.create();
+
+                dialog.show();
 
                 mYouTubeAPI!!.addVideosToPlayList(playlistName, details, setPercentageOfVideosAdded)
             } else {
@@ -265,6 +291,14 @@ class PreferencesActivity : PreferenceActivity(),
         val setPercentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
             run {
                 Log.d("progress", currentVideoNumber.toString() + "/" + totalVideos)
+
+                activity.runOnUiThread({
+                    mProgressBar.max = totalVideos
+                    mProgressBar.setProgress(currentVideoNumber)
+
+                    mProgressTitle.setText(getString(R.string.commitProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
+
+                })
             }
         }
 
