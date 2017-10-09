@@ -390,6 +390,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun showPreferencesActivity() {
         val i = Intent(this, PreferencesActivity::class.java)
+        i.putExtra("channel", mChannel)
+
         // Send in the playlist name so we know what text to display for the Change Playlist Name description
         var playlistName = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
         if (playlistName.isBlank()) {
@@ -504,11 +506,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         watchHistoryIntent.putExtra("channel", channel)
         watchHistoryIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
-    }
-    val setPrecentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
-        run {
-            Log.d("progress", currentVideoNumber.toString() + "/" + totalVideos)
-        }
     }
 
     fun changePlaylistName(playlistName: String) {

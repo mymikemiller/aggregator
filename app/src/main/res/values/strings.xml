@@ -65,5 +65,6 @@
     <string name="connection_suspended">Connection to Google suspended</string>
     <string name="connection_success">Connection to Google succeeded</string>
     <string name="connected">Connected to Google</string>
+    <string name="not_signed_in">You must sign in first.</string>
 
 </resources>

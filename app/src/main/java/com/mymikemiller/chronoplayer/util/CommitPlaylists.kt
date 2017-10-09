@@ -9,7 +9,7 @@ import com.mymikemiller.chronoplayer.Channel
 import java.sql.SQLException
 
 /**
- *  Keeps track of which episode was last played for the purposes of starting with that video when the user loads a channel.
+ *  Keeps track of which playlist the user wants to commit to YouTube for the given channel
  */
 class CommitPlaylists {
     companion object {

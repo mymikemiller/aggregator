@@ -1,5 +1,7 @@
 package com.mymikemiller.chronoplayer
 
+import android.os.Parcel
+import android.os.Parcelable
 import com.google.api.client.util.DateTime
 
 /**
@@ -10,7 +12,15 @@ data class Detail(val channel: Channel,
                   val title: String,
                   val description: String,
                   val thumbnail: String,
-                  val dateUploaded: DateTime) : Comparable<Detail> {
+                  val dateUploaded: DateTime) : Comparable<Detail>, Parcelable {
+
+    constructor(parcel: Parcel) : this(
+            channel = parcel.readSerializable() as Channel,
+            videoId = parcel.readString(),
+            title = parcel.readString(),
+            description = parcel.readString(),
+            thumbnail = parcel.readString(),
+            dateUploaded = DateTime(parcel.readLong())) {}
 
     override fun equals(other: Any?): Boolean {
         if (other != null && other is Detail) {
@@ -31,6 +41,26 @@ data class Detail(val channel: Channel,
         return dateUploaded.value.compareTo(other.dateUploaded.value)
     }
 
-    companion object {
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeSerializable(channel);
+        parcel.writeString(videoId)
+        parcel.writeString(title)
+        parcel.writeString(description)
+        parcel.writeString(thumbnail)
+        parcel.writeLong(dateUploaded.value);
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<Detail> {
+        override fun createFromParcel(parcel: Parcel): Detail {
+            return Detail(parcel)
+        }
+
+        override fun newArray(size: Int): Array<Detail?> {
+            return arrayOfNulls(size)
+        }
     }
 }

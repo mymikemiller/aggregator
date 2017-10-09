@@ -16,6 +16,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.Scope
+import com.mymikemiller.chronoplayer.util.CommitPlaylists
+import com.mymikemiller.chronoplayer.util.VideoList
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
 /**
@@ -177,7 +179,6 @@ class PreferencesActivity : PreferenceActivity(),
             })
         }
 
-        // TODO: move this into handleSignInResult (maybe...)
         fun updateUI(signedIn: Boolean) {
             findPreference(getString(R.string.pref_signInKey)).isEnabled = !signedIn
             findPreference(getString(R.string.pref_signOutKey)).isEnabled = signedIn
@@ -248,13 +249,23 @@ class PreferencesActivity : PreferenceActivity(),
         }
 
         fun commitPlaylist() {
-            // TODO: Send in mChannel and mDetailsByDate to PreferencesActivity create
-//            if (isSignedIn()) {
-//                val playlistName = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
-//                mYouTubeAPI!!.addVideosToPlayList(playlistName, mDetailsByDate, setPrecentageOfVideosAdded)
-//            }
+            if (isSignedIn()) {
 
-            // TODO: inform user that the user isn't authenticated
+                val channel = activity.intent.getSerializableExtra("channel") as Channel
+                val details = VideoList.getAllDetailsFromDb(activity, channel)
+                val playlistName = CommitPlaylists.getCommitPlaylistTitle(activity, channel)
+
+                mYouTubeAPI!!.addVideosToPlayList(playlistName, details, setPercentageOfVideosAdded)
+            } else {
+                Toast.makeText(activity, getString(R.string.not_signed_in),
+                        Toast.LENGTH_LONG).show()
+            }
+        }
+
+        val setPercentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
+            run {
+                Log.d("progress", currentVideoNumber.toString() + "/" + totalVideos)
+            }
         }
 
         override fun onDestroy() {
