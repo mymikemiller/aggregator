@@ -143,6 +143,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .addConnectionCallbacks(this).build()
+        mGoogleApiClient.connect()
     }
 
     // The user is now authenticated
@@ -432,6 +433,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
 
         i.putExtra("playlistName", playlistName)
+        i.putExtra("userIsSignedIn", isSignedIn())
 
         startActivity(i)
     }
@@ -472,16 +474,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         super.onDestroy()
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver)
+        mGoogleApiClient.disconnect()
     }
 
     override fun onStart() {
         super.onStart()
-        mGoogleApiClient.connect()
     }
 
     override fun onStop() {
         super.onStop()
-        mGoogleApiClient.disconnect()
     }
     //endregion
 
@@ -544,7 +545,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun commitPlaylist() {
-        if (mYouTubeAPI != null) {
+        if (isSignedIn()) {
             val playlistName = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
             mYouTubeAPI!!.addVideosToPlayList(playlistName, mDetailsByDate, setPrecentageOfVideosAdded)
         }
@@ -572,17 +573,28 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         startActivity(channelSearchActivityIntent)
     }
 
+    fun isSignedIn(): Boolean {
+        return mYouTubeAPI != null
+    }
+
     fun signIn() {
-        val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
-        startActivityForResult(signInIntent, RC_SIGN_IN)
+        if (!isSignedIn()) {
+            val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
     }
 
     fun signOut() {
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback {
-            // Clear mYouTubeAPI so we don't try to make any authenticated calls
-            mYouTubeAPI = null
+        if (isSignedIn()) {
+            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback {
+                // Clear mYouTubeAPI so we don't try to make any authenticated calls
+                mYouTubeAPI = null
 
-            // Todo: use intents to let PreferencesActivity know we've become deactivated
+                // Use intents to let PreferencesActivity know we've become unauthenticated
+                val intent = Intent()
+                intent.action = PreferencesActivity.USER_SIGNED_OUT
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+            }
         }
     }
 
@@ -603,10 +615,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // Launch the preferences pane so it looks like we went back to it from the warch history
                 showPreferencesActivity()
             }
-        }
-
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-        if (requestCode == RC_SIGN_IN) {
+        } else if (requestCode == RC_SIGN_IN) {
+            // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
             val result: GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
             handleSignInResult(result)
         }
@@ -628,7 +638,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // authenticated calls
                 mYouTubeAPI = YouTubeAPI(this, account.account!!)
 
-                // todo: use intents to Let PreferencesActivity know we've become authenicated
+                // Use intents to Let PreferencesActivity know we've become authenicated
+                val intent = Intent()
+                intent.action = PreferencesActivity.USER_SIGNED_IN
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
             }
         } else {

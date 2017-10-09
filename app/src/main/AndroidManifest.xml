@@ -39,7 +39,13 @@
             android:screenOrientation="sensor"
             android:windowSoftInputMode="adjustResize">
         </activity>
-        <activity android:name=".PreferencesActivity"/>
+        <activity android:name=".PreferencesActivity">
+
+            <intent-filter>
+                <action android:name="com.mikemiller.chronoplayer.USER_SIGNED_IN" />
+                <action android:name="com.mikemiller.chronoplayer.USER_SIGNED_OUT" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".WatchHistoryActivity"
             android:label="@string/title_activity_watch_history"
