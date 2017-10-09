@@ -282,6 +282,7 @@ class PreferencesActivity : PreferenceActivity(),
                     mYouTubeAPI?.cancelCommmit()
                 })
 
+                dialog.setCanceledOnTouchOutside(false)
                 dialog.show();
 
                 mYouTubeAPI!!.addVideosToPlayList(playlistName, details, setPercentageOfVideosAdded)
