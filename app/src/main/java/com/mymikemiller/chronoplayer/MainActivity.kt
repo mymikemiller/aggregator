@@ -40,17 +40,14 @@ import com.mymikemiller.chronoplayer.yt.YouTubeAPI
  * A video player allowing users to watch YouTube episodes in chronological order while providing the ability to skip videos.
  */
 class MainActivity : YouTubeFailureRecoveryActivity(),
-        YouTubePlayer.OnFullscreenListener,
-        GoogleApiClient.ConnectionCallbacks {
+        YouTubePlayer.OnFullscreenListener {
 
     val TAG = "ChronoPlayer"
 
     val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
     val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
-    val RC_SIGN_IN = 3 // The request code for google sign in
 
     //region [Variable definitions]
-    private lateinit var mGoogleApiClient: GoogleApiClient
     private lateinit var mChannel: Channel
     private lateinit var baseLayout: LinearLayout
     private lateinit var bar: LinearLayout
@@ -79,7 +76,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mBroadcastReceiver: BroadcastReceiver
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
-    private var mYouTubeAPI: YouTubeAPI? = null
 
     // These collections include the skipped cideos
     var mDetailsByDateIncludingSkipped = listOf<Detail>()
@@ -120,41 +116,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // Register for broadcast intents from settings
         val filter = IntentFilter(PreferencesActivity.CHANNEL_SELECT)
-        filter.addAction(PreferencesActivity.SIGN_IN)
-        filter.addAction(PreferencesActivity.SIGN_OUT)
-        filter.addAction(PreferencesActivity.COMMIT_PLAYLIST)
         filter.addAction(PreferencesActivity.CHANGE_PLAYLIST_NAME)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
         filter.addAction(PreferencesActivity.UNSKIP_ALL)
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, filter)
 
-
-        // Configure sign-in to request the user's ID, email address, and basic
-        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestScopes(Scope(Scopes.PLUS_LOGIN))
-                .requestScopes(Scope(YouTubeAPI.YOUTUBE_SCOPE))
-                .requestEmail()
-                .build()
-
-        // Build a GoogleApiClient with access to the Google Sign-In API and the
-        // options specified by gso.
-        mGoogleApiClient = GoogleApiClient.Builder(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .addConnectionCallbacks(this).build()
-        mGoogleApiClient.connect()
-    }
-
-    // The user is now authenticated
-    override fun onConnected(p0: Bundle?) {
-        Toast.makeText(this, getString(R.string.connection_success),
-                Toast.LENGTH_LONG).show()
-    }
-
-    override fun onConnectionSuspended(p0: Int) {
-        Toast.makeText(this, getString(R.string.connection_suspended),
-                Toast.LENGTH_LONG).show()
     }
 
     override fun onNewIntent(newIntent: Intent?) {
@@ -413,11 +380,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     when (theIntent?.action) {
                         PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
-                        PreferencesActivity.COMMIT_PLAYLIST -> commitPlaylist()
                         PreferencesActivity.CHANGE_PLAYLIST_NAME -> changePlaylistName(theIntent.extras.getString("playlistName"))
                         PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
-                        PreferencesActivity.SIGN_IN -> signIn()
-                        PreferencesActivity.SIGN_OUT -> signOut()
                     }
                 }
             }
@@ -433,7 +397,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
 
         i.putExtra("playlistName", playlistName)
-        i.putExtra("userIsSignedIn", isSignedIn())
 
         startActivity(i)
     }
@@ -474,7 +437,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         super.onDestroy()
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mBroadcastReceiver)
-        mGoogleApiClient.disconnect()
     }
 
     override fun onStart() {
@@ -543,15 +505,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         watchHistoryIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
     }
-
-    fun commitPlaylist() {
-        if (isSignedIn()) {
-            val playlistName = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
-            mYouTubeAPI!!.addVideosToPlayList(playlistName, mDetailsByDate, setPrecentageOfVideosAdded)
-        }
-
-        // TODO: inform user that the user isn't authenticated
-    }
     val setPrecentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
         run {
             Log.d("progress", currentVideoNumber.toString() + "/" + totalVideos)
@@ -573,31 +526,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         startActivity(channelSearchActivityIntent)
     }
 
-    fun isSignedIn(): Boolean {
-        return mYouTubeAPI != null
-    }
-
-    fun signIn() {
-        if (!isSignedIn()) {
-            val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
-            startActivityForResult(signInIntent, RC_SIGN_IN)
-        }
-    }
-
-    fun signOut() {
-        if (isSignedIn()) {
-            Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback {
-                // Clear mYouTubeAPI so we don't try to make any authenticated calls
-                mYouTubeAPI = null
-
-                // Use intents to let PreferencesActivity know we've become unauthenticated
-                val intent = Intent()
-                intent.action = PreferencesActivity.USER_SIGNED_OUT
-                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-            }
-        }
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -615,41 +543,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // Launch the preferences pane so it looks like we went back to it from the warch history
                 showPreferencesActivity()
             }
-        } else if (requestCode == RC_SIGN_IN) {
-            // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-            val result: GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
-            handleSignInResult(result)
-        }
-    }
-
-    // This happens as a result of signing in for the first time by selecting a user
-    fun handleSignInResult(result: GoogleSignInResult) : Unit {
-        Log.d(TAG, "handleSignInResult: " + result.isSuccess())
-        if (result.isSuccess()) {
-
-            Toast.makeText(this, "Signed in successfully",
-                    Toast.LENGTH_LONG).show()
-
-            // Get the account from the sign in result
-            val account: GoogleSignInAccount? = result.signInAccount
-
-            if (account != null) {
-                // Initialize mYouTubeAPI because we're now authenticated and can call the
-                // authenticated calls
-                mYouTubeAPI = YouTubeAPI(this, account.account!!)
-
-                // Use intents to Let PreferencesActivity know we've become authenicated
-                val intent = Intent()
-                intent.action = PreferencesActivity.USER_SIGNED_IN
-                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-
-            }
-        } else {
-            Toast.makeText(this, "Failed to sign in",
-                    Toast.LENGTH_LONG).show()
-
-            // Clear mYouTubeApi so we don't try to use authenticated functions
-            mYouTubeAPI = null
         }
     }
 

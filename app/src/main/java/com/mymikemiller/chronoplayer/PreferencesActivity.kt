@@ -1,36 +1,40 @@
 package com.mymikemiller.chronoplayer
 
-import android.app.Activity
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceFragment
 import android.preference.PreferenceActivity
 import android.content.Intent
-import android.content.IntentFilter
 import android.preference.EditTextPreference
 import android.support.v4.content.LocalBroadcastManager
 import android.widget.Toast
 import android.preference.Preference
 import android.util.Log
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInResult
+import com.google.android.gms.common.Scopes
+import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.Scope
+import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
 /**
  * The settings activity
  */
-class PreferencesActivity : PreferenceActivity() {
+class PreferencesActivity : PreferenceActivity(),
+        GoogleApiClient.ConnectionCallbacks  {
 
     companion object {
+        val RC_SIGN_IN = 3 // The request code for google sign in
+        val TAG = "PreferencesActivity"
+
         const val CHANNEL_SELECT = "com.mymikemiller.chronoplayer.CHANNEL_SELECT"
-        const val SIGN_IN = "com.mymikemiller.chronoplayer.SIGN_IN"
-        const val SIGN_OUT = "com.mymikemiller.chronoplayer.SIGN_OUT"
-        const val COMMIT_PLAYLIST = "com.mymikemiller.chronoplayer.COMMIT_PLAYLIST"
         const val CHANGE_PLAYLIST_NAME = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_NAME"
         const val UNSKIP_ALL = "com.mymikemiller.chronoplayer.UNSKIP_ALL"
         const val WATCH_HISTORY = "com.mymikemiller.chronoplayer.WATCH_HISTORY"
-        const val USER_SIGNED_IN = "com.mymikemiller.chronoplayer.USER_SIGNED_IN"
-        const val USER_SIGNED_OUT = "com.mymikemiller.chronoplayer.USER_SIGNED_OUT"
 
-        private lateinit var mBroadcastReceiver: BroadcastReceiver
+        private var mYouTubeAPI: YouTubeAPI? = null
+        private lateinit var mGoogleApiClient: GoogleApiClient
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,13 +43,23 @@ class PreferencesActivity : PreferenceActivity() {
         fragmentManager.beginTransaction().replace(android.R.id.content, MyPreferenceFragment()).commit()
     }
 
+    // The user is now authenticated
+    override fun onConnected(p0: Bundle?) {
+        Toast.makeText(this, getString(R.string.connection_success),
+                Toast.LENGTH_LONG).show()
+    }
+
+    override fun onConnectionSuspended(p0: Int) {
+        Toast.makeText(this, getString(R.string.connection_suspended),
+                Toast.LENGTH_LONG).show()
+    }
+
     class MyPreferenceFragment : PreferenceFragment() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
 
-            val signedIn = activity.intent.getBooleanExtra("userIsSignedIn", false)
-            handleSignInAndOut(signedIn)
+            updateUI(isSignedIn())
 
             // Change the playlist name description text to mention the playlist name sent in
             val playlistName = activity.intent.extras.getString("playlistName")
@@ -56,6 +70,21 @@ class PreferencesActivity : PreferenceActivity() {
 
             // Also change the text in the EditText to match what was sent in
             changePlaylistNamePref.editText.setText(playlistName)
+
+
+            // Configure sign-in to request youtube access
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestScopes(Scope(Scopes.PLUS_LOGIN))
+                    .requestScopes(Scope(YouTubeAPI.YOUTUBE_SCOPE))
+                    .requestEmail()
+                    .build()
+
+            // Build a GoogleApiClient with access to the Google Sign-In API and the
+            // options specified by gso.
+            mGoogleApiClient = GoogleApiClient.Builder(activity)
+                    .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                    .addConnectionCallbacks(activity as PreferencesActivity).build()
+            mGoogleApiClient.connect()
 
             val channelSelectButton = findPreference(getString(R.string.pref_channelSelectKey))
             channelSelectButton.setOnPreferenceClickListener({
@@ -72,12 +101,7 @@ class PreferencesActivity : PreferenceActivity() {
             val signInButton = findPreference(getString(R.string.pref_signInKey))
             signInButton.setOnPreferenceClickListener({
 
-                val intent = Intent()
-                intent.action = SIGN_IN
-
-                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
-
-//                activity.finish()
+                signIn()
 
                 true
             })
@@ -85,11 +109,7 @@ class PreferencesActivity : PreferenceActivity() {
             val signOutButton = findPreference(getString(R.string.pref_signOutKey))
             signOutButton.setOnPreferenceClickListener({
 
-                val intent = Intent()
-                intent.action = SIGN_OUT
-                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
-
-//                activity.finish()
+                signOut()
 
                 true
             })
@@ -98,11 +118,7 @@ class PreferencesActivity : PreferenceActivity() {
             val commitPlaylistButton = findPreference(getString(R.string.pref_commitPlaylistKey))
             commitPlaylistButton.setOnPreferenceClickListener({
 
-                val intent = Intent()
-                intent.action = COMMIT_PLAYLIST
-                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
-
-                activity.finish()
+                commitPlaylist()
 
                 true
             })
@@ -159,30 +175,91 @@ class PreferencesActivity : PreferenceActivity() {
 
                 true
             })
-
-            // Register receivers so we know when the user signs in and out and can update the
-            // UI accordingly
-            mBroadcastReceiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, theIntent: Intent?) {
-
-                    when (theIntent?.action) {
-                        USER_SIGNED_IN -> handleSignInAndOut(true)
-                        USER_SIGNED_OUT -> handleSignInAndOut(false)
-                    }
-                }
-            }
         }
 
-        fun handleSignInAndOut(signedIn: Boolean) {
+        // TODO: move this into handleSignInResult (maybe...)
+        fun updateUI(signedIn: Boolean) {
             findPreference(getString(R.string.pref_signInKey)).isEnabled = !signedIn
             findPreference(getString(R.string.pref_signOutKey)).isEnabled = signedIn
             findPreference(getString(R.string.pref_commitPlaylistKey)).isEnabled = signedIn
         }
 
+        // This happens as a result of signing in for the first time by selecting a user
+        fun handleSignInResult(result: GoogleSignInResult) : Unit {
+            Log.d(TAG, "handleSignInResult: " + result.isSuccess())
+            if (result.isSuccess()) {
+
+                Toast.makeText(activity, "Signed in successfully",
+                        Toast.LENGTH_LONG).show()
+
+                // Get the account from the sign in result
+                val account: GoogleSignInAccount? = result.signInAccount
+
+                if (account != null) {
+                    // Initialize mYouTubeAPI because we're now authenticated and can call the
+                    // authenticated calls
+                    mYouTubeAPI = YouTubeAPI(activity, account.account!!)
+                    updateUI(true)
+                }
+            } else {
+                Toast.makeText(activity, "Failed to sign in",
+                        Toast.LENGTH_LONG).show()
+
+                // Clear mYouTubeApi so we don't try to use authenticated functions
+                mYouTubeAPI = null
+            }
+        }
+
+
+        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+            super.onActivityResult(requestCode, resultCode, data)
+
+            if (requestCode == RC_SIGN_IN) {
+                // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+                val result: GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
+                handleSignInResult(result)
+            }
+        }
+
+
+        fun isSignedIn(): Boolean {
+            return mYouTubeAPI != null
+        }
+
+        fun signIn() {
+            if (!isSignedIn()) {
+                val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
+                startActivityForResult(signInIntent, RC_SIGN_IN)
+
+                // We don't call updateUI here because we need to wait for the activity's
+                // result to see if we actually signed in
+            }
+        }
+
+        fun signOut() {
+            if (isSignedIn()) {
+                Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback {
+                    // Clear mYouTubeAPI so we don't try to make any authenticated calls
+                    mYouTubeAPI = null
+
+                    updateUI(false)
+                }
+            }
+        }
+
+        fun commitPlaylist() {
+            // TODO: Send in mChannel and mDetailsByDate to PreferencesActivity create
+//            if (isSignedIn()) {
+//                val playlistName = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
+//                mYouTubeAPI!!.addVideosToPlayList(playlistName, mDetailsByDate, setPrecentageOfVideosAdded)
+//            }
+
+            // TODO: inform user that the user isn't authenticated
+        }
+
         override fun onDestroy() {
             super.onDestroy()
-            LocalBroadcastManager.getInstance(activity)
-                    .unregisterReceiver(mBroadcastReceiver)
+            mGoogleApiClient.disconnect()
         }
     }
 }
