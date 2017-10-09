@@ -45,6 +45,7 @@ val JSON_FACTORY: JsonFactory = JacksonFactory()
  */
 class YouTubeAPI(context: Context, account: Account) {
     private val mYouTube: YouTube
+    private var mCommitCancelled = false
 
     init {
         val credential: GoogleAccountCredential = GoogleAccountCredential.usingOAuth2(
@@ -141,27 +142,39 @@ class YouTubeAPI(context: Context, account: Account) {
         }
     }
 
+    fun cancelCommmit() {
+        mCommitCancelled = true
+    }
+
     fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
                             setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit)
     {
+        // Start out allowing commits. The user can cancel this commit
+        // operation by calling YouTubeAPI.cancelCommit()
+        mCommitCancelled = false
+
         getOrCreatePlaylist(playlistTitle, { playlist -> kotlin.run {
             for (index in 0..detailsToCommit.size) {
-                val detail = detailsToCommit[index]
-                val videoId = detail.videoId
+                if (!mCommitCancelled) {
+                    val detail = detailsToCommit[index]
+                    val videoId = detail.videoId
 
-                val playlistItem = PlaylistItem()
-                val snippet = PlaylistItemSnippet()
-                snippet.playlistId = playlist.id
-                val resourceId = ResourceId()
-                resourceId.set("kind", "youtube#video")
-                resourceId.set("videoId", videoId)
+                    val playlistItem = PlaylistItem()
+                    val snippet = PlaylistItemSnippet()
+                    snippet.playlistId = playlist.id
+                    val resourceId = ResourceId()
+                    resourceId.set("kind", "youtube#video")
+                    resourceId.set("videoId", videoId)
 
-                snippet.resourceId = resourceId
-                playlistItem.snippet = snippet
+                    snippet.resourceId = resourceId
+                    playlistItem.snippet = snippet
 
-                var request = mYouTube.playlistItems().insert("snippet", playlistItem)
-                request.execute()
-                setPercentageCallback(detailsToCommit.size, index)
+                    var request = mYouTube.playlistItems().insert("snippet", playlistItem)
+                    request.execute()
+                    setPercentageCallback(detailsToCommit.size, index)
+                } else {
+                    break;
+                }
             }
         }
         })

@@ -278,6 +278,9 @@ class PreferencesActivity : PreferenceActivity(),
                 val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
                 builder.setView(view);
                 val dialog = builder.create();
+                dialog.setOnDismissListener({
+                    mYouTubeAPI?.cancelCommmit()
+                })
 
                 dialog.show();
 
@@ -297,13 +300,13 @@ class PreferencesActivity : PreferenceActivity(),
                     mProgressBar.setProgress(currentVideoNumber)
 
                     mProgressTitle.setText(getString(R.string.commitProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
-
                 })
             }
         }
 
         override fun onDestroy() {
             super.onDestroy()
+            mYouTubeAPI?.cancelCommmit()
             mGoogleApiClient.disconnect()
         }
     }
