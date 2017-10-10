@@ -26,6 +26,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.mymikemiller.chronoplayer.util.PlaylistManipulator
 
 
 /**
@@ -266,7 +267,7 @@ class PreferencesActivity : PreferenceActivity(),
 
                 // We can't use the intent to pass in the list of details because it's too big.
                 // Instead, get the list of details from the database
-                val details = VideoList.getAllDetailsFromDb(activity, channel)
+                val details = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(activity, channel)).asReversed()
                 val playlistName = CommitPlaylists.getCommitPlaylistTitle(activity, channel)
 
                 val inflater =  activity.getSystemService (Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
