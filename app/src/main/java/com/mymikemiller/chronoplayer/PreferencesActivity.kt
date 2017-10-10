@@ -100,6 +100,9 @@ class PreferencesActivity : PreferenceActivity(),
                     .addConnectionCallbacks(activity as PreferencesActivity).build()
             mGoogleApiClient.connect()
 
+            // TODO: Remove this and let the user sign in when they want
+            signIn()
+
             val channelSelectButton = findPreference(getString(R.string.pref_channelSelectKey))
             channelSelectButton.setOnPreferenceClickListener({
 
