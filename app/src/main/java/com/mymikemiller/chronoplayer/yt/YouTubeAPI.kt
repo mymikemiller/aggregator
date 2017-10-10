@@ -62,23 +62,10 @@ class YouTubeAPI(context: Context, account: Account) {
         mYouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                 .setApplicationName("ChronoPlayer")
                 .build()
-
-//        setPlaylist("gamegrumps")
     }
 
-//    fun setPlaylist(title: String) {
-//        isAuthenticated = false
-//        getPlaylist(title, { playlist: Playlist? ->
-//            run {
-//                // Store the playlist so we can add videos to it
-//                mPlaylist = playlist
-//                isAuthenticated = true
-//            }
-//        })
-//    }
-
-    private fun getOrCreatePlaylist(title: String, callback: (Playlist) -> Unit) {
-        GetOrCreatePlaylistTask(mYouTube, title, { playlist ->
+    private fun getUserPlaylist(title: String, callback: (Playlist?) -> Unit) {
+        GetUserPlaylistTask(mYouTube, title, { playlist ->
             run {
                 callback(playlist)
             }
@@ -88,58 +75,45 @@ class YouTubeAPI(context: Context, account: Account) {
     /**
      * AsyncTask that uses the specified AuthYoutube playlist API.
      */
-    private class GetOrCreatePlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist) -> Unit) : AsyncTask<String, Unit, Unit>() {
+    private class GetUserPlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist?) -> Unit) : AsyncTask<String, Unit, Unit>() {
 
         override fun onPreExecute(): Unit {}
 
         override fun doInBackground(vararg params: String) {
-            try {
-                val playlistsList: PlaylistListResponse = authenticatedYoutube
-                        .playlists()
-                        .list("snippet")
-                        .setMine(true)
-                        .execute()
+            // Get all the user's playlists
+            val playlistsList: PlaylistListResponse = authenticatedYoutube
+                    .playlists()
+                    .list("snippet")
+                    .setMine(true)
+                    .execute()
 
-                val playlists = playlistsList.getItems()
+            val playlists = playlistsList.getItems()
 
-                // Get names of all connections
-                for (playlist in playlists) {
-                    if (playlist.snippet.title == title) {
-                        callback(playlist)
-                        return
-                    }
+            // Find the specified playlist
+            for (playlist in playlists) {
+                if (playlist.snippet.title == title) {
+                    callback(playlist)
+                    return
                 }
-
-                // we didn't find a playlist with the give title. Create one!
-                val playlist = createPlaylist(authenticatedYoutube, title)
-                callback(playlist)
-
-            } catch (userRecoverableException: UserRecoverableAuthIOException) {
-                Log.e("playlist creation", "userRecoverableException")
-            } catch (e: IOException) {
-                Log.e("playlist creation", "IOException")
             }
 
-            return
+            // We didn't find the playlist. Call the callback specifying null.
+            callback(null)
         }
 
         override fun onPostExecute(result: Unit?) {}
+    }
 
-
-        fun createPlaylist(authenticatedYoutube: YouTube, title: String): Playlist{
-            val playlist = Playlist()
-            val snippet = PlaylistSnippet()
-            val status = PlaylistStatus()
-
-            playlist.snippet = snippet
-            playlist.snippet.title = title
-            playlist.status = status
-
-            val playlistsInsertRequest = authenticatedYoutube.playlists().insert("snippet,status", playlist)
-
-            val response = playlistsInsertRequest.execute()
-            return response
-        }
+    private fun getOrCreatePlaylist(title: String, callback: (Playlist) -> Unit) {
+        getUserPlaylist(title, { playlist ->
+            if (playlist != null) {
+                // We found the playlist
+                callback(playlist)
+            } else {
+                val createdPlaylist = createPlaylist(mYouTube, title)
+                callback(createdPlaylist)
+            }
+        })
     }
 
     fun cancelCommmit() {
@@ -261,14 +235,7 @@ class YouTubeAPI(context: Context, account: Account) {
                 if (searchResultList != null) {
                     val results: MutableList<Detail> = mutableListOf()
                     for (result in searchResultList) {
-                        val thumbnail = if (result.snippet.thumbnails.standard != null) result.snippet.thumbnails.standard.url else result.snippet.thumbnails.high.url
-
-                        val d = Detail(channel,
-                                result.snippet.resourceId.videoId,
-                                result.snippet.title,
-                                result.snippet.description,
-                                thumbnail,
-                                result.snippet.publishedAt)
+                        val d = createDetail(result, channel)
 
                         if (d == stopAtDetail) {
                             // Don't break here because our results come in out of order, so we need
@@ -296,6 +263,20 @@ class YouTubeAPI(context: Context, account: Account) {
                     callback(channel, results, searchResponse.nextPageToken, stopAtDetail, setPercentageCallback, callbackWhenDone)
                 }
             }
+        }
+
+        fun createDetail(item: PlaylistItem, channel: Channel): Detail {
+
+            val thumbnail = if (item.snippet.thumbnails.standard != null) item.snippet.thumbnails.standard.url else item.snippet.thumbnails.high.url
+
+            val d = Detail(channel,
+                    item.snippet.resourceId.videoId,
+                    item.snippet.title,
+                    item.snippet.description,
+                    thumbnail,
+                    item.snippet.publishedAt)
+
+            return d
         }
 
         fun fetchChannels(query: String, callback: (channels: List<Channel>) -> Unit) {
@@ -370,6 +351,21 @@ class YouTubeAPI(context: Context, account: Account) {
 
                 callback(uploadPlaylistId)
             }
+        }
+
+        fun createPlaylist(authenticatedYoutube: YouTube, title: String): Playlist{
+            val playlist = Playlist()
+            val snippet = PlaylistSnippet()
+            val status = PlaylistStatus()
+
+            playlist.snippet = snippet
+            playlist.snippet.title = title
+            playlist.status = status
+
+            val playlistsInsertRequest = authenticatedYoutube.playlists().insert("snippet,status", playlist)
+
+            val response = playlistsInsertRequest.execute()
+            return response
         }
     }
 }
