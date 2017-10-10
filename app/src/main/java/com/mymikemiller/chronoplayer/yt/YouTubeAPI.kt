@@ -64,48 +64,8 @@ class YouTubeAPI(context: Context, account: Account) {
                 .build()
     }
 
-    private fun getUserPlaylist(title: String, callback: (Playlist?) -> Unit) {
-        GetUserPlaylistTask(mYouTube, title, { playlist ->
-            run {
-                callback(playlist)
-            }
-        }).execute()
-    }
-
-    /**
-     * AsyncTask that uses the specified AuthYoutube playlist API.
-     */
-    private class GetUserPlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist?) -> Unit) : AsyncTask<String, Unit, Unit>() {
-
-        override fun onPreExecute(): Unit {}
-
-        override fun doInBackground(vararg params: String) {
-            // Get all the user's playlists
-            val playlistsList: PlaylistListResponse = authenticatedYoutube
-                    .playlists()
-                    .list("snippet")
-                    .setMine(true)
-                    .execute()
-
-            val playlists = playlistsList.getItems()
-
-            // Find the specified playlist
-            for (playlist in playlists) {
-                if (playlist.snippet.title == title) {
-                    callback(playlist)
-                    return
-                }
-            }
-
-            // We didn't find the playlist. Call the callback specifying null.
-            callback(null)
-        }
-
-        override fun onPostExecute(result: Unit?) {}
-    }
-
     private fun getOrCreatePlaylist(title: String, callback: (Playlist) -> Unit) {
-        getUserPlaylist(title, { playlist ->
+        getUserPlaylist(mYouTube, title, { playlist ->
             if (playlist != null) {
                 // We found the playlist
                 callback(playlist)
@@ -119,6 +79,54 @@ class YouTubeAPI(context: Context, account: Account) {
     fun cancelCommmit() {
         mCommitCancelled = true
     }
+
+
+
+    // We can't use Details here because a Detail knows what Channel it came from and we wouldn't
+    // be able to compare details once we get it back. So we just use videoIds
+    fun getLastVideoId(playlistTitle: String, callback: (String) -> Unit) {
+        GetLastVideoIdTask(mYouTube, playlistTitle, { videoId ->
+            run {
+                callback(videoId)
+            }
+        }).execute()
+    }
+
+    private class GetLastVideoIdTask(val authenticatedYoutube: YouTube, val playlistTitle: String, val callback: (String) -> Unit) : AsyncTask<String, Unit, Unit>() {
+
+        override fun onPreExecute(): Unit {}
+
+        override fun doInBackground(vararg params: String) {
+
+            //TODO: get user playlist
+
+//            var playlistItemsRequest = authenticatedYoutube.playlistItems().list("contentDetails,snippet,id")
+//            playlistItemsRequest.id = playlist.id
+//            playlistItemsRequest.maxResults = 50
+//            var pageToken: String? = null
+//
+//            while (true)
+//            {
+//                playlistItemsRequest.pageToken = pageToken;
+//                var playlistItemsResponse = playlistItemsRequest.execute();
+//                pageToken = playlistItemsResponse.nextPageToken;
+//
+//                if (pageToken == null) {
+//                    // We've reached the last page. Return the last video id.
+//                    callback(playlistItemsResponse.items[playlistItemsResponse.items.size - 1].snippet.resourceId.videoId);
+//                    return
+//                }
+//            }
+//            return
+//
+//            // we didn't find a playlist with the specified name. Log a message and simply return
+//            Log.e("GetLastVideoId", "Couldn't find specified playlist")
+
+            return
+        }
+    }
+
+
 
     fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
                             setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit)
@@ -366,6 +374,46 @@ class YouTubeAPI(context: Context, account: Account) {
 
             val response = playlistsInsertRequest.execute()
             return response
+        }
+
+        private fun getUserPlaylist(authenticatedYoutube: YouTube, title: String, callback: (Playlist?) -> Unit) {
+            GetUserPlaylistTask(authenticatedYoutube, title, { playlist ->
+                run {
+                    callback(playlist)
+                }
+            }).execute()
+        }
+
+        /**
+         * AsyncTask that uses the specified AuthYoutube playlist API.
+         */
+        private class GetUserPlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist?) -> Unit) : AsyncTask<String, Unit, Unit>() {
+
+            override fun onPreExecute(): Unit {}
+
+            override fun doInBackground(vararg params: String) {
+                // Get all the user's playlists
+                val playlistsList: PlaylistListResponse = authenticatedYoutube
+                        .playlists()
+                        .list("snippet")
+                        .setMine(true)
+                        .execute()
+
+                val playlists = playlistsList.getItems()
+
+                // Find the specified playlist
+                for (playlist in playlists) {
+                    if (playlist.snippet.title == title) {
+                        callback(playlist)
+                        return
+                    }
+                }
+
+                // We didn't find the playlist. Call the callback specifying null.
+                callback(null)
+            }
+
+            override fun onPostExecute(result: Unit?) {}
         }
     }
 }

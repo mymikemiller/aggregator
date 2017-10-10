@@ -216,6 +216,10 @@ class PreferencesActivity : PreferenceActivity(),
                     // authenticated calls
                     mYouTubeAPI = YouTubeAPI(activity, account.account!!)
                     updateUI(true)
+
+                    mYouTubeAPI?.getLastVideoId("gg", { videoId ->
+                        println(videoId)
+                    })
                 }
             } else {
                 Toast.makeText(activity, "Failed to sign in",

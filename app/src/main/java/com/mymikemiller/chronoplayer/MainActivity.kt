@@ -124,6 +124,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // TODO: Remove this to prevent auto-popup of preferences page
         showPreferencesActivity()
+
+
     }
 
     override fun onNewIntent(newIntent: Intent?) {
