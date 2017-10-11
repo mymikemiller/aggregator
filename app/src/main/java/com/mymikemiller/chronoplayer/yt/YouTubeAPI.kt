@@ -169,6 +169,25 @@ class YouTubeAPI(context: Context, account: Account) {
         })
     }
 
+    fun getDetailsToCommit(playlistTitle: String, details: List<Detail>, callback: (List<Detail>) -> Unit) {
+        // Get the last videoId so we know where to start with the commit
+        getLastVideoId(playlistTitle, { lastVideoId ->
+            // Remove all videos before the last videoId
+            val detailsToCommit = mutableListOf<Detail>()
+            var found = false
+            for(detail in details) {
+                if (detail.videoId == lastVideoId) {
+                    found = true
+                }
+                if (!found) {
+                    detailsToCommit.add(detail)
+                }
+            }
+            callback(detailsToCommit.toList().asReversed())
+        })
+        return
+    }
+
     // Static functions that don't require authoriation
     companion object {
         // Scope for modifying the user's private data
@@ -422,5 +441,6 @@ class YouTubeAPI(context: Context, account: Account) {
 
             override fun onPostExecute(result: Unit?) {}
         }
+
     }
 }

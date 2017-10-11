@@ -27,6 +27,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import com.mymikemiller.chronoplayer.util.PlaylistManipulator
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 /**
@@ -84,7 +85,6 @@ class PreferencesActivity : PreferenceActivity(),
 
             // Also change the text in the EditText to match what was sent in
             changePlaylistNamePref.editText.setText(playlistName)
-
 
             // Configure sign-in to request youtube access
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -216,10 +216,6 @@ class PreferencesActivity : PreferenceActivity(),
                     // authenticated calls
                     mYouTubeAPI = YouTubeAPI(activity, account.account!!)
                     updateUI(true)
-
-                    mYouTubeAPI?.getLastVideoId("gg", { videoId ->
-                        println(videoId)
-                    })
                 }
             } else {
                 Toast.makeText(activity, "Failed to sign in",
@@ -293,7 +289,10 @@ class PreferencesActivity : PreferenceActivity(),
                 dialog.setCanceledOnTouchOutside(false)
                 dialog.show();
 
-                mYouTubeAPI!!.addVideosToPlayList(playlistName, details, setPercentageOfVideosAdded)
+                // Get the last video in the user's playlist so we can start adding after that video
+                mYouTubeAPI!!.getDetailsToCommit(playlistName, details, { detailsToCommit ->
+                    mYouTubeAPI!!.addVideosToPlayList(playlistName, detailsToCommit, setPercentageOfVideosAdded)
+                })
             } else {
                 Toast.makeText(activity, getString(R.string.not_signed_in),
                         Toast.LENGTH_LONG).show()
