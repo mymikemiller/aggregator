@@ -50,6 +50,7 @@ class PreferencesActivity : PreferenceActivity(),
 
         private lateinit var mProgressTitle: TextView
         private lateinit var mProgressBar: ProgressBar
+        private lateinit var mCommitProgressDialog: AlertDialog
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -287,13 +288,13 @@ class PreferencesActivity : PreferenceActivity(),
                         activity.runOnUiThread({
                             val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
                             builder.setView(view);
-                            val dialog = builder.create();
-                            dialog.setOnDismissListener({
+                            mCommitProgressDialog = builder.create();
+                            mCommitProgressDialog.setOnDismissListener({
                                 mYouTubeAPI?.cancelCommmit()
                             })
 
-                            dialog.setCanceledOnTouchOutside(false)
-                            dialog.show();
+                            mCommitProgressDialog.setCanceledOnTouchOutside(false)
+                            mCommitProgressDialog.show();
                         })
 
                         mYouTubeAPI!!.addVideosToPlayList(playlistName, detailsToCommit, setPercentageOfVideosAdded)
@@ -307,14 +308,16 @@ class PreferencesActivity : PreferenceActivity(),
 
         val setPercentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
             run {
-                Log.d("progress", currentVideoNumber.toString() + "/" + totalVideos)
+                if (currentVideoNumber == totalVideos) {
+                    mCommitProgressDialog.dismiss()
+                } else {
+                    activity.runOnUiThread({
+                        mProgressBar.max = totalVideos
+                        mProgressBar.setProgress(currentVideoNumber)
 
-                activity.runOnUiThread({
-                    mProgressBar.max = totalVideos
-                    mProgressBar.setProgress(currentVideoNumber)
-
-                    mProgressTitle.setText(getString(R.string.commitProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
-                })
+                        mProgressTitle.setText(getString(R.string.commitProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
+                    })
+                }
             }
         }
 
