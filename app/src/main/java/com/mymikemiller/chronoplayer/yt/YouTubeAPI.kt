@@ -98,29 +98,36 @@ class YouTubeAPI(context: Context, account: Account) {
 
         override fun doInBackground(vararg params: String) {
 
-            //TODO: get user playlist
+            getUserPlaylist(authenticatedYoutube, playlistTitle, { playlist ->
+                // If we fail to find a playlist or a videoId, we callback with a blank string
+                var videoId = ""
+                if (playlist != null) {
+                    var playlistItemsRequest = authenticatedYoutube.playlistItems().list("contentDetails,snippet")
 
-//            var playlistItemsRequest = authenticatedYoutube.playlistItems().list("contentDetails,snippet,id")
-//            playlistItemsRequest.id = playlist.id
-//            playlistItemsRequest.maxResults = 50
-//            var pageToken: String? = null
-//
-//            while (true)
-//            {
-//                playlistItemsRequest.pageToken = pageToken;
-//                var playlistItemsResponse = playlistItemsRequest.execute();
-//                pageToken = playlistItemsResponse.nextPageToken;
-//
-//                if (pageToken == null) {
-//                    // We've reached the last page. Return the last video id.
-//                    callback(playlistItemsResponse.items[playlistItemsResponse.items.size - 1].snippet.resourceId.videoId);
-//                    return
-//                }
-//            }
-//            return
-//
-//            // we didn't find a playlist with the specified name. Log a message and simply return
-//            Log.e("GetLastVideoId", "Couldn't find specified playlist")
+                    playlistItemsRequest.playlistId = playlist.id
+                    playlistItemsRequest.maxResults = 50
+                    playlistItemsRequest.part = "snippet,contentDetails"
+                    var pageToken: String? = null
+
+                    while (true)
+                    {
+                        playlistItemsRequest.pageToken = pageToken;
+                        var playlistItemsResponse = playlistItemsRequest.execute();
+                        pageToken = playlistItemsResponse.nextPageToken;
+
+                        if (pageToken == null) {
+                            // We've reached the last page. Callback the last video id.
+                            if (playlistItemsResponse.items.size > 0) {
+                                videoId = playlistItemsResponse.items[playlistItemsResponse.items.size - 1].snippet.resourceId.videoId
+                                break
+                            }
+                        }
+                    }
+                }
+
+                // videoId will either be a valid videoId or "" (didn't find a playlist or didn't find a videoId)
+                callback(videoId)
+            })
 
             return
         }
