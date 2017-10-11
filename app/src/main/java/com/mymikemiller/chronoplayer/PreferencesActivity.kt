@@ -22,6 +22,7 @@ import com.mymikemiller.chronoplayer.util.VideoList
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 import android.app.ProgressDialog
 import android.content.Context
+import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ProgressBar
@@ -308,16 +309,20 @@ class PreferencesActivity : PreferenceActivity(),
 
         val setPercentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
             run {
-                if (currentVideoNumber == totalVideos) {
-                    mCommitProgressDialog.dismiss()
-                } else {
-                    activity.runOnUiThread({
-                        mProgressBar.max = totalVideos
-                        mProgressBar.setProgress(currentVideoNumber)
 
-                        mProgressTitle.setText(getString(R.string.commitProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
-                    })
-                }
+                activity.runOnUiThread({
+                    mProgressBar.max = totalVideos
+                    mProgressBar.setProgress(currentVideoNumber)
+
+                    mProgressTitle.setText(getString(R.string.commitProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
+
+                    if (currentVideoNumber == totalVideos) {
+                        // After a short delay (so the user can see the progress at 100%), dismiss the dialog
+                        Handler().postDelayed({
+                            mCommitProgressDialog.dismiss()
+                        }, 1000)
+                    }
+                })
             }
         }
 
