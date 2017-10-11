@@ -121,11 +121,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         filter.addAction(PreferencesActivity.UNSKIP_ALL)
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, filter)
-
-        // TODO: Remove this to prevent auto-popup of preferences page
-        showPreferencesActivity()
-
-
     }
 
     override fun onNewIntent(newIntent: Intent?) {

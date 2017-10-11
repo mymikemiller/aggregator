@@ -133,9 +133,6 @@ class WatchHistory {
                             val dateUploaded = cursor.getString(cursor.getColumnIndex(KEY_DATE_UPLOADED))
                             val dateRfc3339 = DateTime.parseRfc3339(dateUploaded)
 
-                            // TODO: get the proper channel here by looking at the Channel database,
-                            // though that's not really required because we don't display anything about the channel
-
                             // We only need the channelId (we actually don't even need that) and thumbnail
                             // here because we're not displaying anything else
                             val newChannel = Channel(channelId,"", "", thumbnail)

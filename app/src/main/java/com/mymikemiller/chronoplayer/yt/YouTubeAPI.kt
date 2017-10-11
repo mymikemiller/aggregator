@@ -133,17 +133,18 @@ class YouTubeAPI(context: Context, account: Account) {
         }
     }
 
-
-
     fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
                             setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit)
     {
+        if (detailsToCommit.size == 0)
+            return
+
         // Start out allowing commits. The user can cancel this commit
         // operation by calling YouTubeAPI.cancelCommit()
         mCommitCancelled = false
 
         getOrCreatePlaylist(playlistTitle, { playlist -> kotlin.run {
-            for (index in 0..detailsToCommit.size) {
+            for (index in 0..detailsToCommit.size - 1) {
                 if (!mCommitCancelled) {
                     val detail = detailsToCommit[index]
                     val videoId = detail.videoId
@@ -160,7 +161,7 @@ class YouTubeAPI(context: Context, account: Account) {
 
                     var request = mYouTube.playlistItems().insert("snippet", playlistItem)
                     request.execute()
-                    setPercentageCallback(detailsToCommit.size, index)
+                    setPercentageCallback(detailsToCommit.size, index + 1)
                 } else {
                     break;
                 }

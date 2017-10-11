@@ -100,9 +100,6 @@ class PreferencesActivity : PreferenceActivity(),
                     .addConnectionCallbacks(activity as PreferencesActivity).build()
             mGoogleApiClient.connect()
 
-            // TODO: Remove this. Let the user sign in when they want.
-            signIn()
-
             val channelSelectButton = findPreference(getString(R.string.pref_channelSelectKey))
             channelSelectButton.setOnPreferenceClickListener({
 
@@ -273,25 +270,34 @@ class PreferencesActivity : PreferenceActivity(),
                 val details = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(activity, channel)).asReversed()
                 val playlistName = CommitPlaylists.getCommitPlaylistTitle(activity, channel)
 
-                val inflater =  activity.getSystemService (Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-                val view: View = inflater.inflate(R.layout.progress_dialog, null);
-
-                mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
-                mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
-
-                val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
-                builder.setView(view);
-                val dialog = builder.create();
-                dialog.setOnDismissListener({
-                    mYouTubeAPI?.cancelCommmit()
-                })
-
-                dialog.setCanceledOnTouchOutside(false)
-                dialog.show();
-
                 // Get the last video in the user's playlist so we can start adding after that video
                 mYouTubeAPI!!.getDetailsToCommit(playlistName, details, { detailsToCommit ->
-                    mYouTubeAPI!!.addVideosToPlayList(playlistName, detailsToCommit, setPercentageOfVideosAdded)
+                    if (detailsToCommit.isEmpty()) {
+                        activity.runOnUiThread({
+                            Toast.makeText(activity, getString(R.string.noVideosToCommit),
+                                    Toast.LENGTH_LONG).show()
+                        })
+                    } else {
+                        val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+                        val view: View = inflater.inflate(R.layout.progress_dialog, null);
+
+                        mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
+                        mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
+
+                        activity.runOnUiThread({
+                            val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
+                            builder.setView(view);
+                            val dialog = builder.create();
+                            dialog.setOnDismissListener({
+                                mYouTubeAPI?.cancelCommmit()
+                            })
+
+                            dialog.setCanceledOnTouchOutside(false)
+                            dialog.show();
+                        })
+
+                        mYouTubeAPI!!.addVideosToPlayList(playlistName, detailsToCommit, setPercentageOfVideosAdded)
+                    }
                 })
             } else {
                 Toast.makeText(activity, getString(R.string.not_signed_in),
