@@ -449,8 +449,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     //region [playlist functions]
     private fun refreshPlaylist() {
-        mAdapter.details = mDetailsByDate
-        mAdapter.notifyDataSetChanged()
+        updateAdapters(mDetailsByDate)
         scrollToCurrentlyPlayingVideo()
     }
     fun openPlaylist() {
@@ -468,8 +467,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // Update our cached lists
         mDetailsByDate = RemovePrevious.filterOutRemoved(this, detail.channel, mDetailsByDate)
+        updateAdapters(mDetailsByDate)
+    }
 
-        // Update the adapter
+    fun updateAdapters(details: List<Detail>) {
         mAdapter.details = mDetailsByDate
         mAdapter.notifyDataSetChanged()
         mEpisodeViewPagerAdapter.details = mAdapter.details
