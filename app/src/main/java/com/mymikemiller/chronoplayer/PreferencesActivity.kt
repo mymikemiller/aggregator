@@ -20,7 +20,6 @@ import com.google.android.gms.common.api.Scope
 import com.mymikemiller.chronoplayer.util.CommitPlaylists
 import com.mymikemiller.chronoplayer.util.VideoList
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
-import android.app.ProgressDialog
 import android.content.Context
 import android.os.Handler
 import android.view.LayoutInflater
@@ -28,7 +27,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import com.mymikemiller.chronoplayer.util.PlaylistManipulator
-import kotlinx.android.synthetic.main.activity_main.*
+import com.mymikemiller.chronoplayer.util.RemovePrevious
 
 
 /**
@@ -43,7 +42,7 @@ class PreferencesActivity : PreferenceActivity(),
 
         const val CHANNEL_SELECT = "com.mymikemiller.chronoplayer.CHANNEL_SELECT"
         const val CHANGE_PLAYLIST_NAME = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_NAME"
-        const val UNSKIP_ALL = "com.mymikemiller.chronoplayer.UNSKIP_ALL"
+        const val SHOW_ALL = "com.mymikemiller.chronoplayer.SHOW_ALL"
         const val WATCH_HISTORY = "com.mymikemiller.chronoplayer.WATCH_HISTORY"
 
         private var mYouTubeAPI: YouTubeAPI? = null
@@ -178,14 +177,14 @@ class PreferencesActivity : PreferenceActivity(),
                 true
             })
 
-            val unskipAllVideosButton = findPreference(getString(R.string.pref_unskipAllVideosKey))
-            unskipAllVideosButton.setOnPreferenceClickListener({
+            val showAllVideosButton = findPreference(getString(R.string.pref_showAllVideosKey))
+            showAllVideosButton.setOnPreferenceClickListener({
 
                 val intent = Intent()
-                intent.action = UNSKIP_ALL
+                intent.action = SHOW_ALL
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
-                Toast.makeText(getActivity(), getString(R.string.videosUnskipped),
+                Toast.makeText(getActivity(), getString(R.string.allVideosShown),
                         Toast.LENGTH_SHORT).show()
 
 
@@ -269,7 +268,10 @@ class PreferencesActivity : PreferenceActivity(),
 
                 // We can't use the intent to pass in the list of details because it's too big.
                 // Instead, get the list of details from the database
-                val details = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(activity, channel)).asReversed()
+                val details = RemovePrevious.filterOutRemoved(activity, channel,
+                        PlaylistManipulator.orderByDate(
+                                VideoList.getAllDetailsFromDb(activity, channel))).asReversed()
+
                 val playlistName = CommitPlaylists.getCommitPlaylistTitle(activity, channel)
 
                 // Get the last video in the user's playlist so we can start adding after that video

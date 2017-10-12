@@ -22,22 +22,9 @@ import android.support.v4.view.ViewPager
 import android.content.Intent
 import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
-import android.os.AsyncTask
-import android.util.Log
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.auth.api.Auth
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInResult
-import com.google.android.gms.common.Scopes
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.common.api.ResultCallback
-import com.google.android.gms.common.api.Scope
-import com.google.android.gms.common.api.Status
-import com.google.api.services.youtube.YouTube
-import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
 /**
- * A video player allowing users to watch YouTube episodes in chronological order while providing the ability to skip videos.
+ * A video player allowing users to watch YouTube episodes in chronological order and commit the resulting playlist to YouTube.
  */
 class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubePlayer.OnFullscreenListener {
@@ -77,10 +64,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
 
-    // These collections include the skipped cideos
-    var mDetailsByDateIncludingSkipped = listOf<Detail>()
+    // These collections include the removed videos
+    var mDetailsByDateIncludingRemoved = listOf<Detail>()
 
-    // These collections have the skipped videos filtered out
+    // These collections have the removed videos filtered out
     var mDetailsByDate = listOf<Detail>()
 
     // endregion
@@ -118,7 +105,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val filter = IntentFilter(PreferencesActivity.CHANNEL_SELECT)
         filter.addAction(PreferencesActivity.CHANGE_PLAYLIST_NAME)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
-        filter.addAction(PreferencesActivity.UNSKIP_ALL)
+        filter.addAction(PreferencesActivity.SHOW_ALL)
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mBroadcastReceiver, filter)
     }
@@ -186,19 +173,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
 
         // This happens once the details are fetched from YouTube. detailsList contains all the
-        // details, including those from the database, skipped or not.
+        // details, including those from the database, removed or not.
         val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
             run {
                 //TODO: we probably shouldn't be doing all this on the UI thread
                 runOnUiThread {
-                    val orderedByDateIncludingSkipped = PlaylistManipulator.orderByDate(allDetailsUnordered)
+                    val orderedByDateIncludingRemoved = PlaylistManipulator.orderByDate(allDetailsUnordered)
 
-                    mDetailsByDateIncludingSkipped = orderedByDateIncludingSkipped
+                    mDetailsByDateIncludingRemoved = orderedByDateIncludingRemoved
 
-                    mDetailsByDate = SkippedVideos.filterOutSkipped(this, mChannel, mDetailsByDateIncludingSkipped)
+                    mDetailsByDate = RemovePrevious.filterOutRemoved(this, mChannel, mDetailsByDateIncludingRemoved)
 
                     // Now that we've got a list of details, we can prepare the RecyclerView
-                    mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, skipVideo)
+                    mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, removeBeforeDetail)
                     mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate, {
                         mEpisodePager.setCurrentItem(mEpisodePager.currentItem - 1, true)
                     }, {
@@ -251,9 +238,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    val skipVideo: (detail: Detail) -> Unit = {detail ->
+    val removeBeforeDetail: (detail: Detail) -> Unit = { detail ->
         run {
-            addSkippedVideo(detail)
+            removeBeforeDetail(detail)
             notifyPlaylistItemsRemoved(detail)
         }
     }
@@ -380,7 +367,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
                         PreferencesActivity.CHANGE_PLAYLIST_NAME -> changePlaylistName(theIntent.extras.getString("playlistName"))
-                        PreferencesActivity.UNSKIP_ALL -> unSkipAllVideos(currentlyPlaying.channel)
+                        PreferencesActivity.SHOW_ALL -> unRemoveAllDetails(currentlyPlaying.channel)
                     }
                 }
             }
@@ -474,32 +461,21 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
     //endregion
 
-    //region [handle skipped videos]
-    fun addSkippedVideo(detail: Detail) {
+    //region [handle removed videos]
+    fun removeBeforeDetail(detail: Detail) {
 
-        SkippedVideos.addSkippedVideo(this, detail)
-
-        // Get what would be our next video if that video were already skipped. getNextVideo does
-        // that for us, even if we've skipped the currently playing video.
-        val nextVideo = getNextVideo()
+        RemovePrevious.setRemovedBeforeVideo(this, detail)
 
         // Update our cached lists
-        mDetailsByDate = SkippedVideos.filterOutSkipped(this, detail.channel, mDetailsByDate)
+        mDetailsByDate = RemovePrevious.filterOutRemoved(this, detail.channel, mDetailsByDate)
 
         // Update the adapter
         mAdapter.details = mDetailsByDate
         mAdapter.notifyDataSetChanged()
         mEpisodeViewPagerAdapter.details = mAdapter.details
         mEpisodeViewPagerAdapter.notifyDataSetChanged()
-
-
-        if (!mDetailsByDate.contains(mCurrentlyPlayingVideoDetail)) {
-            // The user skipped the currently playing video. Play the next video in the adapter if there is one.
-            if (nextVideo != null) {
-                playVideo(nextVideo)
-            }
-        }
     }
+
     fun showWatchHistoryActivity(channel: Channel) {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
         watchHistoryIntent.putExtra("channel", channel)
@@ -530,7 +506,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             if (resultCode == Activity.RESULT_OK) {
                 // We clicked a video.  Find it and play it.
                 val videoId = data.getStringExtra(WatchHistoryActivity.WATCH_HISTORY_DETAIL)
-                val detailToPlay = mDetailsByDateIncludingSkipped.find { it.videoId == videoId }
+                val detailToPlay = mDetailsByDateIncludingRemoved.find { it.videoId == videoId }
                 playVideo(detailToPlay)
 
                 // Collapse the playlist because the user had to open it to get to the preferences
@@ -542,11 +518,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun unSkipAllVideos(channel: Channel) {
-        SkippedVideos.unSkipAllVideos(this, channel)
+    fun unRemoveAllDetails(channel: Channel) {
+        RemovePrevious.unRemove(this, channel)
 
         // Update our cached list
-        mDetailsByDate = mDetailsByDateIncludingSkipped
+        mDetailsByDate = mDetailsByDateIncludingRemoved
 
         if (mAdapterInitialized)
             refreshPlaylist()
@@ -649,31 +625,32 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val currentlyPlayingVideoDetail = mCurrentlyPlayingVideoDetail
         if (currentlyPlayingVideoDetail != null) {
 
-            // We need to know the list of skipped videos so we make sure we don't play one that is
-            // meant to be skipped. But when finding our current place in the playlist, we need to work
-            // with all videos including the skipped ones in case the user just specified to skip a video
+            // We need to know the list of removed videos so we make sure we don't play one that is
+            // meant to be removed. But when finding our current place in the playlist, we need to work
+            // with all videos including the removed ones in case the user just specified to remove a video
             // they're currently playing
-            val skippedVideos = SkippedVideos.getAllSkippedVideos(this, currentlyPlayingVideoDetail.channel)
+            val removeBeforeVideoId = RemovePrevious.getRemoveBeforeVideoId(this, currentlyPlayingVideoDetail.channel)
 
             // This will be true once we found the current video. Once we have that, we keep looping
-            // through all the videos until we find one that isn't specified as skipped
+            // through all the videos until we find the one after removeBeforeVideoId
             var foundCurrentlyPlayingVideo = false
 
-            // As explained above, we need to search through all the videos, including skipped ones,
+            // This will be true once we've found removeBeforeVideoId, meaning we can play the next
+            // video (if we've found the currently playing video)
+            var afterRemoveBeforeVideoId = false
+
+            // As explained above, we need to search through all the videos,
             // in order to find the currently playing video.
-            for (detail in mDetailsByDateIncludingSkipped) {
-                if (foundCurrentlyPlayingVideo) {
-                    // Once we've found the current video, continue looping through
-                    // all videos until we find one that wasn't skipped
-                    if (!skippedVideos.contains(detail.videoId)) {
-                        return detail
-                    }
+            for (detail in mDetailsByDateIncludingRemoved) {
+                if (foundCurrentlyPlayingVideo && afterRemoveBeforeVideoId) {
+                    return detail
                 }
-                if (detail == mCurrentlyPlayingVideoDetail) {
-                    // We found the currently playing video. Now keep looping until we find a video
-                    // not skipped
+
+                if (detail == mCurrentlyPlayingVideoDetail)
                     foundCurrentlyPlayingVideo = true
-                }
+
+                if (detail.videoId == removeBeforeVideoId)
+                    afterRemoveBeforeVideoId == true
             }
         }
         return null

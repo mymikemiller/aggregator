@@ -13,14 +13,14 @@
     <string name="down_button">Move to bottom</string>
     <string name="preferences_button">Preferences</string>
     <string name="target_button">Show Currently Playing</string>
-    <string name="skipVideo">Skip Video</string>
+    <string name="removePrevious">Remove previous videos</string>
     <string name="launchedFromSettings">launchedFromSettings</string>
     <string name="sharedPrefsName">SharedPrefs</string>
 
-    <string name="pref_unskipAllVideosKey">unskipAllVideosButton</string>
-    <string name="pref_unskip_all_videos_title">Unskip All</string>
-    <string name="pref_unskip_all_videos_description">Unskip all videos</string>
-    <string name="videosUnskipped">All videos are now available</string>
+    <string name="pref_showAllVideosKey">showAllVideosButton</string>
+    <string name="pref_show_all_videos_title">Show All</string>
+    <string name="pref_show_all_videos_description">Show all videos from the start</string>
+    <string name="allVideosShown">All videos are now shown</string>
 
     <string name="pref_channel_select_title">Select Channel</string>
     <string name="pref_channelSelectKey">channelSelectsButton</string>

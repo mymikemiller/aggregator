@@ -4,6 +4,6 @@
 
     <item
         android:id="@+id/skip_video"
-        android:title="@string/skipVideo"/>
+        android:title="@string/removePrevious"/>
 
 </menu>

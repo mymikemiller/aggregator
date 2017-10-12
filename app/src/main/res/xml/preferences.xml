@@ -34,7 +34,7 @@
         android:key="@string/pref_watchHistoryKey"/>
 
     <Preference
-        android:title="@string/pref_unskip_all_videos_title"
-        android:summary="@string/pref_unskip_all_videos_description"
-        android:key="@string/pref_unskipAllVideosKey"/>
+        android:title="@string/pref_show_all_videos_title"
+        android:summary="@string/pref_show_all_videos_description"
+        android:key="@string/pref_showAllVideosKey"/>
 </PreferenceScreen>
