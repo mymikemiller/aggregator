@@ -7,19 +7,27 @@ import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ListView
 import android.widget.Toast
 
 /**
- * Created by mikem on 10/12/2017.
+ * Allows you to manage which channels end up in the playlist
  */
 class ManageChannelsActivity : AppCompatActivity() {
+
+    lateinit var mListView: ListView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manage_channels)
 
-        // set the acion bar
+        // set up the action bar
         val myToolbar = findViewById<View>(R.id.my_toolbar) as Toolbar
         setSupportActionBar(myToolbar)
+
+        val channels = mutableListOf<Channel>()
+        mListView = findViewById<ListView>(R.id.listView)
+        mListView.setAdapter(ChannelAdapter(this, channels))
 
     }
 
