@@ -40,7 +40,7 @@ class PreferencesActivity : PreferenceActivity(),
         val RC_SIGN_IN = 3 // The request code for google sign in
         val TAG = "PreferencesActivity"
 
-        const val CHANNEL_SELECT = "com.mymikemiller.chronoplayer.CHANNEL_SELECT"
+        const val MANAGE_CHANNELS = "com.mymikemiller.chronoplayer.MANAGE_CHANNELS"
         const val CHANGE_PLAYLIST_NAME = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_NAME"
         const val SHOW_ALL = "com.mymikemiller.chronoplayer.SHOW_ALL"
         const val WATCH_HISTORY = "com.mymikemiller.chronoplayer.WATCH_HISTORY"
@@ -101,11 +101,11 @@ class PreferencesActivity : PreferenceActivity(),
                     .addConnectionCallbacks(activity as PreferencesActivity).build()
             mGoogleApiClient.connect()
 
-            val channelSelectButton = findPreference(getString(R.string.pref_channelSelectKey))
-            channelSelectButton.setOnPreferenceClickListener({
+            val manageChannelsButton = findPreference(getString(R.string.pref_manageChannelsKey))
+            manageChannelsButton.setOnPreferenceClickListener({
 
                 val intent = Intent()
-                intent.action = CHANNEL_SELECT
+                intent.action = MANAGE_CHANNELS
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
                 //activity.finish()

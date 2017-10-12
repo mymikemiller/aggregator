@@ -50,6 +50,10 @@
             android:name=".WatchHistoryActivity"
             android:label="@string/title_activity_watch_history"
             android:theme="@style/AppTheme.NoActionBar"/>
+        <activity
+            android:name=".ManageChannelsActivity"
+            android:label="@string/title_activity_manage_channels"
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>

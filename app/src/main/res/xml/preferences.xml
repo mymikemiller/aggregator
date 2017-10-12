@@ -4,9 +4,9 @@
     android:layout_width="match_parent">
 
     <Preference
-        android:title="@string/pref_channel_select_title"
-        android:summary="@string/pref_channel_select_description"
-        android:key="@string/pref_channelSelectKey"/>
+        android:title="@string/pref_manage_channels_title"
+        android:summary="@string/pref_manage_channels_description"
+        android:key="@string/pref_manageChannelsKey"/>
 
     <Preference
         android:title="@string/pref_sign_in_title"

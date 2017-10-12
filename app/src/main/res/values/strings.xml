@@ -22,10 +22,11 @@
     <string name="pref_show_all_videos_description">Show all videos from the start</string>
     <string name="allVideosShown">All videos are now shown</string>
 
-    <string name="pref_channel_select_title">Select Channel</string>
-    <string name="pref_channelSelectKey">channelSelectsButton</string>
-    <string name="pref_channel_select_description">Change the YouTube channel</string>
-    <string name="channelSelect">channelSelect</string>
+    <string name="pref_manage_channels_title">Manage channels</string>
+    <string name="pref_manageChannelsKey">manageChannelsButton</string>
+    <string name="pref_manage_channels_description">Select the YouTube channels for this playlist</string>
+    <string name="manageChannels">manageChannels</string>
+    <string name="title_activity_manage_channels">Manage Channels</string>
 
     <string name="pref_sign_in_title">Sign in</string>
     <string name="pref_signInKey">signInButton</string>

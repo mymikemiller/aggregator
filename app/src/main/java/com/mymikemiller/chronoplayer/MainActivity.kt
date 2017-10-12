@@ -102,7 +102,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         setUp(intent)
 
         // Register for broadcast intents from settings
-        val filter = IntentFilter(PreferencesActivity.CHANNEL_SELECT)
+        val filter = IntentFilter(PreferencesActivity.MANAGE_CHANNELS)
         filter.addAction(PreferencesActivity.CHANGE_PLAYLIST_NAME)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
         filter.addAction(PreferencesActivity.SHOW_ALL)
@@ -364,7 +364,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 if (currentlyPlaying != null) {
 
                     when (theIntent?.action) {
-                        PreferencesActivity.CHANNEL_SELECT -> showChannelSelectActivity(currentlyPlaying.channel)
+                        PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
                         PreferencesActivity.CHANGE_PLAYLIST_NAME -> changePlaylistName(theIntent.extras.getString("playlistName"))
                         PreferencesActivity.SHOW_ALL -> unRemoveAllDetails(currentlyPlaying.channel)
@@ -489,14 +489,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         CommitPlaylists.addOrUpdateCommitPlaylistTitle(this, mChannel, playlistName)
     }
 
-    fun showChannelSelectActivity(channel: Channel) {
-        val channelSearchActivityIntent = Intent(this, ChannelSearchActivity::class.java)
-
-        // Specify to the LaunchActivity that we came from settings so it doesn't automatically
-        // load the channel we're currently on
-        channelSearchActivityIntent.putExtra(getString(R.string.launchedFromSettings), true)
-        channelSearchActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        startActivity(channelSearchActivityIntent)
+    fun showManageChannelsActivity() {
+        val manageChannelsActivityIntent = Intent(this, ManageChannelsActivity::class.java)
+        manageChannelsActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        startActivity(manageChannelsActivityIntent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
