@@ -56,7 +56,8 @@
     <string name="watchHistory">watchHistory</string>
     <string name="title_activity_watch_history">Watch History</string>
 
-    <string name="launchChannel">launchChannels</string>
+    <string name="extraLaunchPlaylistTitle">launchPlaylistTitle</string>
+    <string name="prefPlaylistTitle">playlistTitle</string>
     <string name="undo">Undo</string>
     <string name="ellipsis">ellipsis</string>
     <string name="search_hint">Search YouTube Channels</string>

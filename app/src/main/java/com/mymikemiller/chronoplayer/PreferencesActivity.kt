@@ -17,10 +17,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.Scope
-import com.mymikemiller.chronoplayer.util.CommitPlaylists
+import com.mymikemiller.chronoplayer.util.PlaylistChannels
 import com.mymikemiller.chronoplayer.util.VideoList
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
@@ -39,6 +40,9 @@ class PreferencesActivity : PreferenceActivity(),
     companion object {
         val RC_SIGN_IN = 3 // The request code for google sign in
         val TAG = "PreferencesActivity"
+        val EXTRA_PLAYLIST_TITLE = "playlistTitle"
+        val APP_SHARED_PREFERENCES = "CHRONOPLAYER_SHARED_PREFERENCES"
+        val PLAYLIST_SHARED_PREF_NAME = "PlaylistPrefs"
 
         const val MANAGE_CHANNELS = "com.mymikemiller.chronoplayer.MANAGE_CHANNELS"
         const val CHANGE_PLAYLIST_NAME = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_NAME"
@@ -78,14 +82,14 @@ class PreferencesActivity : PreferenceActivity(),
             updateUI(isSignedIn())
 
             // Change the playlist name description text to mention the playlist name sent in
-            val playlistName = activity.intent.extras.getString("playlistName")
-            val changePlaylistNamePref: EditTextPreference = findPreference(
+            val playlistTitle = activity.intent.extras.getString("playlistTitle")
+            val changePlaylistTitle: EditTextPreference = findPreference(
                     getString(R.string.pref_changePlaylistNameKey)) as EditTextPreference;
-            changePlaylistNamePref.setSummary(playlistName);
-            changePlaylistNamePref.setTitle(getString(R.string.changePlaylistNameTitle))
+            changePlaylistTitle.setSummary(playlistTitle);
+            changePlaylistTitle.setTitle(getString(R.string.changePlaylistNameTitle))
 
             // Also change the text in the EditText to match what was sent in
-            changePlaylistNamePref.editText.setText(playlistName)
+            changePlaylistTitle.editText.setText(playlistTitle)
 
             // Configure sign-in to request youtube access
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -155,7 +159,7 @@ class PreferencesActivity : PreferenceActivity(),
 
                             val theIntent = Intent()
                             theIntent.action = CHANGE_PLAYLIST_NAME
-                            theIntent.putExtra("playlistName", playlistName)
+                            theIntent.putExtra("playlistTitle", playlistName)
                             LocalBroadcastManager.getInstance(activity).sendBroadcast(theIntent)
 
                             return@OnPreferenceChangeListener true
@@ -264,15 +268,24 @@ class PreferencesActivity : PreferenceActivity(),
         fun commitPlaylist() {
             if (isSignedIn()) {
 
-                val channel = activity.intent.getSerializableExtra("channel") as Channel
+                val playlistTitle = activity.intent.getSerializableExtra(PreferencesActivity.EXTRA_PLAYLIST_TITLE) as String
+
+                val channels = PlaylistChannels.getChannels(activity, playlistTitle)
 
                 // We can't use the intent to pass in the list of details because it's too big.
                 // Instead, get the list of details from the database
-                val details = RemovePrevious.filterOutRemoved(activity, channel,
+                // TODO: Make this work using the playlistTitle to find the remove before date
+                val details = RemovePrevious.filterOutRemoved(activity, playlistTitle,
                         PlaylistManipulator.orderByDate(
-                                VideoList.getAllDetailsFromDb(activity, channel))).asReversed()
+                                VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
 
-                val playlistName = CommitPlaylists.getCommitPlaylistTitle(activity, channel)
+                val prefs: SharedPreferences = activity.getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+                val playlistName = prefs.getString(PLAYLIST_SHARED_PREF_NAME, "");
+
+                if (playlistName.isBlank()) {
+                    Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
+                    return
+                }
 
                 // Get the last video in the user's playlist so we can start adding after that video
                 mYouTubeAPI!!.getDetailsToCommit(playlistName, details, { detailsToCommit ->

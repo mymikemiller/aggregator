@@ -22,6 +22,9 @@ import android.support.v4.view.ViewPager
 import android.content.Intent
 import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
+import android.util.Log
+import com.google.api.client.util.DateTime
+import kotlinx.android.synthetic.main.activity_main.*
 
 /**
  * A video player allowing users to watch YouTube episodes in chronological order and commit the resulting playlist to YouTube.
@@ -35,7 +38,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
 
     //region [Variable definitions]
-    private lateinit var mChannel: Channel
+    private lateinit var mPlaylistTitle: String
     private lateinit var baseLayout: LinearLayout
     private lateinit var bar: LinearLayout
     private lateinit var slidingLayout: SlidingUpPanelLayout
@@ -118,15 +121,16 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun setUp(theIntent: Intent) {
-        mChannel = theIntent.getSerializableExtra("channel") as Channel
+        mPlaylistTitle = theIntent.getStringExtra(getString(R.string.extraLaunchPlaylistTitle))
 
         // Save the channel's name as the youtube commit playlist name if there is no entry in the database
-        if (CommitPlaylists.getCommitPlaylistTitle(this, mChannel).isBlank()) {
-            changePlaylistName(mChannel.name)
-        }
+        // TODO: Set the playlist title?
+//        if (PlaylistChannels.getChannels(this, mPlaylistTitle).isEmpty()) {
+//            changePlaylistTitle(mChannel.name)
+//        }
 
         // Save the launch channel to sharedPreferences so we start there next time
-        saveLaunchChannel(mChannel)
+        saveLaunchPlaylistTitle(mPlaylistTitle)
 
         setUpYouTubeFetch()
         setUpPlayer()
@@ -136,16 +140,18 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         setUpPreferences()
     }
 
-    private fun saveLaunchChannel(channel: Channel) {
+    private fun saveLaunchPlaylistTitle(playlistTitle: String) {
         // Store the channel in shared preferences so we can go right to MainAcivity when we start up next time
         val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
         val editor = preferences.edit()
-        editor.putString(getString(R.string.launchChannel), channel.channelId)
+        editor.putString(getString(R.string.prefPlaylistTitle), playlistTitle)
         editor.apply()
 
+        // TODO: make sure my assumption is correct about not needing this
+        // I don't think we need this anymore. The playlist should already be added when the playlist is created.
         // insert the Channel into the Channels database (or do nothing if it's already there).
         // We'll need it to launch MainActivity right away the next time LaunchActivity loads
-        Channels.addChannel(applicationContext, channel)
+//        Channels.addChannel(applicationContext, channel)
     }
 
     private fun setUpYouTubeFetch() {
@@ -154,10 +160,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // Get the details ordered by date uploaded and force an upgrade if necessary
         val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(this,
-                mChannel))
+                mPlaylistTitle))
 
         // This won't work until we've initialized these lists
-        val stopAtDetail = if (detailsFromDbByDate.isNotEmpty()) detailsFromDbByDate[detailsFromDbByDate.size - 1] else null
+        val stopAtDate = if (detailsFromDbByDate.isNotEmpty()) detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded else null
 
         // Set up what happens when a playlist item is clicked
         val onItemClick: (Detail) -> Unit = {detail ->
@@ -182,10 +188,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     mDetailsByDateIncludingRemoved = orderedByDateIncludingRemoved
 
-                    mDetailsByDate = RemovePrevious.filterOutRemoved(this, mChannel, mDetailsByDateIncludingRemoved)
+                    mDetailsByDate = RemovePrevious.filterOutRemoved(this, mPlaylistTitle, mDetailsByDateIncludingRemoved)
 
                     // Now that we've got a list of details, we can prepare the RecyclerView
-                    mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, removeBeforeDetail)
+                    mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, removeBeforeDate)
                     mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate, {
                         mEpisodePager.setCurrentItem(mEpisodePager.currentItem - 1, true)
                     }, {
@@ -206,17 +212,21 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                         // Get the last video we were playing (which will be the next video in the playlist
                         // if it was queued at the end of the last watch session if it had time to try to load)
-                        var videoIdToPlay = LastPlayedVideo.getLastPlayedVideoId(this, mChannel)
+                        var videoIdToPlay = LastPlayedVideo.getLastPlayedVideoId(this, mPlaylistTitle)
                         if (videoIdToPlay == "") {
                             videoIdToPlay = firstVideoId
                         }
 
                         //val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
 
-                        var detailToPlay = VideoList.getDetail(this, mChannel, videoIdToPlay)
+                        val channels = PlaylistChannels.getChannels(this, mPlaylistTitle)
+
+                        var detailToPlay = VideoList.getDetail(this, channels, videoIdToPlay)
                         if (detailToPlay == null) {
                             // If we couldn't find a video to play, play the chronologically first video of the channel
-                            detailToPlay = VideoList.getDetail(this, mChannel, videoIdToPlay)
+                            val details = VideoList.getDetails(this, channels)
+                            PlaylistManipulator.orderByDate(details)
+                            detailToPlay = details[0]
                         }
 
                         playVideo(detailToPlay, true)
@@ -228,8 +238,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
 
         VideoList.fetchAllDetails(this,
-                mChannel,
-                stopAtDetail, setVideoFetchPercentageComplete, detailsFetched)
+                mPlaylistTitle,
+                stopAtDate, setVideoFetchPercentageComplete, detailsFetched)
     }
 
     val isSelected: (Detail) -> Boolean = {detail ->
@@ -238,18 +248,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    val removeBeforeDetail: (detail: Detail) -> Unit = { detail ->
+    val removeBeforeDate: (date: DateTime) -> Unit = { date ->
         run {
-            removeBeforeDetail(detail)
-            notifyPlaylistItemsRemoved(detail)
+            removeVideosBeforeDate(date)
+            notifyPlaylistItemsRemoved(date)
         }
     }
 
-    private fun notifyPlaylistItemsRemoved(detail: Detail) {
+    private fun notifyPlaylistItemsRemoved(date: DateTime) {
         for (i in mAdapter.details.indices) {
             val iDetail = mAdapter.details[i]
-            if (detail == iDetail) {
+            if (date == iDetail.dateUploaded) {
                 // Make the RecyclerView items scroll up to fill in the space
+                // TODO: Shouldn't this notify about more than just one detail?
                 mPlaylistRecyclerView.adapter.notifyItemRemoved(i)
             }
         }
@@ -366,8 +377,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     when (theIntent?.action) {
                         PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
-                        PreferencesActivity.CHANGE_PLAYLIST_NAME -> changePlaylistName(theIntent.extras.getString("playlistName"))
-                        PreferencesActivity.SHOW_ALL -> unRemoveAllDetails(currentlyPlaying.channel)
+                        PreferencesActivity.CHANGE_PLAYLIST_NAME -> changePlaylistTitle(theIntent.extras.getString("playlistName"))
+                        PreferencesActivity.SHOW_ALL -> unRemovePrevious(currentlyPlaying.channel)
                     }
                 }
             }
@@ -376,22 +387,22 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun showPreferencesActivity() {
         val i = Intent(this, PreferencesActivity::class.java)
-        i.putExtra("channel", mChannel)
+        i.putExtra(PreferencesActivity.EXTRA_PLAYLIST_TITLE, mPlaylistTitle)
 
-        // Send in the playlist name so we know what text to display for the Change Playlist Name description
-        var playlistName = CommitPlaylists.getCommitPlaylistTitle(this, mChannel)
-        if (playlistName.isBlank()) {
-            playlistName = mChannel.name
-        }
-
-        i.putExtra("playlistName", playlistName)
+//        // Send in the playlist name so we know what text to display for the Change Playlist Name description
+//        var playlistName = PlaylistChannels.getChannels(this, mChannel)
+//        if (playlistName.isBlank()) {
+//            playlistName = mChannel.name
+//        }
+//
+//        i.putExtra("playlistName", playlistName)
 
         startActivity(i)
     }
 
     val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
         run {
-            val numDetailsInDatabase = VideoList.getNumDetailsInDb(this, mChannel)
+            val numDetailsInDatabase = VideoList.getNumDetailsInDb(this, mPlaylistTitle)
             fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
             fetchVideosProgresBar.setProgress(currentVideoNumber)
         }
@@ -461,12 +472,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     //endregion
 
     //region [handle removed videos]
-    fun removeBeforeDetail(detail: Detail) {
+    fun removeVideosBeforeDate(date: DateTime) {
 
-        RemovePrevious.setRemovedBeforeVideo(this, detail)
+        RemovePrevious.setRemovedBeforeDate(this, mPlaylistTitle, date)
 
         // Update our cached lists
-        mDetailsByDate = RemovePrevious.filterOutRemoved(this, detail.channel, mDetailsByDate)
+        mDetailsByDate = RemovePrevious.filterOutRemoved(this, mPlaylistTitle, mDetailsByDate)
         updateAdapters(mDetailsByDate)
     }
 
@@ -484,9 +495,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
     }
 
-    fun changePlaylistName(playlistName: String) {
+    // TODO: Make this work by clearing playlist title and removing all videos, etc.
+    fun changePlaylistTitle(playlistName: String) {
+        Log.e("MainActivity", "changePlaylistTitle is not yet implemented")
         // Save the playlist name to the database
-        CommitPlaylists.addOrUpdateCommitPlaylistTitle(this, mChannel, playlistName)
+        //PlaylistChannels.addChannel(this, mPlaylistTitle, playlistName)
     }
 
     fun showManageChannelsActivity() {
@@ -515,8 +528,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun unRemoveAllDetails(channel: Channel) {
-        RemovePrevious.unRemove(this, channel)
+    fun unRemovePrevious(channel: Channel) {
+        RemovePrevious.unRemove(this, mPlaylistTitle)
 
         // Update our cached list
         mDetailsByDate = mDetailsByDateIncludingRemoved
@@ -626,28 +639,33 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             // meant to be removed. But when finding our current place in the playlist, we need to work
             // with all videos including the removed ones in case the user just specified to remove a video
             // they're currently playing
-            val removeBeforeVideoId = RemovePrevious.getRemoveBeforeVideoId(this, currentlyPlayingVideoDetail.channel)
+            val removeBeforeDate = RemovePrevious.getRemoveBeforeDate(this, mPlaylistTitle)
 
             // This will be true once we found the current video. Once we have that, we keep looping
-            // through all the videos until we find the one after removeBeforeVideoId
+            // through all the videos until we find the one after removeBeforeDate
             var foundCurrentlyPlayingVideo = false
 
-            // This will be true once we've found removeBeforeVideoId, meaning we can play the next
+            // This will be true once we've found a video after removeBeforeDate, meaning we can play the next
             // video (if we've found the currently playing video)
-            var afterRemoveBeforeVideoId = false
+            var afterRemoveBeforeDate = false
 
             // As explained above, we need to search through all the videos,
             // in order to find the currently playing video.
             for (detail in mDetailsByDateIncludingRemoved) {
-                if (foundCurrentlyPlayingVideo && afterRemoveBeforeVideoId) {
+                if (foundCurrentlyPlayingVideo && afterRemoveBeforeDate) {
                     return detail
                 }
 
                 if (detail == mCurrentlyPlayingVideoDetail)
                     foundCurrentlyPlayingVideo = true
 
-                if (detail.videoId == removeBeforeVideoId)
-                    afterRemoveBeforeVideoId == true
+                if (removeBeforeDate != null) {
+                    if (detail.dateUploaded.value > removeBeforeDate.value) {
+                        afterRemoveBeforeDate == true
+                    }
+                } else {
+                    afterRemoveBeforeDate == true
+                }
             }
         }
         return null
@@ -709,10 +727,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 mPlaylistRecyclerView.adapter.notifyDataSetChanged()
             }
 
-            // TODO: This should be in a database rather than SharedPreferences because now we have to track every one in the database
             // Save the Detail to the database so we can start there next time
             // this database uses ChannelId for the key and VideoId for the value
-            LastPlayedVideo.addOrUpdateLastPlayedVideo(this, mChannel, detail)
+            LastPlayedVideo.addOrUpdateLastPlayedVideo(this, mPlaylistTitle, detail)
 
 
             if (centerPlaylistItem)

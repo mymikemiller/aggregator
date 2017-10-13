@@ -1,19 +1,16 @@
 package com.mymikemiller.chronoplayer
 
 import android.app.Activity
-import android.app.ListActivity
 import android.content.Intent
 import android.os.Bundle
-import android.app.SearchManager
 import android.content.Context
 import android.support.v7.widget.SearchView
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
-import com.google.android.youtube.player.YouTubeApiServiceUtil
 import com.mymikemiller.chronoplayer.util.Channels
+import com.mymikemiller.chronoplayer.util.PlaylistChannels
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
-import kotlinx.android.synthetic.main.activity_channel_search.*
 
 
 /**
@@ -69,10 +66,15 @@ class ChannelSearchActivity : Activity() {
         mListView.onItemClickListener = object: AdapterView.OnItemClickListener {
             override fun onItemClick(l: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val channel = mListView.adapter.getItem(position) as Channel
+                //TODO: Remove this
+                PlaylistChannels.addChannel(this@ChannelSearchActivity, "gg", channel)
+                Channels.addChannel(this@ChannelSearchActivity, channel)
+                val channels = PlaylistChannels.getChannels(this@ChannelSearchActivity, "gg")
+
+
                 launchMainActivity(channel)
             }
         }
-
 
         if (!intent.hasExtra(getString(R.string.launchedFromSettings))) {
             // We were not launched from settings (we loaded the app for the first time), so next
@@ -81,7 +83,7 @@ class ChannelSearchActivity : Activity() {
             // database to launch the MainActivity specifying the channel in the intent. If it's
             // not there, load this view and let the user search
             val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
-            val channelId = preferences.getString(getString(R.string.launchChannel), "")
+            val channelId = preferences.getString(getString(R.string.prefPlaylistTitle), "")
 
             if (channelId != "") {
                 // We have a last watched channel, so launch the MainActivity
@@ -103,7 +105,9 @@ class ChannelSearchActivity : Activity() {
     fun launchMainActivity(channel: Channel) {
         val mainIntent = Intent(this, MainActivity::class.java)
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        mainIntent.putExtra("channel", channel)
+        // TODO: get the actual playlist name from the user entering it, instead of from this channelsearchactivity
+        mainIntent.putExtra(getString(R.string.extraLaunchPlaylistTitle),
+                "gg")
         startActivity(mainIntent)
         finish()
     }

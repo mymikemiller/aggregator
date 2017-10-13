@@ -16,7 +16,8 @@ import java.sql.SQLException
  */
 class Channels {
     companion object {
-        // Increment this when the table definition changes
+        // !! When incrementing this, probably also increment PlaylistChannels's version or else
+        // playlists might refer to channels not in this database.
         val DATABASE_VERSION: Int = 6
         val DATABASE_NAME: String = "Channels"
         val CHANNELS_TABLE_NAME: String = "ChannelsTable"
@@ -41,7 +42,6 @@ class Channels {
             return dbHelper.getAllChannelsFromDb()
         }
 
-        // Returns all Channels in the databases
         fun addChannel(context: Context, channel: Channel) {
             val dbHelper = ChannelsOpenHelper(context.applicationContext)
             dbHelper.addChannel(channel)

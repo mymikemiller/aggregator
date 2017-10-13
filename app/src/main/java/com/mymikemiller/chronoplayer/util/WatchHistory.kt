@@ -109,9 +109,9 @@ class WatchHistory {
                     // If we need to know stuff from the VideoList table, we can join to it here.
 //                "SELECT * FROM $TABLE_NAME " +
 //                        "LEFT JOIN ${VideoList.CHANNELS_TABLE_NAME}" +
-//                        "ON  = ${VideoList.CHANNELS_TABLE_NAME}.${VideoList.KEY_CHANNELID} = " +
-//                        "${TABLE_NAME}.$KEY_CHANNELID"
-//                "WHERE $KEY_CHANNELID = $channelId"
+//                        "ON  = ${VideoList.CHANNELS_TABLE_NAME}.${VideoList.KEY_PLAYLIST_TITLE} = " +
+//                        "${TABLE_NAME}.$KEY_PLAYLIST_TITLE"
+//                "WHERE $KEY_PLAYLIST_TITLE = $channelId"
                 val db: SQLiteDatabase
 
                 try {

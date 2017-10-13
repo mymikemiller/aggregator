@@ -3,7 +3,7 @@
     android:id="@+id/menu">
 
     <item
-        android:id="@+id/skip_video"
+        android:id="@+id/remove_previous"
         android:title="@string/removePrevious"/>
 
 </menu>

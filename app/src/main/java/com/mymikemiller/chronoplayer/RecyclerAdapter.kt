@@ -11,13 +11,14 @@ import java.util.*
 import android.graphics.LightingColorFilter
 import android.graphics.Color
 import android.support.v4.content.ContextCompat
+import com.google.api.client.util.DateTime
 
 
 class RecyclerAdapter(private val context: Context,
                       var details: List<Detail>,
                       private val isSelectedCallback: (detail: Detail) -> Boolean,
                       private val onItemClickCallback: (detail: Detail) -> Unit,
-                      private val skipVideoCallback: ((detail: Detail) -> Unit)? = null)
+                      private val removePreviousCallback: ((date: DateTime) -> Unit)? = null)
         : RecyclerView.Adapter<RecyclerAdapter.DetailHolder>()
 {
 
@@ -79,7 +80,7 @@ class RecyclerAdapter(private val context: Context,
 
         fun bindDetail(context: Context,
                        detail: Detail,
-                       skipVideoCallback: ((detail: Detail) -> Unit)?) {
+                       removePrevious: ((date: DateTime) -> Unit)?) {
             mDetail = detail
             Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
 
@@ -101,18 +102,18 @@ class RecyclerAdapter(private val context: Context,
                     //Inflating the Popup using xml file
                     popup.menuInflater.inflate(R.menu.recyclerview_item_popup, popup.menu)
 
-                    if (skipVideoCallback == null) {
-                        popup.getMenu().findItem(R.id.skip_video).isVisible = false
+                    if (removePrevious == null) {
+                        popup.getMenu().findItem(R.id.remove_previous).isVisible = false
                     }
 
                     //registering popup with OnMenuItemClickListener
                     popup.setOnMenuItemClickListener(object : PopupMenu.OnMenuItemClickListener {
                         override fun onMenuItemClick(item: MenuItem): Boolean {
 
-                            if (item.itemId == R.id.skip_video) {
-                                // Skip the clicked video
-                                if (skipVideoCallback != null) {
-                                    skipVideoCallback(detail)
+                            if (item.itemId == R.id.remove_previous) {
+                                // Remove everything before the clicked video
+                                if (removePrevious != null) {
+                                    removePrevious(detail.dateUploaded)
                                 }
                             }
                             return true
@@ -146,7 +147,7 @@ class RecyclerAdapter(private val context: Context,
         val itemDetail = details[position]
         holder.setIsSelectedCallback(isSelectedCallback)
         holder.setOnItemClickCallback(onItemClickCallback)
-        holder.bindDetail(context, itemDetail, skipVideoCallback)
+        holder.bindDetail(context, itemDetail, removePreviousCallback)
     }
 
     override fun getItemCount(): Int {
