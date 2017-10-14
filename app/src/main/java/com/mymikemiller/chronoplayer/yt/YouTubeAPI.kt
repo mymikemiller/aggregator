@@ -285,7 +285,8 @@ class YouTubeAPI(context: Context, account: Account) {
                     if (done || searchResponse.nextPageToken == null) {
                         // This is the last page of results.
                         // Call the final callback.
-                        callbackWhenDone(results)
+                         allDetails.addAll(results)
+                         callbackWhenDone(allDetails)
                         return
                     }
 

@@ -178,13 +178,28 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         }
 
+        fun removeDuplicates(details: List<Detail>): List<Detail> {
+            val withoutDuplicates = mutableListOf<Detail>()
+            for(detail in details) {
+                if (!withoutDuplicates.contains(detail)) {
+                    withoutDuplicates.add(detail)
+                }
+            }
+            return withoutDuplicates
+
+        }
+
         // This happens once the details are fetched from YouTube. detailsList contains all the
         // details, including those from the database, removed or not.
         val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
             run {
+
+                // Make sure there are no duplicates in the list. It's a bandaid, but that's fine.
+                val allDetailsUnorderedWithoutDuplicates = removeDuplicates(allDetailsUnordered)
+
                 //TODO: we probably shouldn't be doing all this on the UI thread
                 runOnUiThread {
-                    val orderedByDateIncludingRemoved = PlaylistManipulator.orderByDate(allDetailsUnordered)
+                    val orderedByDateIncludingRemoved = PlaylistManipulator.orderByDate(allDetailsUnorderedWithoutDuplicates)
 
                     mDetailsByDateIncludingRemoved = orderedByDateIncludingRemoved
 
