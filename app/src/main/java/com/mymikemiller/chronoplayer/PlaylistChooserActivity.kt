@@ -20,8 +20,13 @@ import com.mymikemiller.chronoplayer.util.PlaylistChannels
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 import kotlinx.android.synthetic.main.activity_main.*
 import android.widget.ArrayAdapter
-
-
+import android.R.string.cancel
+import android.app.AlertDialog
+import android.content.DialogInterface
+import android.os.Handler
+import android.text.InputType
+import android.support.v4.widget.SearchViewCompat.setInputType
+import android.widget.EditText
 
 /**
  * Created by mikem on 10/14/2017.
@@ -66,6 +71,35 @@ class PlaylistChooserActivity: AppCompatActivity() {
         if (item.getItemId() == R.id.action_show_my_playlists) {
             Toast.makeText(this, "Clicked!",
                     Toast.LENGTH_LONG).show()
+
+            return true;
+        } else if (item.getItemId() == R.id.action_add_playlist) {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Playlist Name")
+
+            // Set up the input
+            val input = EditText(this)
+            // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+            input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            builder.setView(input)
+
+            // Set up the buttons
+            builder.setNegativeButton("Cancel", { dialog, which -> dialog.cancel() })
+            builder.setPositiveButton("OK", { dialog, which ->
+                run {
+                    launchMainActivity(input.text.toString().trim())
+                }
+            })
+
+            builder.show()
+
+            // Pop up the keyboard
+            val handler = Handler()
+            handler.post(Runnable {
+                input.requestFocus()
+                val mgr = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                mgr.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
+            })
 
             return true;
         }

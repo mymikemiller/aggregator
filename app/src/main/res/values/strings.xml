@@ -28,7 +28,7 @@
     <string name="manageChannels">manageChannels</string>
     <string name="title_activity_manage_channels">Manage Channels</string>
 
-    <string name="title_activity_select_playlist">Select Playlist</string>
+    <string name="title_activity_select_playlist">Select a Playlist</string>
 
     <string name="pref_sign_in_title">Sign in</string>
     <string name="pref_signInKey">signInButton</string>
