@@ -28,6 +28,8 @@
     <string name="manageChannels">manageChannels</string>
     <string name="title_activity_manage_channels">Manage Channels</string>
 
+    <string name="title_activity_select_playlist">Select Playlist</string>
+
     <string name="pref_sign_in_title">Sign in</string>
     <string name="pref_signInKey">signInButton</string>
     <string name="pref_sign_in_description">Sign in to Google to enable advanced features</string>
@@ -70,5 +72,7 @@
     <string name="not_signed_in">You must sign in first.</string>
     <string name="commitProgressTitle">Committing to YouTube</string>
     <string name="noVideosToCommit">Playlist already contains all videos</string>
+
+    <string name="show_my_playlists">Show my playlists</string>
 
 </resources>

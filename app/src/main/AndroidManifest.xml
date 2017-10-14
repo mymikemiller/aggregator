@@ -17,7 +17,9 @@
         <!-- this SearchableActivity performs youtube channel searches
              and displays the results in a ListView-->
         <activity android:name=".PlaylistChooserActivity"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:label="@string/title_activity_select_playlist"
+            android:theme="@style/AppTheme.NoActionBar">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

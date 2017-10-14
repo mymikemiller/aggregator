@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.SearchView
 import android.support.v7.widget.Toolbar
 import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -25,7 +26,7 @@ import android.widget.ArrayAdapter
 /**
  * Created by mikem on 10/14/2017.
  */
-class PlaylistChooserActivity: Activity() {
+class PlaylistChooserActivity: AppCompatActivity() {
 
     lateinit var mListView: ListView
 
@@ -33,7 +34,10 @@ class PlaylistChooserActivity: Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_playlist_chooser)
 
-        val channels = mutableListOf<Channel>()
+        // set up the action bar
+        val myToolbar = findViewById<View>(R.id.playlist_chooser_toolbar) as Toolbar
+        setSupportActionBar(myToolbar)
+
         mListView = findViewById<ListView>(R.id.listView)
 
         val items = listOf("gg", "aa")
@@ -50,11 +54,29 @@ class PlaylistChooserActivity: Activity() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu items for use in the action bar
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.show_my_playlists_menu, menu)
+        return true;
+    }
+    @Override
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle presses on the action bar items
+        if (item.getItemId() == R.id.action_show_my_playlists) {
+            Toast.makeText(this, "Clicked!",
+                    Toast.LENGTH_LONG).show()
+
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     // Launch the main activity
     fun launchMainActivity(playlistTitle: String) {
         val mainIntent = Intent(this, MainActivity::class.java)
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        // TODO: get the actual playlist name from the user entering it, instead of from this channelsearchactivity
         mainIntent.putExtra(getString(R.string.extraLaunchPlaylistTitle),
                 playlistTitle)
         startActivity(mainIntent)
