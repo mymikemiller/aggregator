@@ -13,15 +13,23 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+
         <!-- this SearchableActivity performs youtube channel searches
              and displays the results in a ListView-->
-        <activity android:name=".ChannelSearchActivity"
+        <activity android:name=".PlaylistChooserActivity"
             android:launchMode="singleTop">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+        </activity>
+
+        <!-- this SearchableActivity performs youtube channel searches
+             and displays the results in a ListView-->
+        <activity android:name=".ChannelSearchActivity"
+            android:launchMode="singleTop">
 
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />

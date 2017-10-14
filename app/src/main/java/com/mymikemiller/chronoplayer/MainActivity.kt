@@ -193,7 +193,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // details, including those from the database, removed or not.
         val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
             run {
-
                 // Make sure there are no duplicates in the list. It's a bandaid, but that's fine.
                 val allDetailsUnorderedWithoutDuplicates = removeDuplicates(allDetailsUnordered)
 
