@@ -49,7 +49,6 @@ class PreferencesActivity : PreferenceActivity(),
         const val SHOW_ALL = "com.mymikemiller.chronoplayer.SHOW_ALL"
         const val WATCH_HISTORY = "com.mymikemiller.chronoplayer.WATCH_HISTORY"
 
-        private var mYouTubeAPI: YouTubeAPI? = null
         private lateinit var mGoogleApiClient: GoogleApiClient
 
         private lateinit var mProgressTitle: TextView
@@ -216,7 +215,7 @@ class PreferencesActivity : PreferenceActivity(),
                 if (account != null) {
                     // Initialize mYouTubeAPI because we're now authenticated and can call the
                     // authenticated calls
-                    mYouTubeAPI = YouTubeAPI(activity, account.account!!)
+                    YouTubeAPI.authenticate(activity, account.account!!)
                     updateUI(true)
                 }
             } else {
@@ -224,7 +223,7 @@ class PreferencesActivity : PreferenceActivity(),
                         Toast.LENGTH_LONG).show()
 
                 // Clear mYouTubeApi so we don't try to use authenticated functions
-                mYouTubeAPI = null
+                YouTubeAPI.unAuthenticate()
             }
         }
 
@@ -241,7 +240,7 @@ class PreferencesActivity : PreferenceActivity(),
 
 
         fun isSignedIn(): Boolean {
-            return mYouTubeAPI != null
+            return YouTubeAPI.isAuthenticated()
         }
 
         fun signIn() {
@@ -258,7 +257,7 @@ class PreferencesActivity : PreferenceActivity(),
             if (isSignedIn()) {
                 Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback {
                     // Clear mYouTubeAPI so we don't try to make any authenticated calls
-                    mYouTubeAPI = null
+                    YouTubeAPI.unAuthenticate()
 
                     updateUI(false)
                 }
@@ -280,7 +279,9 @@ class PreferencesActivity : PreferenceActivity(),
                                 VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
 
                 val prefs: SharedPreferences = activity.getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
-                val playlistName = prefs.getString(PLAYLIST_SHARED_PREF_NAME, "");
+                var playlistName = prefs.getString(PLAYLIST_SHARED_PREF_NAME, "");
+
+                playlistName = "gg"
 
                 if (playlistName.isBlank()) {
                     Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
@@ -288,7 +289,7 @@ class PreferencesActivity : PreferenceActivity(),
                 }
 
                 // Get the last video in the user's playlist so we can start adding after that video
-                mYouTubeAPI!!.getDetailsToCommit(playlistName, details, { detailsToCommit ->
+                YouTubeAPI.getDetailsToCommit(playlistName, details, { detailsToCommit ->
                     if (detailsToCommit.isEmpty()) {
                         activity.runOnUiThread({
                             Toast.makeText(activity, getString(R.string.noVideosToCommit),
@@ -306,14 +307,14 @@ class PreferencesActivity : PreferenceActivity(),
                             builder.setView(view);
                             mCommitProgressDialog = builder.create();
                             mCommitProgressDialog.setOnDismissListener({
-                                mYouTubeAPI?.cancelCommmit()
+                                YouTubeAPI.cancelCommit()
                             })
 
                             mCommitProgressDialog.setCanceledOnTouchOutside(false)
                             mCommitProgressDialog.show();
                         })
 
-                        mYouTubeAPI!!.addVideosToPlayList(playlistName, detailsToCommit, setPercentageOfVideosAdded)
+                        YouTubeAPI.addVideosToPlayList(playlistName, detailsToCommit, setPercentageOfVideosAdded)
                     }
                 })
             } else {
@@ -343,7 +344,7 @@ class PreferencesActivity : PreferenceActivity(),
 
         override fun onDestroy() {
             super.onDestroy()
-            mYouTubeAPI?.cancelCommmit()
+            YouTubeAPI.cancelCommit()
             mGoogleApiClient.disconnect()
         }
     }

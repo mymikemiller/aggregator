@@ -18,7 +18,7 @@ class Channels {
     companion object {
         // !! When incrementing this, probably also increment PlaylistChannels's version or else
         // playlists might refer to channels not in this database.
-        val DATABASE_VERSION: Int = 6
+        val DATABASE_VERSION: Int = 9
         val DATABASE_NAME: String = "Channels"
         val CHANNELS_TABLE_NAME: String = "ChannelsTable"
 

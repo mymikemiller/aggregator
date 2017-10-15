@@ -47,6 +47,11 @@ class PlaylistChooserActivity: AppCompatActivity() {
 
         val items = listOf("gg", "aa")
 
+        val c = Channel("UCVV8ZTEgZwv08TlqpxEkdTg","Game Time", "UUVV8ZTEgZwv08TlqpxEkdTg", "")
+        Channels.addChannel(this, c)
+//        val c: Channel = Channels.getChannel(this, "UC9CuvdOVfMPvKCiwdGKL3cQ")!!
+        PlaylistChannels.addChannel(this, "gg", c)
+
         val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items)
         mListView.setAdapter(adapter)
 
@@ -69,8 +74,8 @@ class PlaylistChooserActivity: AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Handle presses on the action bar items
         if (item.getItemId() == R.id.action_show_my_playlists) {
-            Toast.makeText(this, "Clicked!",
-                    Toast.LENGTH_LONG).show()
+
+
 
             return true;
         } else if (item.getItemId() == R.id.action_add_playlist) {

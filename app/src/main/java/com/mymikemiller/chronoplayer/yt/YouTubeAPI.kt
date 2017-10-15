@@ -3,6 +3,7 @@ package com.mymikemiller.chronoplayer.yt
 import android.accounts.Account
 import android.content.Context
 import android.os.AsyncTask
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.services.youtube.YouTube
@@ -23,11 +24,7 @@ import com.google.api.services.youtube.model.PlaylistSnippet
 import com.google.api.services.youtube.model.PlaylistItem
 import com.google.api.services.youtube.model.ResourceId
 import com.google.api.services.youtube.model.PlaylistItemSnippet
-
-
-
-
-
+import com.mymikemiller.chronoplayer.PreferencesActivity
 
 
 val HTTP_TRANSPORT = NetHttpTransport()
@@ -71,11 +68,9 @@ class YouTubeAPI(context: Context, account: Account) {
         })
     }
 
-    fun cancelCommmit() {
+    fun cancelCommit() {
         mCommitCancelled = true
     }
-
-
 
     // We can't use Details here because a Detail knows what Channel it came from and we wouldn't
     // be able to compare details once we get it back. So we just use videoIds
@@ -189,6 +184,8 @@ class YouTubeAPI(context: Context, account: Account) {
         // Scope for modifying the user's private data
         val YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube"
 
+        var sYouTubeAPI: YouTubeAPI? = null
+
         /**
          * Define a global instance of a YouTube object, which will be used to make
          * YouTube Data API requests.
@@ -196,10 +193,47 @@ class YouTubeAPI(context: Context, account: Account) {
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
                 HttpRequestInitializer { }).setApplicationName("chronoplayer").build()
 
+
+        fun isAuthenticated() : Boolean{
+            return sYouTubeAPI != null
+        }
+
+        fun authenticate(context: Context, account: Account) {
+            sYouTubeAPI = YouTubeAPI(context, account)
+        }
+        fun unAuthenticate() {
+            sYouTubeAPI = null
+        }
+
+        fun getDetailsToCommit(playlistTitle: String, details: List<Detail>, callback: (List<Detail>) -> Unit) {
+            if (isAuthenticated()) {
+                sYouTubeAPI!!.getDetailsToCommit(playlistTitle, details, callback)
+            } else {
+                throw RuntimeException("Cannot getDetailsToCommmit. User is not authenticated.")
+            }
+        }
+
+        fun cancelCommit() {
+            if (isAuthenticated()) {
+                sYouTubeAPI!!.cancelCommit()
+            } else {
+                throw RuntimeException("Cannot cancelCommit. User is not authenticated.")
+            }
+        }
+
+        fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
+                                setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit) {
+            if (isAuthenticated()) {
+                sYouTubeAPI!!.addVideosToPlayList(playlistTitle, detailsToCommit, setPercentageCallback)
+            } else {
+                throw RuntimeException("Cannot addVideosToPlayList. User is not authenticated.")
+            }
+        }
+
         fun fetchAllDetails(channel: Channel,
-                              stopAtDate: DateTime?,
-                              setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                              callback: (details: List<Detail>) -> Unit) {
+                          stopAtDate: DateTime?,
+                          setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
+                          callback: (details: List<Detail>) -> Unit) {
 
             // Clear the details in preparation of fetching them all
             allDetails = mutableListOf<Detail>()

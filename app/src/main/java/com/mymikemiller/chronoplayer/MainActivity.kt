@@ -186,7 +186,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 }
             }
             return withoutDuplicates
-
         }
 
         // This happens once the details are fetched from YouTube. detailsList contains all the
