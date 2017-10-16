@@ -169,7 +169,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // This won't work until we've initialized these lists
         val stopAtDate = if (detailsFromDbByDate.isNotEmpty()) detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded else null
 
-
         val response = VideoList.fetchAllDetails(this,
                 mPlaylistTitle,
                 stopAtDate, setVideoFetchPercentageComplete, detailsFetched)
@@ -529,6 +528,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun showManageChannelsActivity() {
         val manageChannelsActivityIntent = Intent(this, ManageChannelsActivity::class.java)
+        manageChannelsActivityIntent.putExtra(getString(R.string.playlistTitle), mPlaylistTitle)
         manageChannelsActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         startActivity(manageChannelsActivityIntent)
     }
@@ -553,7 +553,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         } else if (requestCode == CHANNEL_SELECT_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
                 // The user selected a new channel to add to our list
-                // TODO: Add it
                 val channel = data.getSerializableExtra("channel") as Channel
                 PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
                 loadPlaylist()

@@ -1,6 +1,7 @@
 package com.mymikemiller.chronoplayer
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
@@ -9,13 +10,19 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ListView
 import android.widget.Toast
+import com.mymikemiller.chronoplayer.util.PlaylistChannels
+import com.sothree.slidinguppanel.SlidingUpPanelLayout
 
 /**
  * Allows you to manage which channels end up in the playlist
  */
 class ManageChannelsActivity : AppCompatActivity() {
 
+    val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
+
     lateinit var mListView: ListView
+    var mPlaylistTitle = ""
+    var mChannels = mutableListOf<Channel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,10 +32,12 @@ class ManageChannelsActivity : AppCompatActivity() {
         val myToolbar = findViewById<View>(R.id.my_toolbar) as Toolbar
         setSupportActionBar(myToolbar)
 
-        val channels = mutableListOf<Channel>()
-        mListView = findViewById<ListView>(R.id.listView)
-        mListView.setAdapter(ChannelAdapter(this, channels))
+        // Get the list of channels to display
+        mPlaylistTitle = intent.getStringExtra(getString(R.string.playlistTitle))
+        mChannels = PlaylistChannels.getChannels(this, mPlaylistTitle).toMutableList()
 
+        mListView = findViewById<ListView>(R.id.listView)
+        mListView.setAdapter(ChannelAdapter(this, mChannels))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -44,11 +53,30 @@ class ManageChannelsActivity : AppCompatActivity() {
         val id = item.getItemId()
 
         if (id == R.id.add_channel) {
-            Toast.makeText(this, "Clicked!",
-                    Toast.LENGTH_LONG).show()
+
+            val channelSearchActivityIntent = Intent(this, ChannelSearchActivity::class.java)
+            channelSearchActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            startActivityForResult(channelSearchActivityIntent, CHANNEL_SELECT_REQUEST)
+
             return true
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // Check which request we're responding to
+        if (requestCode == CHANNEL_SELECT_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+                // The user selected a new channel to add to our list
+                val channel = data.getSerializableExtra("channel") as Channel
+                PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
+
+                mChannels.add(channel)
+                (mListView.adapter as ChannelAdapter).notifyDataSetChanged()
+            }
+        }
     }
 }

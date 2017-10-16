@@ -60,18 +60,13 @@ class ChannelSearchActivity : Activity() {
                 // do nothing
                 return false
             }
-
         })
 
         mListView.onItemClickListener = object: AdapterView.OnItemClickListener {
             override fun onItemClick(l: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val channel = mListView.adapter.getItem(position) as Channel
-                //TODO: Remove this
-                PlaylistChannels.addChannel(this@ChannelSearchActivity, "gg", channel)
+                // Add the channel to the database so it's there when we add to PlaylistChannels table
                 Channels.addChannel(this@ChannelSearchActivity, channel)
-                val channels = PlaylistChannels.getChannels(this@ChannelSearchActivity, "gg")
-
-
                 sendResult(channel)
             }
         }

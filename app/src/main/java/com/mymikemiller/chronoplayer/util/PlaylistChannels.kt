@@ -18,7 +18,7 @@ class PlaylistChannels {
         val TAG = "PlaylistChannels"
 
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 12
+        val DATABASE_VERSION: Int = 13
         val DATABASE_NAME: String = "PlaylistChannels"
         val PLAYLIST_CHANNELS_TABLE_NAME: String = "PlaylistChannelsTable"
 
@@ -67,7 +67,7 @@ class PlaylistChannels {
         // There should definitely be a channel for each channelId in this database because to get
         // a channel to put into this database, it must be in the Channels database
         fun getChannels(context: Context, playlistTitle: String): List<Channel> {
-            // If we don't find any rows, PlaylistChannels should be "" to show that we didn't find any
+            // If we don't find any rows, PlaylistChannels should be empty to show that we didn't find any
             val channels = mutableListOf<Channel>()
 
             val SELECT_QUERY = "SELECT $KEY_CHANNEL_ID" +
@@ -92,7 +92,7 @@ class PlaylistChannels {
                         if (channel != null) {
                             channels.add(channel)
                         } else {
-                            Log.e(TAG, "Channel must exist in Channels database for the specified playlist title " + playlistTitle)
+                            throw RuntimeException("Channel must exist in Channels database for the specified playlist title " + playlistTitle)
                         }
                     } while (cursor.moveToNext())
                 }
