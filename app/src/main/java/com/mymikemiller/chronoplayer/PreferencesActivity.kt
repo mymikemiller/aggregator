@@ -206,9 +206,6 @@ class PreferencesActivity : PreferenceActivity(),
             Log.d(TAG, "handleSignInResult: " + result.isSuccess())
             if (result.isSuccess()) {
 
-                Toast.makeText(activity, "Signed in successfully",
-                        Toast.LENGTH_LONG).show()
-
                 // Get the account from the sign in result
                 val account: GoogleSignInAccount? = result.signInAccount
 

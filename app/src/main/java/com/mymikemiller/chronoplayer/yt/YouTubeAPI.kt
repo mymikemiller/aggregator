@@ -451,17 +451,35 @@ class YouTubeAPI(context: Context, account: Account) {
         }
 
         private fun getUserPlaylist(authenticatedYoutube: YouTube, title: String, callback: (Playlist?) -> Unit) {
-            GetUserPlaylistTask(authenticatedYoutube, title, { playlist ->
+            GetUserPlaylistsTask(authenticatedYoutube, { playlists ->
                 run {
-                    callback(playlist)
+                    // Find the specified playlist
+                    for (playlist in playlists) {
+                        if (playlist.snippet.title == title) {
+                            callback(playlist)
+                            return@run
+                        }
+                    }
+                    callback(null)
                 }
             }).execute()
         }
 
+        fun getUserPlaylistTitles(callback: (List<String>) -> Unit) {
+            if (isAuthenticated()) {
+                GetUserPlaylistsTask(sYouTubeAPI?.mYouTube!!, { playlists ->
+                    run {
+                        val playlistTitles = playlists.map { it -> it.snippet.title }
+                        callback(playlistTitles)
+                    }
+                }).execute()
+            }
+        }
+
         /**
-         * AsyncTask that uses the specified AuthYoutube playlist API.
+         * AsyncTask that uses the specified AuthYoutube playlist API to get all the user's playlists
          */
-        private class GetUserPlaylistTask(val authenticatedYoutube: YouTube, val title: String, val callback: (Playlist?) -> Unit) : AsyncTask<String, Unit, Unit>() {
+        private class GetUserPlaylistsTask(val authenticatedYoutube: YouTube, val callback: (List<Playlist>) -> Unit) : AsyncTask<String, Unit, Unit>() {
 
             override fun onPreExecute(): Unit {}
 
@@ -475,16 +493,7 @@ class YouTubeAPI(context: Context, account: Account) {
 
                 val playlists = playlistsList.getItems()
 
-                // Find the specified playlist
-                for (playlist in playlists) {
-                    if (playlist.snippet.title == title) {
-                        callback(playlist)
-                        return
-                    }
-                }
-
-                // We didn't find the playlist. Call the callback specifying null.
-                callback(null)
+                callback(playlists)
             }
 
             override fun onPostExecute(result: Unit?) {}

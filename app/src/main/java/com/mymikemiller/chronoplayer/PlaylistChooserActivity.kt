@@ -26,14 +26,27 @@ import android.content.DialogInterface
 import android.os.Handler
 import android.text.InputType
 import android.support.v4.widget.SearchViewCompat.setInputType
+import android.util.Log
 import android.widget.EditText
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInResult
+import com.google.android.gms.common.Scopes
+import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.Scope
+import com.google.api.services.youtube.YouTube
 
 /**
  * Created by mikem on 10/14/2017.
  */
-class PlaylistChooserActivity: AppCompatActivity() {
+class PlaylistChooserActivity: AppCompatActivity(),
+        GoogleApiClient.ConnectionCallbacks {
+
 
     lateinit var mListView: ListView
+    val mListViewItems: MutableList<String> = mutableListOf()
+    private lateinit var mGoogleApiClient: GoogleApiClient
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,15 +58,11 @@ class PlaylistChooserActivity: AppCompatActivity() {
 
         mListView = findViewById<ListView>(R.id.listView)
 
-        val items = listOf("gg", "aa")
 
-        val c = Channel("UCVV8ZTEgZwv08TlqpxEkdTg","Game Time", "UUVV8ZTEgZwv08TlqpxEkdTg", "")
-        Channels.addChannel(this, c)
-//        val c: Channel = Channels.getChannel(this, "UC9CuvdOVfMPvKCiwdGKL3cQ")!!
-        PlaylistChannels.addChannel(this, "gg", c)
-
-        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items)
+        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mListViewItems)
         mListView.setAdapter(adapter)
+
+        adapter.notifyDataSetChanged()
 
         mListView.onItemClickListener = object: AdapterView.OnItemClickListener {
             override fun onItemClick(l: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -61,6 +70,25 @@ class PlaylistChooserActivity: AppCompatActivity() {
 
                 launchMainActivity(playlistTitle)
             }
+        }
+
+
+        // Configure sign-in to request youtube access
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestScopes(Scope(Scopes.PLUS_LOGIN))
+                .requestScopes(Scope(YouTubeAPI.YOUTUBE_SCOPE))
+                .requestEmail()
+                .build()
+
+        // Build a GoogleApiClient with access to the Google Sign-In API and the
+        // options specified by gso.
+        mGoogleApiClient = GoogleApiClient.Builder(this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .addConnectionCallbacks(this).build()
+        mGoogleApiClient.connect()
+
+        if (YouTubeAPI.isAuthenticated()) {
+            showUserPlaylists()
         }
     }
 
@@ -75,7 +103,7 @@ class PlaylistChooserActivity: AppCompatActivity() {
         // Handle presses on the action bar items
         if (item.getItemId() == R.id.action_show_my_playlists) {
 
-
+            signIn()
 
             return true;
         } else if (item.getItemId() == R.id.action_add_playlist) {
@@ -120,5 +148,77 @@ class PlaylistChooserActivity: AppCompatActivity() {
                 playlistTitle)
         startActivity(mainIntent)
         finish()
+    }
+
+    override fun onConnected(p0: Bundle?) {
+        // Do Nothing
+    }
+
+    override fun onConnectionSuspended(p0: Int) {
+        // Do Nothing
+    }
+
+    fun signIn() {
+        if (!YouTubeAPI.isAuthenticated()) {
+            val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
+            startActivityForResult(signInIntent, PreferencesActivity.RC_SIGN_IN)
+
+            // We don't call updateUI here because we need to wait for the activity's
+            // result to see if we actually signed in
+        } else {
+            showUserPlaylists()
+        }
+    }
+
+    // This happens as a result of signing in for the first time by selecting a user
+    fun handleSignInResult(result: GoogleSignInResult) : Unit {
+        Log.d(PreferencesActivity.TAG, "handleSignInResult: " + result.isSuccess())
+        if (result.isSuccess()) {
+
+            Toast.makeText(this, "Signed in successfully",
+                    Toast.LENGTH_SHORT).show()
+
+            // Get the account from the sign in result
+            val account: GoogleSignInAccount? = result.signInAccount
+
+            if (account != null) {
+                // Initialize mYouTubeAPI because we're now authenticated and can call the
+                // authenticated calls
+                YouTubeAPI.authenticate(this, account.account!!)
+                showUserPlaylists()
+            }
+        } else {
+            Toast.makeText(this, "Failed to sign in",
+                    Toast.LENGTH_LONG).show()
+
+            // Clear mYouTubeApi so we don't try to use authenticated functions
+            YouTubeAPI.unAuthenticate()
+        }
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == PreferencesActivity.RC_SIGN_IN) {
+            // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+            val result: GoogleSignInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
+            handleSignInResult(result)
+        }
+    }
+
+    fun showUserPlaylists() {
+        if (YouTubeAPI.isAuthenticated()) {
+            YouTubeAPI.getUserPlaylistTitles({ playlistTitles ->
+                runOnUiThread({
+                    for (playlistTitle in playlistTitles) {
+                        mListViewItems.add(playlistTitle)
+                    }
+                    (mListView.adapter as ArrayAdapter<String>).notifyDataSetChanged()
+                })
+
+            })
+
+        }
     }
 }
