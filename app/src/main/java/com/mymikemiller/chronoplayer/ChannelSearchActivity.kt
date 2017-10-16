@@ -72,7 +72,7 @@ class ChannelSearchActivity : Activity() {
                 val channels = PlaylistChannels.getChannels(this@ChannelSearchActivity, "gg")
 
 
-                launchMainActivity(channel)
+                sendResult(channel)
             }
         }
 
@@ -92,7 +92,7 @@ class ChannelSearchActivity : Activity() {
                 // sharedPreferences, but if there isn't we just continue loading
                 val channel = Channels.getChannel(applicationContext, channelId)
                 if (channel != null) {
-                    launchMainActivity(channel)
+                    sendResult(channel)
                 }
             } else {
                 // We couldn't find a last-watched-channel (launch channel) in the shared
@@ -102,13 +102,10 @@ class ChannelSearchActivity : Activity() {
     }
 
     // Launch the main activity
-    fun launchMainActivity(channel: Channel) {
-        val mainIntent = Intent(this, MainActivity::class.java)
-        mainIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        // TODO: get the actual playlist name from the user entering it, instead of from this channelsearchactivity
-        mainIntent.putExtra(getString(R.string.extraLaunchPlaylistTitle),
-                "gg")
-        startActivity(mainIntent)
+    fun sendResult(channel: Channel) {
+        val i = Intent()
+        i.putExtra("channel", channel)
+        setResult(RESULT_OK, i)
         finish()
     }
 

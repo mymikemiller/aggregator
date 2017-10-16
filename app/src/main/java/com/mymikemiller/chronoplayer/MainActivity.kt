@@ -154,6 +154,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun setUpYouTubeFetch() {
+        loadPlaylist()
+    }
+
+    fun loadPlaylist() {
+
         // Show the fetch progress section
         fetchVideosProgressSection.visibility = View.VISIBLE
 
@@ -164,94 +169,103 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // This won't work until we've initialized these lists
         val stopAtDate = if (detailsFromDbByDate.isNotEmpty()) detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded else null
 
-        // Set up what happens when a playlist item is clicked
-        val onItemClick: (Detail) -> Unit = {detail ->
-            run {
-                if (detail != mCurrentlyPlayingVideoDetail) {
-                    playVideo(detail, false)
-                }
-                // Hide the keyboard and collapse the slidingPanel if we click an item
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(mSearchEditText.getWindowToken(), 0)
-                slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-            }
-        }
 
-        fun removeDuplicates(details: List<Detail>): List<Detail> {
-            val withoutDuplicates = mutableListOf<Detail>()
-            for(detail in details) {
-                if (!withoutDuplicates.contains(detail)) {
-                    withoutDuplicates.add(detail)
-                }
-            }
-            return withoutDuplicates
-        }
-
-        // This happens once the details are fetched from YouTube. detailsList contains all the
-        // details, including those from the database, removed or not.
-        val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
-            run {
-                // Make sure there are no duplicates in the list. It's a bandaid, but that's fine.
-                val allDetailsUnorderedWithoutDuplicates = removeDuplicates(allDetailsUnordered)
-
-                //TODO: we probably shouldn't be doing all this on the UI thread
-                runOnUiThread {
-                    val orderedByDateIncludingRemoved = PlaylistManipulator.orderByDate(allDetailsUnorderedWithoutDuplicates)
-
-                    mDetailsByDateIncludingRemoved = orderedByDateIncludingRemoved
-
-                    mDetailsByDate = RemovePrevious.filterOutRemoved(this, mPlaylistTitle, mDetailsByDateIncludingRemoved)
-
-                    // Now that we've got a list of details, we can prepare the RecyclerView
-                    mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, removeBeforeDate)
-                    mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate, {
-                        mEpisodePager.setCurrentItem(mEpisodePager.currentItem - 1, true)
-                    }, {
-                        mEpisodePager.setCurrentItem(mEpisodePager.currentItem + 1, true)
-                    })
-                    mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
-
-                    mAdapterInitialized = true
-                    mPlaylistRecyclerView.setAdapter(mAdapter)
-                    mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
-                    fetchVideosProgressSection.visibility = View.GONE
-
-                    // If the channel has no videos, don't play anything.
-                    if (mDetailsByDate.isNotEmpty()) {
-
-                        // Get the default first video (the channel's first video)
-                        val firstVideoId = mDetailsByDate[0].videoId
-
-                        // Get the last video we were playing (which will be the next video in the playlist
-                        // if it was queued at the end of the last watch session if it had time to try to load)
-                        var videoIdToPlay = LastPlayedVideo.getLastPlayedVideoId(this, mPlaylistTitle)
-                        if (videoIdToPlay == "") {
-                            videoIdToPlay = firstVideoId
-                        }
-
-                        //val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
-
-                        val channels = PlaylistChannels.getChannels(this, mPlaylistTitle)
-
-                        var detailToPlay = VideoList.getDetail(this, channels, videoIdToPlay)
-                        if (detailToPlay == null) {
-                            // If we couldn't find a video to play, play the chronologically first video of the channel
-                            val details = VideoList.getDetails(this, channels)
-                            PlaylistManipulator.orderByDate(details)
-                            detailToPlay = details[0]
-                        }
-
-                        playVideo(detailToPlay, true)
-
-                        scrollToCurrentlyPlayingVideo()
-                    }
-                }
-            }
-        }
-
-        VideoList.fetchAllDetails(this,
+        val response = VideoList.fetchAllDetails(this,
                 mPlaylistTitle,
                 stopAtDate, setVideoFetchPercentageComplete, detailsFetched)
+
+        if (!response) {
+            // The user hasn't set up their playlist with any channels yet.
+
+            val channelSearchActivityIntent = Intent(this, ChannelSearchActivity::class.java)
+            channelSearchActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            startActivityForResult(channelSearchActivityIntent, CHANNEL_SELECT_REQUEST)
+        }
+    }
+
+    // This happens once the details are fetched from YouTube. detailsList contains all the
+    // details, including those from the database, removed or not.
+    val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
+        run {
+            // Make sure there are no duplicates in the list. It's a bandaid, but that's fine.
+            val allDetailsUnorderedWithoutDuplicates = removeDuplicates(allDetailsUnordered)
+
+            //TODO: we probably shouldn't be doing all this on the UI thread
+            runOnUiThread {
+                val orderedByDateIncludingRemoved = PlaylistManipulator.orderByDate(allDetailsUnorderedWithoutDuplicates)
+
+                mDetailsByDateIncludingRemoved = orderedByDateIncludingRemoved
+
+                mDetailsByDate = RemovePrevious.filterOutRemoved(this, mPlaylistTitle, mDetailsByDateIncludingRemoved)
+
+                // Now that we've got a list of details, we can prepare the RecyclerView
+                mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, removeBeforeDate)
+                mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate, {
+                    mEpisodePager.setCurrentItem(mEpisodePager.currentItem - 1, true)
+                }, {
+                    mEpisodePager.setCurrentItem(mEpisodePager.currentItem + 1, true)
+                })
+                mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
+
+                mAdapterInitialized = true
+                mPlaylistRecyclerView.setAdapter(mAdapter)
+                mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
+                fetchVideosProgressSection.visibility = View.GONE
+
+                // If the channel has no videos, don't play anything.
+                if (mDetailsByDate.isNotEmpty()) {
+
+                    // Get the default first video (the channel's first video)
+                    val firstVideoId = mDetailsByDate[0].videoId
+
+                    // Get the last video we were playing (which will be the next video in the playlist
+                    // if it was queued at the end of the last watch session if it had time to try to load)
+                    var videoIdToPlay = LastPlayedVideo.getLastPlayedVideoId(this, mPlaylistTitle)
+                    if (videoIdToPlay == "") {
+                        videoIdToPlay = firstVideoId
+                    }
+
+                    //val videoIdToPlay = sharedPref.getString(getString(R.string.currentVideoId), firstDetail.videoId).toString()
+
+                    val channels = PlaylistChannels.getChannels(this, mPlaylistTitle)
+
+                    var detailToPlay = VideoList.getDetail(this, channels, videoIdToPlay)
+                    if (detailToPlay == null) {
+                        // If we couldn't find a video to play, play the chronologically first video of the channel
+                        val details = VideoList.getDetails(this, channels)
+                        PlaylistManipulator.orderByDate(details)
+                        detailToPlay = details[0]
+                    }
+
+                    playVideo(detailToPlay, true)
+
+                    scrollToCurrentlyPlayingVideo()
+                }
+            }
+        }
+    }
+
+    // Set up what happens when a playlist item is clicked
+    val onItemClick: (Detail) -> Unit = {detail ->
+        run {
+            if (detail != mCurrentlyPlayingVideoDetail) {
+                playVideo(detail, false)
+            }
+            // Hide the keyboard and collapse the slidingPanel if we click an item
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(mSearchEditText.getWindowToken(), 0)
+            slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+        }
+    }
+
+    fun removeDuplicates(details: List<Detail>): List<Detail> {
+        val withoutDuplicates = mutableListOf<Detail>()
+        for(detail in details) {
+            if (!withoutDuplicates.contains(detail)) {
+                withoutDuplicates.add(detail)
+            }
+        }
+        return withoutDuplicates
     }
 
     val isSelected: (Detail) -> Boolean = {detail ->
@@ -535,6 +549,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 // Launch the preferences pane so it looks like we went back to it from the warch history
                 showPreferencesActivity()
+            }
+        } else if (requestCode == CHANNEL_SELECT_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+                // The user selected a new channel to add to our list
+                // TODO: Add it
+                val channel = data.getSerializableExtra("channel") as Channel
+                PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
+                loadPlaylist()
             }
         }
     }

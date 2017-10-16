@@ -89,12 +89,16 @@ class VideoList {
                             playlistTitle: String,
                             stopAtDate: DateTime?,
                             setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                            callbackWhenDone: (details: List<Detail>) -> Unit) {
+                            callbackWhenDone: (details: List<Detail>) -> Unit): Boolean {
 
             val channels = PlaylistChannels.getChannels(context, playlistTitle)
+            if (channels.isEmpty()){
+                return false
+            }
 
             val fetcher = DetailsFetcher(channels, setPercentageCallback, callbackWhenDone)
             fetcher.startFetch(context, stopAtDate)
+            return true
         }
 
 
