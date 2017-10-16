@@ -45,7 +45,7 @@ class PreferencesActivity : PreferenceActivity(),
         val PLAYLIST_SHARED_PREF_NAME = "PlaylistPrefs"
 
         const val MANAGE_CHANNELS = "com.mymikemiller.chronoplayer.MANAGE_CHANNELS"
-        const val CHANGE_PLAYLIST_NAME = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_NAME"
+        const val CHANGE_PLAYLIST_TITLE = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_TITLE"
         const val SHOW_ALL = "com.mymikemiller.chronoplayer.SHOW_ALL"
         const val WATCH_HISTORY = "com.mymikemiller.chronoplayer.WATCH_HISTORY"
 
@@ -81,14 +81,11 @@ class PreferencesActivity : PreferenceActivity(),
             updateUI(isSignedIn())
 
             // Change the playlist name description text to mention the playlist name sent in
-            val playlistTitle = activity.intent.extras.getString("playlistTitle")
-            val changePlaylistTitle: EditTextPreference = findPreference(
-                    getString(R.string.pref_changePlaylistNameKey)) as EditTextPreference;
+            val playlistTitle = activity.intent.extras.getString(EXTRA_PLAYLIST_TITLE)
+            val changePlaylistTitle: Preference = findPreference(
+                    getString(R.string.pref_changePlaylistTitleKey)) as Preference;
             changePlaylistTitle.setSummary(playlistTitle);
-            changePlaylistTitle.setTitle(getString(R.string.changePlaylistNameTitle))
-
-            // Also change the text in the EditText to match what was sent in
-            changePlaylistTitle.editText.setText(playlistTitle)
+            changePlaylistTitle.setTitle(getString(R.string.changePlaylistTitleTitle))
 
             // Configure sign-in to request youtube access
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -141,30 +138,15 @@ class PreferencesActivity : PreferenceActivity(),
                 true
             })
 
-            this.findPreference(getString(R.string.pref_changePlaylistNameKey))
-                    .onPreferenceChangeListener = android.preference.Preference
-                    .OnPreferenceChangeListener { preference, newValue ->
+            val changePlaylistButton = findPreference(getString(R.string.pref_changePlaylistTitleKey))
+            changePlaylistButton.setOnPreferenceClickListener({
 
-                        if (newValue.toString().length > 0) {
+                val intent = Intent()
+                intent.action = CHANGE_PLAYLIST_TITLE
+                LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
-                            // Change the description text to mention the new playlist name
-                            val customPref: Preference = findPreference(getString(R.string.pref_changePlaylistNameKey));
-                            customPref.setSummary(newValue.toString());
-
-                            // Get the playlist name from the EditText
-                            val changePlaylistNamePref: EditTextPreference = findPreference(
-                                    getString(R.string.pref_changePlaylistNameKey)) as EditTextPreference
-                            val playlistName = changePlaylistNamePref.editText.text.toString()
-
-                            val theIntent = Intent()
-                            theIntent.action = CHANGE_PLAYLIST_NAME
-                            theIntent.putExtra("playlistTitle", playlistName)
-                            LocalBroadcastManager.getInstance(activity).sendBroadcast(theIntent)
-
-                            return@OnPreferenceChangeListener true
-                        }
-                        return@OnPreferenceChangeListener false
-                    }
+                true
+            })
 
             val watchHistoryButton = findPreference(getString(R.string.pref_watchHistoryKey))
             watchHistoryButton.setOnPreferenceClickListener({

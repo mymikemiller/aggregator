@@ -24,7 +24,6 @@ import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
 import android.util.Log
 import com.google.api.client.util.DateTime
-import kotlinx.android.synthetic.main.activity_main.*
 
 /**
  * A video player allowing users to watch YouTube episodes in chronological order and commit the resulting playlist to YouTube.
@@ -106,7 +105,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // Register for broadcast intents from settings
         val filter = IntentFilter(PreferencesActivity.MANAGE_CHANNELS)
-        filter.addAction(PreferencesActivity.CHANGE_PLAYLIST_NAME)
+        filter.addAction(PreferencesActivity.CHANGE_PLAYLIST_TITLE)
         filter.addAction(PreferencesActivity.WATCH_HISTORY)
         filter.addAction(PreferencesActivity.SHOW_ALL)
         LocalBroadcastManager.getInstance(this)
@@ -390,7 +389,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     when (theIntent?.action) {
                         PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
                         PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
-                        PreferencesActivity.CHANGE_PLAYLIST_NAME -> changePlaylistTitle(theIntent.extras.getString("playlistName"))
+                        PreferencesActivity.CHANGE_PLAYLIST_TITLE -> showPlaylistChooserActivity()
                         PreferencesActivity.SHOW_ALL -> unRemovePrevious(currentlyPlaying.channel)
                     }
                 }
@@ -509,10 +508,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     // TODO: Make this work by clearing playlist title and removing all videos, etc.
-    fun changePlaylistTitle(playlistName: String) {
-        Log.e("MainActivity", "changePlaylistTitle is not yet implemented")
-        // Save the playlist name to the database
-        //PlaylistChannels.addChannel(this, mPlaylistTitle, playlistName)
+    fun showPlaylistChooserActivity() {
+        val i: Intent = Intent(this, PlaylistChooserActivity::class.java)
+        startActivity(i)
     }
 
     fun showManageChannelsActivity() {
