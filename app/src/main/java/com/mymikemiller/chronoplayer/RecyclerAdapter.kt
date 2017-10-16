@@ -27,6 +27,7 @@ class RecyclerAdapter(private val context: Context,
         private val mContext = context
         private val mRootLayout: LinearLayout
         private val mThumbnail: ImageView
+        private val mDetailThumbnail: ImageView
         private val mDescription: TextView
         private val mTitle: TextView
         private val mDate: TextView
@@ -41,6 +42,7 @@ class RecyclerAdapter(private val context: Context,
         init {
             mRootLayout = v.findViewById(R.id.rootLayout)
             mThumbnail = v.findViewById<ImageView>(R.id.thumbnail)
+            mDetailThumbnail = v.findViewById<ImageView>(R.id.channelThumbnail)
             mDescription = v.findViewById<TextView>(R.id.description)
             mTitle = v.findViewById<TextView>(R.id.title)
             mDate = v.findViewById<TextView>(R.id.date)
@@ -83,6 +85,7 @@ class RecyclerAdapter(private val context: Context,
                        removePrevious: ((date: DateTime) -> Unit)?) {
             mDetail = detail
             Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
+            Picasso.with(mDetailThumbnail.context).load(detail.channel.thumbnail).into(mDetailThumbnail)
 
             mTitle.setText(detail.title)
             mDescription.setText(detail.description)
