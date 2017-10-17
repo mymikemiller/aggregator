@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -12,6 +13,9 @@ import android.widget.ListView
 import android.widget.Toast
 import com.mymikemiller.chronoplayer.util.PlaylistChannels
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
+import android.view.KeyEvent.KEYCODE_BACK
+
+
 
 /**
  * Allows you to manage which channels end up in the playlist
@@ -64,6 +68,13 @@ class ManageChannelsActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    override fun onBackPressed() {
+        val i: Intent = Intent()
+        setResult(Activity.RESULT_OK, i)
+        finish()
+        super.onBackPressed()
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -76,6 +87,11 @@ class ManageChannelsActivity : AppCompatActivity() {
 
                 mChannels.add(channel)
                 (mListView.adapter as ChannelAdapter).notifyDataSetChanged()
+
+                val i: Intent = Intent()
+                setResult(Activity.RESULT_OK, i)
+
+                finish()
             }
         }
     }

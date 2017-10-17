@@ -19,7 +19,7 @@ import java.sql.SQLException
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 90
+        val DATABASE_VERSION: Int = 93
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -125,12 +125,18 @@ class VideoList {
                             stopAtDate,
                             setPercentageCallback,
                             { detailsFetched ->
-                                // We get here each time we finish fetching one of the channel's details
+                                // We get here each time we finish fetching one of the channels' details
                                 details.addAll(detailsFetched)
                                 // TODO: Figure out what to do with setPercentageCallback. Probably use YoutubeAPI.getNumDetails(Task)
                                 numberOfCallbacksReceived++
+                                for (d in detailsFetched) {
+                                    if (d.channel.name == "Game Time") {
+                                        println()
+                                    }
+                                }
                                 if (numberOfCallbacksReceived == channels.size) {
                                     fetchInProgress = false
+                                    numberOfCallbacksReceived = 0
                                     callbackWhenDoneFetchingAllChannels(details)
                                 }
                             })
@@ -234,7 +240,6 @@ class VideoList {
             // SELECT * FROM DETAILS WHERE ChannelId = $channel.id
             val DETAILS_SELECT_QUERY = "SELECT * FROM $DETAILS_TABLE_NAME WHERE $KEY_CHANNELID = ?"
             val db: SQLiteDatabase
-
 
             try {
                 db = this.readableDatabase

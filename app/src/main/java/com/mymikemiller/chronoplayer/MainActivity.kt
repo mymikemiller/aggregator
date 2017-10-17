@@ -35,6 +35,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
     val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
+    val MANAGE_CHANNELS_REQUEST = 3  // The request code from the ManageChannelsActivity activity
 
     //region [Variable definitions]
     private lateinit var mPlaylistTitle: String
@@ -157,7 +158,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         loadPlaylist()
     }
 
-    fun loadPlaylist() {
+    fun loadPlaylist(force: Boolean = false) {
 
         // Show the fetch progress section
         fetchVideosProgressSection.visibility = View.VISIBLE
@@ -166,8 +167,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(this,
                 mPlaylistTitle))
 
-        // This won't work until we've initialized these lists
-        val stopAtDate = if (detailsFromDbByDate.isNotEmpty()) detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded else null
+        val stopAtDate = if (detailsFromDbByDate.isEmpty() || force) null else detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded
 
         val response = VideoList.fetchAllDetails(this,
                 mPlaylistTitle,
@@ -197,8 +197,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                 mDetailsByDate = RemovePrevious.filterOutRemoved(this, mPlaylistTitle, mDetailsByDateIncludingRemoved)
 
-                // Now that we've got a list of details, we can prepare the RecyclerView
-                mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, removeBeforeDate)
+                // Now that we've got a list of details, we can prepare the Episode Pager and RecyclerView
                 mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate, {
                     mEpisodePager.setCurrentItem(mEpisodePager.currentItem - 1, true)
                 }, {
@@ -206,6 +205,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 })
                 mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
 
+                mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, removeBeforeDate)
                 mAdapterInitialized = true
                 mPlaylistRecyclerView.setAdapter(mAdapter)
                 mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
@@ -530,7 +530,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val manageChannelsActivityIntent = Intent(this, ManageChannelsActivity::class.java)
         manageChannelsActivityIntent.putExtra(getString(R.string.playlistTitle), mPlaylistTitle)
         manageChannelsActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        startActivity(manageChannelsActivityIntent)
+        startActivityForResult(manageChannelsActivityIntent, MANAGE_CHANNELS_REQUEST)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
@@ -555,8 +555,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // The user selected a new channel to add to our list
                 val channel = data.getSerializableExtra("channel") as Channel
                 PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
-                loadPlaylist()
+                loadPlaylist(true)
             }
+        } else if (requestCode == MANAGE_CHANNELS_REQUEST) {
+            // The channels have been added/removed from the playlist in PlaylistChannels, so just
+            // refresh the playlist and it'll have the new/removed channels.
+            loadPlaylist(true)
         }
     }
 

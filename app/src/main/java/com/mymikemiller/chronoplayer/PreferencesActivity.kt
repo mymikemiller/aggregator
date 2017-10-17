@@ -108,7 +108,7 @@ class PreferencesActivity : PreferenceActivity(),
                 intent.action = MANAGE_CHANNELS
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
-                //activity.finish()
+                activity.finish()
 
                 true
             })
