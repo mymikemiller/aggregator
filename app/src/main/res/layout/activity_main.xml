@@ -72,6 +72,11 @@
                         android:indeterminate="false"
                         style="@android:style/Widget.ProgressBar.Horizontal" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0/0"/>
+
                 </LinearLayout>
 
                 <!-- The pager allowing the user to skip episodes by swiping the main view-->

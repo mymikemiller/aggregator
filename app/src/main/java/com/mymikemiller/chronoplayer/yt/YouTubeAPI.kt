@@ -231,9 +231,9 @@ class YouTubeAPI(context: Context, account: Account) {
         }
 
         fun fetchAllDetails(channel: Channel,
-                          stopAtDate: DateTime?,
-                          setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                          callback: (details: List<Detail>) -> Unit) {
+                            stopAtDate: DateTime?,
+                            incrementalDetailsFetched: (List<Detail>) -> Unit,
+                            callback: (details: List<Detail>) -> Unit) {
 
             // Clear the details in preparation of fetching them all
             allDetails = mutableListOf<Detail>()
@@ -242,7 +242,7 @@ class YouTubeAPI(context: Context, account: Account) {
                     "",
                     stopAtDate,
                     accumulate,
-                    setPercentageCallback,
+                    incrementalDetailsFetched,
                     callback).execute()
         }
 
@@ -253,13 +253,13 @@ class YouTubeAPI(context: Context, account: Account) {
                          detailList: List<Detail>,
                          nextPageToken: String,
                          stopAtDate: DateTime?,
-                         setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
+                         incrementalDetailsFetched: (List<Detail>) -> Unit,
                          callbackWhenDone: (detailList: List<Detail>) -> Unit
         ) -> Unit = { channel,
                       detailsList,
                       nextPageToken,
                       stopAtDate,
-                      setPercentageCallback,
+                      incrementalDetailsFetched,
                       callbackWhenDone ->
             run {
                 prevNextPageToken = nextPageToken
@@ -268,7 +268,7 @@ class YouTubeAPI(context: Context, account: Account) {
                         nextPageToken,
                         stopAtDate,
                         accumulate,
-                        setPercentageCallback,
+                        incrementalDetailsFetched,
                         callbackWhenDone).execute()
             }
         }
@@ -280,10 +280,9 @@ class YouTubeAPI(context: Context, account: Account) {
                                                  detailList: List<Detail>,
                                                  nextPageToken: String,
                                                  stopAtDate: DateTime?,
-                                                 setPercentageCallback: (kotlin.Int, kotlin.Int) -> Unit,
+                                                 incrementalDetailsFetched: (List<Detail>) -> Unit,
                                                  callbackWhenDone: (detailList: List<Detail>) -> Unit) -> Unit,
-                                        val setPercentageCallback: (totalVideos: kotlin.Int,
-                                                      currentVideoNumber: kotlin.Int) -> Unit,
+                                        val incrementalDetailsFetched: (List<Detail>) -> Unit,
                                         val callbackWhenDone: (detailList: List<Detail>) -> Unit
                                               ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
@@ -313,8 +312,9 @@ class YouTubeAPI(context: Context, account: Account) {
 
                     // Let the caller know how close we are to being done
                     val overallTotalResults = searchResponse.pageInfo.totalResults
+
                     // We have to add searchResultList.size instead of just allDetails.size because allDetails won't be added to until the callback is called below
-                    setPercentageCallback(Integer.valueOf(overallTotalResults), Integer.valueOf(allDetails.size + searchResultList.size))
+                    incrementalDetailsFetched(results)
 
                     if (done || searchResponse.nextPageToken == null) {
                         // This is the last page of results.
@@ -325,15 +325,24 @@ class YouTubeAPI(context: Context, account: Account) {
                     }
 
                     // TODO: do we need this? Seems like we always return above
-                    callback(channel, results, searchResponse.nextPageToken, stopAtDate, setPercentageCallback, callbackWhenDone)
+                    callback(channel, results, searchResponse.nextPageToken, stopAtDate, incrementalDetailsFetched, callbackWhenDone)
                 }
             }
         }
 
-        private class GetNumDetailsTask(val channels: List<Channel>,
+        fun getNumDetailsFromYouTube(channels: List<Channel>, callback: (Int) -> Unit) {
+            GetNumDetailsFromYouTubeTask(channels, { numDetails ->
+                run {
+                    callback(numDetails)
+                }
+            }).execute()
+        }
+
+        private class GetNumDetailsFromYouTubeTask(val channels: List<Channel>,
                                         val callback: (numDetailsTotal: Int) -> Unit
         ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
+                var totalVideos = 0
                 for(channel in channels) {
                     val videosListByUploadPlaylistIdRequest = youtube.PlaylistItems().list("snippet")
                     videosListByUploadPlaylistIdRequest.playlistId = channel.uploadPlaylistId
@@ -342,8 +351,9 @@ class YouTubeAPI(context: Context, account: Account) {
                     videosListByUploadPlaylistIdRequest.pageToken = ""
 
                     val searchResponse = videosListByUploadPlaylistIdRequest.execute()
-                    callback(searchResponse.pageInfo.totalResults)
+                    totalVideos += searchResponse.pageInfo.totalResults
                 }
+                callback(totalVideos)
             }
         }
 

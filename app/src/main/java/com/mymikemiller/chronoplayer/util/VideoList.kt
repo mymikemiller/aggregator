@@ -7,10 +7,12 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.content.ContentValues.TAG
 import android.content.ContentValues
+import android.os.AsyncTask
 import android.util.Log
 import com.google.api.client.util.DateTime
 import com.google.api.services.youtube.model.Playlist
 import com.mymikemiller.chronoplayer.Channel
+import com.mymikemiller.chronoplayer.DeveloperKey
 import java.sql.SQLException
 
 /**
@@ -19,7 +21,7 @@ import java.sql.SQLException
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 93
+        val DATABASE_VERSION: Int = 94
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -80,30 +82,33 @@ class VideoList {
             return returnDetail
         }
 
+        // Return the number of details in the database for the specified channels
         fun getDetails(context: Context, channels: List<Channel>) : List<Detail> {
             val details = getAllDetailsFromDb(context, channels)
             return details
         }
 
+        fun getNumDetailsToFetch(context: Context, channels: List<Channel>, callback: (Int) -> Unit) {
+            val numDetailsInDb = getDetails(context, channels).size
+            YouTubeAPI.getNumDetailsFromYouTube(channels, { numDetailsFromYouTube ->
+                callback(numDetailsFromYouTube - numDetailsInDb)
+            })
+        }
+
         fun fetchAllDetails(context: Context,
-                            playlistTitle: String,
+                            channels: List<Channel>,
                             stopAtDate: DateTime?,
-                            setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
-                            callbackWhenDone: (details: List<Detail>) -> Unit): Boolean {
+                            incrementalDetailsFetched: (List<Detail>) -> Unit,
+                            callbackWhenDone: (details: List<Detail>) -> Unit) {
 
-            val channels = PlaylistChannels.getChannels(context, playlistTitle)
-            if (channels.isEmpty()){
-                return false
-            }
 
-            val fetcher = DetailsFetcher(channels, setPercentageCallback, callbackWhenDone)
+            val fetcher = DetailsFetcher(channels, incrementalDetailsFetched, callbackWhenDone)
             fetcher.startFetch(context, stopAtDate)
-            return true
         }
 
 
         private class DetailsFetcher(private val channels: List<Channel>,
-                                     private val setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
+                                     private val incrementalDetailsFetched: (List<Detail>) -> Unit,
                                      private val callbackWhenDoneFetchingAllChannels: (details: List<Detail>) -> Unit) {
 
             private var numberOfCallbacksReceived = 0
@@ -123,7 +128,7 @@ class VideoList {
                     fetchAllDetails(context,
                             channel,
                             stopAtDate,
-                            setPercentageCallback,
+                            incrementalDetailsFetched,
                             { detailsFetched ->
                                 // We get here each time we finish fetching one of the channels' details
                                 details.addAll(detailsFetched)
@@ -148,12 +153,11 @@ class VideoList {
             private fun fetchAllDetails(context: Context,
                                         channel: Channel,
                                         stopAtDate: DateTime?,
-                                        setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit,
+                                        incrementalDetailsFetched: (List<Detail>) -> Unit,
                                         callback: (details: List<Detail>) -> Unit) {
 
-
                 // Now that we have all details from the database, append the ones we find from YouTube
-                YouTubeAPI.fetchAllDetails(channel, stopAtDate, setPercentageCallback, { newDetails: List<Detail> ->
+                YouTubeAPI.fetchAllDetails(channel, stopAtDate, incrementalDetailsFetched, { newDetails: List<Detail> ->
                     run {
                         val dbHelper = DetailsOpenHelper(context.applicationContext)
 

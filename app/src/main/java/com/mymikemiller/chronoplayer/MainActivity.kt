@@ -24,6 +24,7 @@ import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
 import android.util.Log
 import com.google.api.client.util.DateTime
+import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
 /**
  * A video player allowing users to watch YouTube episodes in chronological order and commit the resulting playlist to YouTube.
@@ -66,6 +67,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mBroadcastReceiver: BroadcastReceiver
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
+    private var mNumVideosToFetch = 0
+    private var mNumVideosFetched = 0
 
     // These collections include the removed videos
     var mDetailsByDateIncludingRemoved = listOf<Detail>()
@@ -159,6 +162,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun loadPlaylist(force: Boolean = false) {
+        // First clear the playlist so we don't try playing something while the fetch happens
+        updateAdapters(listOf())
 
         // Make sure the playlist is minimized so we can see the progress
         slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
@@ -172,16 +177,25 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         val stopAtDate = if (detailsFromDbByDate.isEmpty() || force) null else detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded
 
-        val response = VideoList.fetchAllDetails(this,
-                mPlaylistTitle,
-                stopAtDate, setVideoFetchPercentageComplete, detailsFetched)
-
-        if (!response) {
+        val channels = PlaylistChannels.getChannels(this, mPlaylistTitle)
+        if (channels.isEmpty()){
             // The user hasn't set up their playlist with any channels yet.
 
             val channelSearchActivityIntent = Intent(this, ChannelSearchActivity::class.java)
             channelSearchActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             startActivityForResult(channelSearchActivityIntent, CHANNEL_SELECT_REQUEST)
+        } else {
+            VideoList.getNumDetailsToFetch(this, channels, { numDetailsFromYouTube ->
+                mNumVideosToFetch = numDetailsFromYouTube
+                fetchVideosProgresBar.max = mNumVideosToFetch
+                fetchVideosProgresBar.setProgress(0)
+                mNumVideosFetched = 0
+                // The user has set up some channels to fetch for this playlist. Fetch them.
+                VideoList.fetchAllDetails(this,
+                        channels,
+                        stopAtDate, respondToIncrementalVideosFetched, detailsFetched)
+            })
+
         }
     }
 
@@ -428,11 +442,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         startActivity(i)
     }
 
-    val setVideoFetchPercentageComplete: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
+    val respondToIncrementalVideosFetched: (List<Detail>) -> Unit = { incrementalDetailsFetched ->
         run {
-            val numDetailsInDatabase = VideoList.getNumDetailsInDb(this, mPlaylistTitle)
-            fetchVideosProgresBar.max = (totalVideos - numDetailsInDatabase)
-            fetchVideosProgresBar.setProgress(currentVideoNumber)
+            mNumVideosFetched += incrementalDetailsFetched.size
+            fetchVideosProgresBar.setProgress(mNumVideosFetched)
+//            val numDetailsInDatabase = VideoList.getNumDetailsInDb(this, mPlaylistTitle)
+//            fetchVideosProgresBar.max = (mTotalVideosToFetch - numDetailsInDatabase)
+//            fetchVideosProgresBar.setProgress(currentVideoNumber)
         }
     }
 
@@ -510,10 +526,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun updateAdapters(details: List<Detail>) {
-        mAdapter.details = mDetailsByDate
-        mAdapter.notifyDataSetChanged()
-        mEpisodeViewPagerAdapter.details = mAdapter.details
-        mEpisodeViewPagerAdapter.notifyDataSetChanged()
+        if (mAdapterInitialized) {
+            mAdapter.details = details
+            mAdapter.notifyDataSetChanged()
+            mEpisodeViewPagerAdapter.details = details
+            mEpisodeViewPagerAdapter.notifyDataSetChanged()
+        }
     }
 
     fun showWatchHistoryActivity(channel: Channel) {
