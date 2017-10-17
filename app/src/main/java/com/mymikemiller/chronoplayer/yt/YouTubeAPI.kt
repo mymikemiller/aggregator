@@ -324,7 +324,6 @@ class YouTubeAPI(context: Context, account: Account) {
                         return
                     }
 
-                    // TODO: do we need this? Seems like we always return above
                     callback(channel, results, searchResponse.nextPageToken, stopAtDate, incrementalDetailsFetched, callbackWhenDone)
                 }
             }
