@@ -160,6 +160,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun loadPlaylist(force: Boolean = false) {
 
+        // Make sure the playlist is minimized so we can see the progress
+        slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+
         // Show the fetch progress section
         fetchVideosProgressSection.visibility = View.VISIBLE
 
@@ -561,7 +564,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         } else if (requestCode == MANAGE_CHANNELS_REQUEST) {
             // The channels have been added/removed from the playlist in PlaylistChannels, so just
             // refresh the playlist and it'll have the new/removed channels.
-            loadPlaylist(true)
+            if (resultCode == Activity.RESULT_OK) {
+                loadPlaylist(true)
+            }
         }
     }
 
