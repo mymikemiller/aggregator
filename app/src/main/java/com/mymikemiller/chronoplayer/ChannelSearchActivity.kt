@@ -71,29 +71,33 @@ class ChannelSearchActivity : Activity() {
             }
         }
 
-        if (!intent.hasExtra(getString(R.string.launchedFromSettings))) {
-            // We were not launched from settings (we loaded the app for the first time), so next
-            // we see if we have a preference for the last channel we watched. Find the last
-            // watched ChannelId in SharedPreferences. If it's there, use the channel
-            // database to launch the MainActivity specifying the channel in the intent. If it's
-            // not there, load this view and let the user search
-            val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
-            val channelId = preferences.getString(getString(R.string.prefPlaylistTitle), "")
-
-            if (channelId != "") {
-                // We have a last watched channel, so launch the MainActivity
-                // Search the database for the specified channelId
-                // There should definitely be a channel in Channels for the channelId stored in
-                // sharedPreferences, but if there isn't we just continue loading
-                val channel = Channels.getChannel(applicationContext, channelId)
-                if (channel != null) {
-                    sendResult(channel)
-                }
-            } else {
-                // We couldn't find a last-watched-channel (launch channel) in the shared
-                // preferences, so simply allow this activity to load
-            }
-        }
+//        if (!intent.hasExtra(getString(R.string.launchedFromSettings))) {
+//            // We were not launched from settings (we loaded the app for the first time), so next
+//            // we see if we have a preference for the last channel we watched. Find the last
+//            // watched ChannelId in SharedPreferences. If it's there, use the channel
+//            // database to launch the MainActivity specifying the channel in the intent. If it's
+//            // not there, load this view and let the user search
+//            val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
+//            val playlistTitle = preferences.getString(getString(R.string.prefPlaylistTitle), "")
+//
+//            if (playlistTitle != "") {
+//                // We have a last watched channel, so launch the MainActivity
+//                // Search the database for the specified channelId
+//                // There should definitely be a channel in Channels for the channelId stored in
+//                // sharedPreferences, but if there isn't we just continue loading
+//                //val channel = Channels.getChannel(applicationContext, channelId)
+//                val i = Intent(this, MainActivity::class.java)
+//                i.putExtra(getString(R.string.extraLaunchPlaylistTitle), playlistTitle)
+//                startActivity(i)
+//                finish()
+//                //if (channel != null) {
+//                //    sendResult(channel)
+////                }
+//            } else {
+//                // We couldn't find a last-watched-channel (launch channel) in the shared
+//                // preferences, so simply allow this activity to load
+//            }
+//        }
     }
 
     // Launch the main activity
@@ -103,5 +107,4 @@ class ChannelSearchActivity : Activity() {
         setResult(RESULT_OK, i)
         finish()
     }
-
 }

@@ -523,6 +523,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     // TODO: Make this work by clearing playlist title and removing all videos, etc.
     fun showPlaylistChooserActivity() {
         val i: Intent = Intent(this, PlaylistChooserActivity::class.java)
+        i.putExtra(getString(R.string.launchedFromSettings), true)
         startActivity(i)
     }
 

@@ -27,6 +27,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.google.api.services.youtube.YouTube
 import com.mymikemiller.chronoplayer.util.PlaylistManipulator
 import com.mymikemiller.chronoplayer.util.RemovePrevious
 
@@ -323,7 +324,8 @@ class PreferencesActivity : PreferenceActivity(),
 
         override fun onDestroy() {
             super.onDestroy()
-            YouTubeAPI.cancelCommit()
+            if (YouTubeAPI.isAuthenticated())
+                YouTubeAPI.cancelCommit()
             mGoogleApiClient.disconnect()
         }
     }
