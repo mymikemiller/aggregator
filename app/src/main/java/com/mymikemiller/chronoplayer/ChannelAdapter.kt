@@ -9,12 +9,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ImageView
+import android.widget.Toast
 import com.squareup.picasso.Picasso
 
 /**
  *
  */
 class ChannelAdapter(context: Context, channels: List<Channel>) : ArrayAdapter<Channel>(context, 0, channels) {
+
+    var showDeleteIcon = false
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         var theConvertView = convertView
@@ -31,6 +34,15 @@ class ChannelAdapter(context: Context, channels: List<Channel>) : ArrayAdapter<C
         titleTextView.setText(channel.name)
         Picasso.with(thumbnailImageView.context).load(channel.thumbnail).into(thumbnailImageView)
         // Return the completed view to render on screen
+
+        if (showDeleteIcon) {
+            val deleteIcon = theConvertView.findViewById<ImageView>(R.id.deleteIcon)
+            deleteIcon.visibility = View.VISIBLE
+            deleteIcon.setOnClickListener {
+                println()
+            }
+        }
+
         return theConvertView
     }
 }

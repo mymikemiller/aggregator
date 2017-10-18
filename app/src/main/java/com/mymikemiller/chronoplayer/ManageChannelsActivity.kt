@@ -15,6 +15,7 @@ import android.widget.Toast
 import com.mymikemiller.chronoplayer.util.PlaylistChannels
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import android.view.KeyEvent.KEYCODE_BACK
+import android.widget.ImageView
 import com.mymikemiller.chronoplayer.util.VideoList
 
 
@@ -44,7 +45,9 @@ class ManageChannelsActivity : AppCompatActivity() {
         mStartChannels.addAll(mChannels)
 
         mListView = findViewById<ListView>(R.id.listView)
-        mListView.setAdapter(ChannelAdapter(this, mChannels))
+        val adapter = ChannelAdapter(this, mChannels)
+        adapter.showDeleteIcon = true
+        mListView.setAdapter(adapter)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
