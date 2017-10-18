@@ -21,7 +21,7 @@ import java.sql.SQLException
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 103
+        val DATABASE_VERSION: Int = 104
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -234,7 +234,7 @@ class VideoList {
                 }
                 db.setTransactionSuccessful()
             } catch (e: Exception) {
-                Log.d(TAG, "Error while trying to add Detail to database")
+                Log.d(TAG, "Error while trying to add Detail to database " + e)
             } finally {
                 db.endTransaction()
             }

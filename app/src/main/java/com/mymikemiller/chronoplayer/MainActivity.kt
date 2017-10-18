@@ -181,7 +181,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 mPlaylistTitle))
 
         // When addedChannelNames is empty, fetch them all (by sending in null)
-        val stopAtDate = if (detailsFromDbByDate.isEmpty() || addedChannelNames.isEmpty()) null else detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded
+        val stopAtDate = detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded
 
         val channels = PlaylistChannels.getChannels(this, mPlaylistTitle)
         if (channels.isEmpty()){
