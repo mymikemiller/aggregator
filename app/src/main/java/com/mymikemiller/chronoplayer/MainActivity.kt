@@ -25,6 +25,7 @@ import android.content.IntentFilter
 import android.util.Log
 import com.google.api.client.util.DateTime
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
+import kotlinx.android.synthetic.main.activity_main.*
 
 /**
  * A video player allowing users to watch YouTube episodes in chronological order and commit the resulting playlist to YouTube.
@@ -48,6 +49,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var otherViews: View
     private lateinit var fetchVideosProgressSection: LinearLayout
     private lateinit var fetchVideosProgresBar: ProgressBar
+    private lateinit var fetchVideosProgresText: TextView
     private var fullscreen: Boolean = false
     private lateinit var playerStateChangeListener: MyPlayerStateChangeListener
     private lateinit var playbackEventListener: MyPlaybackEventListener
@@ -91,6 +93,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         otherViews = findViewById(R.id.other_views)
         fetchVideosProgressSection = findViewById(R.id.fetchVideosProgressSection)
         fetchVideosProgresBar = findViewById(R.id.fetchVideosProgressBar)
+        fetchVideosProgresText = findViewById(R.id.fetchVideosProgressText)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)
         playbackEventListener = MyPlaybackEventListener(recordCurrentTime, recordCurrentTimeHandler)
         mUpButton = findViewById(R.id.up_button)
@@ -158,10 +161,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun setUpYouTubeFetch() {
-        loadPlaylist()
+        // Specify no channels, which means we will fetch them all
+        loadPlaylist(listOf())
     }
 
-    fun loadPlaylist(force: Boolean = false) {
+    // Send in listOf() to fetch all
+    fun loadPlaylist(addedChannelNames: List<String>) {
         // First clear the playlist so we don't try playing something while the fetch happens
         updateAdapters(listOf())
 
@@ -175,7 +180,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(this,
                 mPlaylistTitle))
 
-        val stopAtDate = if (detailsFromDbByDate.isEmpty() || force) null else detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded
+        // When addedChannelNames is empty, fetch them all (by sending in null)
+        val stopAtDate = if (detailsFromDbByDate.isEmpty() || addedChannelNames.isEmpty()) null else detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded
 
         val channels = PlaylistChannels.getChannels(this, mPlaylistTitle)
         if (channels.isEmpty()){
@@ -193,7 +199,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 // The user has set up some channels to fetch for this playlist. Fetch them.
                 VideoList.fetchAllDetails(this,
                         channels,
-                        stopAtDate, respondToIncrementalVideosFetched, detailsFetched)
+                        addedChannelNames, stopAtDate, respondToIncrementalVideosFetched, detailsFetched)
             })
 
         }
@@ -446,9 +452,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         run {
             mNumVideosFetched += incrementalDetailsFetched.size
             fetchVideosProgresBar.setProgress(mNumVideosFetched)
-//            val numDetailsInDatabase = VideoList.getNumDetailsInDb(this, mPlaylistTitle)
-//            fetchVideosProgresBar.max = (mTotalVideosToFetch - numDetailsInDatabase)
-//            fetchVideosProgresBar.setProgress(currentVideoNumber)
+            runOnUiThread({
+                fetchVideosProgressText.setText(mNumVideosFetched.toString() + "/" + fetchVideosProgresBar.max)
+            })
         }
     }
 
@@ -574,16 +580,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         } else if (requestCode == CHANNEL_SELECT_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
-                // The user selected a new channel to add to our list
+                // The user selected an initial channel to add to our list
                 val channel = data.getSerializableExtra("channel") as Channel
                 PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
-                loadPlaylist(true)
+                // channel is the only one, so we can send it in and it'll be the only one refreshed
+                loadPlaylist(listOf(channel.name))
             }
         } else if (requestCode == MANAGE_CHANNELS_REQUEST) {
             // The channels have been added/removed from the playlist in PlaylistChannels, so just
             // refresh the playlist and it'll have the new/removed channels.
             if (resultCode == Activity.RESULT_OK) {
-                loadPlaylist(true)
+                val newChannels = data.getStringArrayListExtra("newChannelNames")
+                newChannels.toList()
+                loadPlaylist(newChannels)
             }
         }
     }

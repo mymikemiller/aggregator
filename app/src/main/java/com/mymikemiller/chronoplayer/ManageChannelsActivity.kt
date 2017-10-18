@@ -3,6 +3,7 @@ package com.mymikemiller.chronoplayer
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Parcelable
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.KeyEvent
@@ -27,6 +28,7 @@ class ManageChannelsActivity : AppCompatActivity() {
     lateinit var mListView: ListView
     var mPlaylistTitle = ""
     var mChannels = mutableListOf<Channel>()
+    val mStartChannels = mutableListOf<Channel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +41,7 @@ class ManageChannelsActivity : AppCompatActivity() {
         // Get the list of channels to display
         mPlaylistTitle = intent.getStringExtra(getString(R.string.playlistTitle))
         mChannels = PlaylistChannels.getChannels(this, mPlaylistTitle).toMutableList()
+        mStartChannels.addAll(mChannels)
 
         mListView = findViewById<ListView>(R.id.listView)
         mListView.setAdapter(ChannelAdapter(this, mChannels))
@@ -71,8 +74,21 @@ class ManageChannelsActivity : AppCompatActivity() {
     override fun onBackPressed() {
         val i: Intent = Intent()
         setResult(Activity.RESULT_OK, i)
+//        val addedChannels: ArrayList<Parcelable> = ArrayList<Parcelable>()
+        val addedChannels = getAddedChannels()
+        i.putStringArrayListExtra("newChannelNames", addedChannels)
         finish()
         super.onBackPressed()
+    }
+
+    private fun getAddedChannels(): ArrayList<String> {
+        val addedChannels: ArrayList<String> = arrayListOf()
+        for(channel in mChannels) {
+            if (mStartChannels.contains(channel)) {
+                addedChannels.add(channel.name)//(channel)
+            }
+        }
+        return addedChannels
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
@@ -90,6 +106,8 @@ class ManageChannelsActivity : AppCompatActivity() {
 
                 val i: Intent = Intent()
                 setResult(Activity.RESULT_OK, i)
+                val addedChannels = arrayListOf<String>(channel.name)
+                i.putStringArrayListExtra("newChannelNames", addedChannels)
 
                 finish()
             }

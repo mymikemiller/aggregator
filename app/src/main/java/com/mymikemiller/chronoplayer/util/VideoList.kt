@@ -21,7 +21,7 @@ import java.sql.SQLException
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 98
+        val DATABASE_VERSION: Int = 103
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -97,13 +97,13 @@ class VideoList {
 
         fun fetchAllDetails(context: Context,
                             channels: List<Channel>,
+                            channelNamesToFetch: List<String>,
                             stopAtDate: DateTime?,
                             incrementalDetailsFetched: (List<Detail>) -> Unit,
                             callbackWhenDone: (details: List<Detail>) -> Unit) {
 
-
             val fetcher = DetailsFetcher(channels, incrementalDetailsFetched, callbackWhenDone)
-            fetcher.startFetch(context, stopAtDate)
+            fetcher.startFetch(context, channelNamesToFetch, stopAtDate)
         }
 
 
@@ -115,7 +115,7 @@ class VideoList {
             private val details = mutableListOf<Detail>()
             private var fetchInProgress = false
 
-            fun startFetch(context: Context, stopAtDate: DateTime?) {
+            fun startFetch(context: Context, channelNamesToFetch: List<String>, stopAtDate: DateTime?) {
                 // Only allow one fetch at a time
                 if (fetchInProgress) {
                     throw Error("Details fetch already in progress. Can't start another.")
@@ -125,6 +125,8 @@ class VideoList {
                 fetchInProgress = true
 
                 for(channel in channels) {
+                    val stopAtDate = if (channelNamesToFetch.contains(channel.name)) null else stopAtDate
+
                     fetchAllDetails(context,
                             channel,
                             stopAtDate,
@@ -227,7 +229,8 @@ class VideoList {
                     values.put(KEY_DATE_UPLOADED, detail.dateUploaded.toStringRfc3339())
 
                     // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
-                    db.insert(DETAILS_TABLE_NAME, null, values)
+                    // Ignore duplicate entries. Just don't insert them.
+                    db.insertWithOnConflict(DETAILS_TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_IGNORE)
                 }
                 db.setTransactionSuccessful()
             } catch (e: Exception) {
