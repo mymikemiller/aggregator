@@ -449,10 +449,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     val respondToIncrementalVideosFetched: (List<Detail>) -> Unit = { incrementalDetailsFetched ->
         run {
-            mNumVideosFetched += incrementalDetailsFetched.size
-            fetchVideosProgresBar.setProgress(mNumVideosFetched)
+
             runOnUiThread({
-                fetchVideosProgressText.setText(mNumVideosFetched.toString() + "/" + fetchVideosProgresBar.max)
+                if (fetchVideosProgresBar.max == 0) {
+                    // Prevent showing 0/0
+                    fetchVideosProgressText.visibility = View.GONE
+                } else {
+                    fetchVideosProgressText.visibility = View.VISIBLE
+                    mNumVideosFetched += incrementalDetailsFetched.size
+                    // Sometimes the incrementalDetailsFetched number is a little bigger than mNumVideosFetched so to look right, we cap it
+                    mNumVideosFetched = Math.min(mNumVideosFetched, fetchVideosProgresBar.max)
+                    fetchVideosProgresBar.setProgress(mNumVideosFetched)
+                    fetchVideosProgressText.setText(mNumVideosFetched.toString() + "/" + fetchVideosProgresBar.max)
+                }
             })
         }
     }
