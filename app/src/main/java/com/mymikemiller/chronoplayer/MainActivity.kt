@@ -180,8 +180,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(this,
                 mPlaylistTitle))
 
-        // When addedChannelNames is empty, fetch them all (by sending in null)
-        val stopAtDate = detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded
+        val stopAtDate = if (detailsFromDbByDate.isEmpty()) null else detailsFromDbByDate[detailsFromDbByDate.size - 1].dateUploaded
 
         val channels = PlaylistChannels.getChannels(this, mPlaylistTitle)
         if (channels.isEmpty()){
@@ -191,12 +190,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             channelSearchActivityIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             startActivityForResult(channelSearchActivityIntent, CHANNEL_SELECT_REQUEST)
         } else {
+            // The user has set up some channels to fetch for this playlist. Fetch them.
             VideoList.getNumDetailsToFetch(this, channels, { numDetailsFromYouTube ->
                 mNumVideosToFetch = numDetailsFromYouTube
                 fetchVideosProgresBar.max = mNumVideosToFetch
                 fetchVideosProgresBar.setProgress(0)
                 mNumVideosFetched = 0
-                // The user has set up some channels to fetch for this playlist. Fetch them.
                 VideoList.fetchAllDetails(this,
                         channels,
                         addedChannelNames, stopAtDate, respondToIncrementalVideosFetched, detailsFetched)
@@ -591,7 +590,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             // refresh the playlist and it'll have the new/removed channels.
             if (resultCode == Activity.RESULT_OK) {
                 val newChannels = data.getStringArrayListExtra("newChannelNames")
-                newChannels.toList()
                 loadPlaylist(newChannels)
             }
         }

@@ -18,7 +18,7 @@ class PlaylistChannels {
         val TAG = "PlaylistChannels"
 
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 22
+        val DATABASE_VERSION: Int = 23
         val DATABASE_NAME: String = "PlaylistChannels"
         val PLAYLIST_CHANNELS_TABLE_NAME: String = "PlaylistChannelsTable"
 

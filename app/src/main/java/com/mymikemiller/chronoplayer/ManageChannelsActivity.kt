@@ -15,7 +15,7 @@ import android.widget.Toast
 import com.mymikemiller.chronoplayer.util.PlaylistChannels
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import android.view.KeyEvent.KEYCODE_BACK
-
+import com.mymikemiller.chronoplayer.util.VideoList
 
 
 /**
@@ -73,8 +73,9 @@ class ManageChannelsActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         val i: Intent = Intent()
+        // when we press back, we want to fetch everything again, so clear the video list
+        VideoList.clearDatabase(this)
         setResult(Activity.RESULT_OK, i)
-//        val addedChannels: ArrayList<Parcelable> = ArrayList<Parcelable>()
         val addedChannels = getAddedChannels()
         i.putStringArrayListExtra("newChannelNames", addedChannels)
         finish()
