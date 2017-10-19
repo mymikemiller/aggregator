@@ -81,11 +81,14 @@ class YouTubeAPI(context: Context, account: Account) {
                 callback(videoId)
             }
         }).execute()
+
     }
 
     private class GetLastVideoIdTask(val authenticatedYoutube: YouTube, val playlistTitle: String, val callback: (String) -> Unit) : AsyncTask<String, Unit, Unit>() {
 
-        override fun onPreExecute(): Unit {}
+        override fun onPreExecute(): Unit {
+            super.onPreExecute()
+        }
 
         override fun doInBackground(vararg params: String) {
 
@@ -110,6 +113,8 @@ class YouTubeAPI(context: Context, account: Account) {
                             // We've reached the last page. Callback the last video id.
                             if (playlistItemsResponse.items.size > 0) {
                                 videoId = playlistItemsResponse.items[playlistItemsResponse.items.size - 1].snippet.resourceId.videoId
+                                break
+                            } else {
                                 break
                             }
                         }
@@ -472,7 +477,7 @@ class YouTubeAPI(context: Context, account: Account) {
                     }
                     callback(null)
                 }
-            }).execute()
+            }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
         }
 
         fun getUserPlaylistTitles(callback: (List<String>) -> Unit) {

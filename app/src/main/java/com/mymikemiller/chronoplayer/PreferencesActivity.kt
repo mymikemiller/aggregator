@@ -55,6 +55,7 @@ class PreferencesActivity : PreferenceActivity(),
         private lateinit var mProgressTitle: TextView
         private lateinit var mProgressBar: ProgressBar
         private lateinit var mCommitProgressDialog: AlertDialog
+        private lateinit var mPlaylistTitle: String
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,15 +65,9 @@ class PreferencesActivity : PreferenceActivity(),
     }
 
     // The user is now authenticated
-    override fun onConnected(p0: Bundle?) {
-        Toast.makeText(this, getString(R.string.connection_success),
-                Toast.LENGTH_LONG).show()
-    }
+    override fun onConnected(p0: Bundle?) {}
 
-    override fun onConnectionSuspended(p0: Int) {
-        Toast.makeText(this, getString(R.string.connection_suspended),
-                Toast.LENGTH_LONG).show()
-    }
+    override fun onConnectionSuspended(p0: Int) {}
 
     class MyPreferenceFragment : PreferenceFragment() {
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,10 +77,10 @@ class PreferencesActivity : PreferenceActivity(),
             updateUI(isSignedIn())
 
             // Change the playlist name description text to mention the playlist name sent in
-            val playlistTitle = activity.intent.extras.getString(EXTRA_PLAYLIST_TITLE)
+            mPlaylistTitle = activity.intent.extras.getString(EXTRA_PLAYLIST_TITLE)
             val changePlaylistTitle: Preference = findPreference(
                     getString(R.string.pref_changePlaylistTitleKey)) as Preference;
-            changePlaylistTitle.setSummary(playlistTitle);
+            changePlaylistTitle.setSummary(mPlaylistTitle);
             changePlaylistTitle.setTitle(getString(R.string.changePlaylistTitleTitle))
 
             // Configure sign-in to request youtube access
@@ -258,18 +253,13 @@ class PreferencesActivity : PreferenceActivity(),
                         PlaylistManipulator.orderByDate(
                                 VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
 
-                val prefs: SharedPreferences = activity.getSharedPreferences(APP_SHARED_PREFERENCES, Context.MODE_PRIVATE);
-                var playlistName = prefs.getString(PLAYLIST_SHARED_PREF_NAME, "");
-
-                playlistName = "gg"
-
-                if (playlistName.isBlank()) {
+                if (mPlaylistTitle.isBlank()) {
                     Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
                     return
                 }
 
                 // Get the last video in the user's playlist so we can start adding after that video
-                YouTubeAPI.getDetailsToCommit(playlistName, details, { detailsToCommit ->
+                YouTubeAPI.getDetailsToCommit(playlistTitle, details, { detailsToCommit ->
                     if (detailsToCommit.isEmpty()) {
                         activity.runOnUiThread({
                             Toast.makeText(activity, getString(R.string.noVideosToCommit),
@@ -294,7 +284,7 @@ class PreferencesActivity : PreferenceActivity(),
                             mCommitProgressDialog.show();
                         })
 
-                        YouTubeAPI.addVideosToPlayList(playlistName, detailsToCommit, setPercentageOfVideosAdded)
+                        YouTubeAPI.addVideosToPlayList(mPlaylistTitle, detailsToCommit, setPercentageOfVideosAdded)
                     }
                 })
             } else {
