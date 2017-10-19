@@ -497,8 +497,9 @@ class YouTubeAPI(context: Context, account: Account) {
                 // Get all the user's playlists
                 val playlistsList: PlaylistListResponse = authenticatedYoutube
                         .playlists()
-                        .list("snippet")
+                        .list("snippet,contentDetails")
                         .setMine(true)
+                        .setMaxResults(25)
                         .execute()
 
                 val playlists = playlistsList.getItems()
