@@ -45,9 +45,16 @@ class ManageChannelsActivity : AppCompatActivity() {
         mStartChannels.addAll(mChannels)
 
         mListView = findViewById<ListView>(R.id.listView)
-        val adapter = ChannelAdapter(this, mChannels)
+        val adapter = ChannelAdapter(this, mChannels, deleteChannel)
         adapter.showDeleteIcon = true
         mListView.setAdapter(adapter)
+    }
+
+    private val deleteChannel = fun (position: Int) {
+        val channel = mChannels.get(position)
+        mChannels.remove(channel)
+        (mListView.adapter as ChannelAdapter).notifyDataSetChanged()
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -75,6 +82,16 @@ class ManageChannelsActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+
+        // Clear PlaylistChannels for this playlist
+        for (channel in PlaylistChannels.getChannels(this, mPlaylistTitle)) {
+            PlaylistChannels.removeChannel(this, mPlaylistTitle, channel)
+        }
+        //Set all the channels to PlaylistChannels
+        for (channel in mChannels) {
+            PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
+        }
+
         val i: Intent = Intent()
         // when we press back, we want to fetch everything again, so clear the video list
         VideoList.clearDatabase(this)

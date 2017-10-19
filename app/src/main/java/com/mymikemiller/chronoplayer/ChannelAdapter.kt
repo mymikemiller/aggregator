@@ -15,7 +15,7 @@ import com.squareup.picasso.Picasso
 /**
  *
  */
-class ChannelAdapter(context: Context, channels: List<Channel>) : ArrayAdapter<Channel>(context, 0, channels) {
+class ChannelAdapter(context: Context, channels: List<Channel>,val deleteCallback: (position: Int) -> Unit = {}) : ArrayAdapter<Channel>(context, 0, channels) {
 
     var showDeleteIcon = false
 
@@ -39,7 +39,7 @@ class ChannelAdapter(context: Context, channels: List<Channel>) : ArrayAdapter<C
             val deleteIcon = theConvertView.findViewById<ImageView>(R.id.deleteIcon)
             deleteIcon.visibility = View.VISIBLE
             deleteIcon.setOnClickListener {
-                println()
+                deleteCallback(position)
             }
         }
 
