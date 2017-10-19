@@ -27,29 +27,15 @@ class RemovePrevious {
                         KEY_PLAYLIST_TITLE + " TEXT NOT NULL, " +
                         KEY_REMOVE_BEFORE_DATE + " TEXT NOT NULL UNIQUE);"
 
-        // TODO: Make this work with playlistTitle
         fun filterOutRemoved(context: Context, playlistTitle: String, details: List<Detail>) : List<Detail> {
             Log.e(DATABASE_NAME, "filterOutRemoved is not implemented yet")
-            return details
-//            val dbHelper = RemoveBeforeDateOpenHelper(context.applicationContext)
-//            val videoIdToRemoveBefore = dbHelper.getRemoveBeforeDateFromDb(channel)
-//            if (videoIdToRemoveBefore.isBlank()) {
-//                // We never removed any videos, so return them all
-//                return details
-//            }
-//
-//            var includedDetails = mutableListOf<Detail>()
-//            var found = false
-//            for(detail in details) {
-//                if (detail.videoId == videoIdToRemoveBefore)
-//                    found = true
-//
-//                if (found) {
-//                    includedDetails.add(detail)
-//                }
-//            }
-//
-//            return includedDetails
+            val dbHelper = RemoveBeforeDateOpenHelper(context.applicationContext)
+            val dateToRemoveBefore = dbHelper.getRemoveBeforeDateFromDb(playlistTitle)
+            var newDetails = details
+            if (dateToRemoveBefore != null) {
+                newDetails = details.filter { it -> it.dateUploaded.value >= dateToRemoveBefore.value}
+            }
+            return newDetails
         }
 
         fun setRemovedBeforeDate(context: Context, playlistTitle: String, date: DateTime) {
