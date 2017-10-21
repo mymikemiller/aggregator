@@ -13,6 +13,7 @@ import com.google.api.client.util.DateTime
 import com.google.api.services.youtube.model.Playlist
 import com.mymikemiller.chronoplayer.Channel
 import com.mymikemiller.chronoplayer.DeveloperKey
+import com.mymikemiller.chronoplayer.PlaylistDetail
 import java.sql.SQLException
 
 /**
@@ -21,7 +22,7 @@ import java.sql.SQLException
 class VideoList {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 104
+        val DATABASE_VERSION: Int = 108
         val DATABASE_NAME: String = "VideoList"
         val DETAILS_TABLE_NAME: String = "VideoListTable"
 
@@ -99,7 +100,7 @@ class VideoList {
                             channels: List<Channel>,
                             channelNamesToFetch: List<String>,
                             stopAtDate: DateTime?,
-                            incrementalDetailsFetched: (List<Detail>) -> Unit,
+                            incrementalDetailsFetched: (List<PlaylistDetail>) -> Unit,
                             callbackWhenDone: (details: List<Detail>) -> Unit) {
 
             val fetcher = DetailsFetcher(channels, incrementalDetailsFetched, callbackWhenDone)
@@ -108,7 +109,7 @@ class VideoList {
 
 
         private class DetailsFetcher(private val channels: List<Channel>,
-                                     private val incrementalDetailsFetched: (List<Detail>) -> Unit,
+                                     private val incrementalDetailsFetched: (List<PlaylistDetail>) -> Unit,
                                      private val callbackWhenDoneFetchingAllChannels: (details: List<Detail>) -> Unit) {
 
             private var numberOfCallbacksReceived = 0
@@ -129,6 +130,7 @@ class VideoList {
 
                     fetchAllDetails(context,
                             channel,
+                            channel.uploadPlaylistId,
                             stopAtDate,
                             incrementalDetailsFetched,
                             { detailsFetched ->
@@ -136,11 +138,6 @@ class VideoList {
                                 details.addAll(detailsFetched)
                                 // TODO: Figure out what to do with setPercentageCallback. Probably use YoutubeAPI.getNumDetails(Task)
                                 numberOfCallbacksReceived++
-                                for (d in detailsFetched) {
-                                    if (d.channel.name == "Game Time") {
-                                        println()
-                                    }
-                                }
                                 if (numberOfCallbacksReceived == channels.size) {
                                     fetchInProgress = false
                                     numberOfCallbacksReceived = 0
@@ -151,15 +148,17 @@ class VideoList {
             }
 
 
-            // Returns all Details in the database (after fetching from YouTube) that belong to the given channels
+            // Returns all Details in the database (after fetching from YouTube) that belong to the given playlist
             private fun fetchAllDetails(context: Context,
-                                        channel: Channel,
+                                        channel: Channel?,
+                                        playlistId: String,
                                         stopAtDate: DateTime?,
-                                        incrementalDetailsFetched: (List<Detail>) -> Unit,
+                                        incrementalDetailsFetched: (List<PlaylistDetail>) -> Unit,
                                         callback: (details: List<Detail>) -> Unit) {
 
+
                 // Now that we have all details from the database, append the ones we find from YouTube
-                YouTubeAPI.fetchAllDetails(channel, stopAtDate, incrementalDetailsFetched, { newDetails: List<Detail> ->
+                YouTubeAPI.fetchAllDetails(channel, playlistId, stopAtDate, incrementalDetailsFetched, { newPlaylistDetails: List<PlaylistDetail> ->
                     run {
                         val dbHelper = DetailsOpenHelper(context.applicationContext)
 
@@ -168,22 +167,35 @@ class VideoList {
 
                         // We got all the new Details from YouTube, so append them to the database.
                         // Remove duplicates before adding to the database.
-                        val newDetailsMutable = newDetails.toMutableList()
-                        for (detail in newDetails) {
-                            if (detailsFromDb.contains(detail)) {
-                                newDetailsMutable.remove(detail)
+                        val newPlaylistDetailsMutable = newPlaylistDetails.toMutableList()
+                        for (playlistDetail in newPlaylistDetails) {
+                            // If detailsFromDb.contains(detail) but we can't do it that way because
+                            // of the difference between a Detail and a PlaylistDetail. So instead,
+                            // loop through detailsFromDb and search explicitly.
+                            val contains = false
+                            for(detailFromDb in detailsFromDb){
+                                if (playlistDetail.detail == detailFromDb) {
+                                    newPlaylistDetailsMutable.remove(playlistDetail)
+                                    break
+                                }
                             }
                         }
 
-                        // Append to the database
-                        dbHelper.addDetails(newDetailsMutable)
+                        // Convert newPlaylistDetails to newDetails
+                        val newDetails = newPlaylistDetails.map { it ->
+                            it.detail
+                        }
 
-                        detailsFromDb.addAll(newDetailsMutable)
+                        // Append to the database
+                        dbHelper.addDetails(newDetails)
+
+                        detailsFromDb.addAll(newDetails)
 
                         // Return to the original callback the combined list of unsorted Details
                         callback(detailsFromDb)
                     }
                 })
+
             }
         }
     }
@@ -221,7 +233,7 @@ class VideoList {
             try {
                 for(detail in details) {
                     val values = ContentValues()
-                    values.put(KEY_CHANNELID, detail.channel.channelId)
+                    values.put(KEY_CHANNELID, detail.channel!!.channelId)
                     values.put(KEY_VIDEOID, detail.videoId)
                     values.put(KEY_TITLE, detail.title)
                     values.put(KEY_DESCRIPTION, detail.description)
@@ -241,7 +253,7 @@ class VideoList {
         }
 
         // Get all Details from the database that belong to the given channel
-        fun getAllDetailsFromDb(channels: List<Channel>): List<Detail> {
+        fun getAllDetailsFromDb(channels: List<Channel?>): List<Detail> {
             val allDetails = mutableListOf<Detail>()
 
             // SELECT * FROM DETAILS WHERE ChannelId = $channel.id
@@ -257,7 +269,7 @@ class VideoList {
             }
             try {
                 for (channel in channels) {
-                    val cursor = db.rawQuery(DETAILS_SELECT_QUERY, arrayOf(channel.channelId))
+                    val cursor = db.rawQuery(DETAILS_SELECT_QUERY, arrayOf(channel?.channelId))
                     try {
                         if (cursor.moveToFirst()) {
                             do {

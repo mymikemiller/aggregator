@@ -423,9 +423,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                     when (theIntent?.action) {
                         PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
-                        PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
+//                        PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
                         PreferencesActivity.CHANGE_PLAYLIST_TITLE -> showPlaylistChooserActivity()
-                        PreferencesActivity.SHOW_ALL -> unRemovePrevious(currentlyPlaying.channel)
+                        PreferencesActivity.SHOW_ALL -> unRemovePrevious(currentlyPlaying.channel!!)
                     }
                 }
             }
@@ -447,7 +447,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         startActivity(i)
     }
 
-    val respondToIncrementalVideosFetched: (List<Detail>) -> Unit = { incrementalDetailsFetched ->
+    val respondToIncrementalVideosFetched: (List<PlaylistDetail>) -> Unit = { incrementalDetailsFetched ->
         run {
 
             runOnUiThread({
@@ -548,9 +548,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun showWatchHistoryActivity(channel: Channel) {
+    fun showWatchHistoryActivity(playlistTitle: String) {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
-        watchHistoryIntent.putExtra("channel", channel)
+        // TODO: watchHistoryIntent should contain a playlistTitle, but currently it's expecting a channel
+        watchHistoryIntent.putExtra("playlistTitle", playlistTitle)
         watchHistoryIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
     }

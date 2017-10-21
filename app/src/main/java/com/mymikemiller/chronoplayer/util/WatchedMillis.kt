@@ -14,7 +14,7 @@ import java.sql.SQLException
 class WatchedMillis {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 66
+        val DATABASE_VERSION: Int = 68
         val DATABASE_NAME: String = "WatchedMillis"
         val WATCHED_MILLIS_TABLE_NAME: String = "WatchedMillisTable"
 

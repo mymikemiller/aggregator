@@ -16,7 +16,7 @@ import java.sql.SQLException
 class WatchHistory {
     companion object {
         // Increment this when the table definition changes
-        val DATABASE_VERSION: Int = 8
+        val DATABASE_VERSION: Int = 10
         val DATABASE_NAME: String = "WatchHistory"
         val TABLE_NAME: String = "WatchHistoryTable"
 
@@ -69,7 +69,7 @@ class WatchHistory {
             fun addDetail(detail: Detail) {
 
                 // Only add the detail if it's not the most recent video in the database
-                val existingDetials = getAllDetailsFromDb(detail.channel.channelId)
+                val existingDetials = getAllDetailsFromDb(detail.channel!!.channelId)
                 if (existingDetials.size > 0 && detail == existingDetials[existingDetials.size - 1])
                     return
 

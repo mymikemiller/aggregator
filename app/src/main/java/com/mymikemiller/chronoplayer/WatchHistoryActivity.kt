@@ -24,7 +24,9 @@ class WatchHistoryActivity : AppCompatActivity() {
         setContentView(R.layout.activity_watch_history)
         setSupportActionBar(toolbar)
 
+        // TODO: This should use playlistTitle, not channel
         val channel = intent.getSerializableExtra("channel") as Channel
+//        val playlistTitle = intent.getSerializableExtra("playlistTitle") as String
         mDetails = WatchHistory.getWatchHistory(this, channel).reversed()
 
         mAdapter = HistoryRecyclerAdapter(this, mDetails, onItemClick)

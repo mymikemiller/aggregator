@@ -7,12 +7,13 @@ import com.google.api.client.util.DateTime
 /**
 *   Contains detailed information about the video, e.g. the thumbnail image, title and description
 */
-data class Detail(val channel: Channel,
-                  val videoId: String,
-                  val title: String,
-                  val description: String,
-                  val thumbnail: String,
-                  val dateUploaded: DateTime) : Comparable<Detail>, Parcelable {
+data class Detail(val channel: Channel?,
+                       val videoId: String,
+                       val title: String,
+                       val description: String,
+                       val thumbnail: String,
+                       val dateUploaded: DateTime,
+                       val isPlaylistDetail: Boolean = false) : Comparable<Detail>, Parcelable {
 
     constructor(parcel: Parcel) : this(
             channel = parcel.readSerializable() as Channel,
@@ -20,7 +21,8 @@ data class Detail(val channel: Channel,
             title = parcel.readString(),
             description = parcel.readString(),
             thumbnail = parcel.readString(),
-            dateUploaded = DateTime(parcel.readLong())) {}
+            dateUploaded = DateTime(parcel.readLong()),
+            isPlaylistDetail = parcel.readInt() != 0) {}
 
     override fun equals(other: Any?): Boolean {
         if (other != null && other is Detail) {
@@ -47,7 +49,8 @@ data class Detail(val channel: Channel,
         parcel.writeString(title)
         parcel.writeString(description)
         parcel.writeString(thumbnail)
-        parcel.writeLong(dateUploaded.value);
+        parcel.writeLong(dateUploaded.value)
+        parcel.writeInt(if (isPlaylistDetail) 1 else 0);
     }
 
     override fun describeContents(): Int {

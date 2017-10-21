@@ -85,7 +85,7 @@ class RecyclerAdapter(private val context: Context,
                        removePrevious: ((date: DateTime) -> Unit)?) {
             mDetail = detail
             Picasso.with(mThumbnail.context).load(detail.thumbnail).into(mThumbnail)
-            Picasso.with(mDetailThumbnail.context).load(detail.channel.thumbnail).into(mDetailThumbnail)
+            Picasso.with(mDetailThumbnail.context).load(detail.channel!!.thumbnail).into(mDetailThumbnail)
 
             mTitle.setText(detail.title)
             mDescription.setText(detail.description)

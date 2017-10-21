@@ -15,7 +15,7 @@ import java.sql.SQLException
 class RemovePrevious {
     companion object {
 
-        val DATABASE_VERSION: Int = 5
+        val DATABASE_VERSION: Int = 7
         val DATABASE_NAME: String = "RemovePrevious"
         val REMOVE_BEFORE_DATE_TABLE_NAME: String = "RemovePreviousTable"
 

@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.preference.PreferenceFragment
 import android.preference.PreferenceActivity
 import android.content.Intent
-import android.preference.EditTextPreference
 import android.support.v4.content.LocalBroadcastManager
 import android.widget.Toast
 import android.preference.Preference
@@ -21,13 +20,11 @@ import com.mymikemiller.chronoplayer.util.PlaylistChannels
 import com.mymikemiller.chronoplayer.util.VideoList
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import com.google.api.services.youtube.YouTube
 import com.mymikemiller.chronoplayer.util.PlaylistManipulator
 import com.mymikemiller.chronoplayer.util.RemovePrevious
 
@@ -284,7 +281,11 @@ class PreferencesActivity : PreferenceActivity(),
                             mCommitProgressDialog.show();
                         })
 
-                        YouTubeAPI.addVideosToPlayList(mPlaylistTitle, detailsToCommit, setPercentageOfVideosAdded)
+                        YouTubeAPI.addVideosToPlaylist(mPlaylistTitle, detailsToCommit, setPercentageOfVideosAdded)
+
+                        YouTubeAPI.getDetailsToRemove(mPlaylistTitle, detailsToCommit, {playlistDetails ->
+                            YouTubeAPI.removePlaylistDetailsFromPlaylist(mPlaylistTitle, playlistDetails)
+                        })
                     }
                 })
             } else {

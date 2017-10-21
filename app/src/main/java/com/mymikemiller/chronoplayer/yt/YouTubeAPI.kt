@@ -3,8 +3,6 @@ package com.mymikemiller.chronoplayer.yt
 import android.accounts.Account
 import android.content.Context
 import android.os.AsyncTask
-import android.util.Log
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.services.youtube.YouTube
@@ -16,16 +14,13 @@ import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.client.util.DateTime
 import com.google.api.services.youtube.model.Playlist
 import com.google.api.services.youtube.model.PlaylistListResponse
-import com.mymikemiller.chronoplayer.Channel
-import com.mymikemiller.chronoplayer.Detail
-import com.mymikemiller.chronoplayer.DeveloperKey
 import java.util.*
 import com.google.api.services.youtube.model.PlaylistStatus
 import com.google.api.services.youtube.model.PlaylistSnippet
 import com.google.api.services.youtube.model.PlaylistItem
 import com.google.api.services.youtube.model.ResourceId
 import com.google.api.services.youtube.model.PlaylistItemSnippet
-import com.mymikemiller.chronoplayer.PreferencesActivity
+import com.mymikemiller.chronoplayer.*
 
 
 val HTTP_TRANSPORT = NetHttpTransport()
@@ -58,7 +53,7 @@ class YouTubeAPI(context: Context, account: Account) {
     }
 
     private fun getOrCreatePlaylist(title: String, callback: (Playlist) -> Unit) {
-        getUserPlaylist(mYouTube, title, { playlist ->
+        getUserPlaylist(title, { playlist ->
             if (playlist != null) {
                 // We found the playlist
                 callback(playlist)
@@ -92,7 +87,7 @@ class YouTubeAPI(context: Context, account: Account) {
 
         override fun doInBackground(vararg params: String) {
 
-            getUserPlaylist(authenticatedYoutube, playlistTitle, { playlist ->
+            getUserPlaylist(playlistTitle, { playlist ->
                 // If we fail to find a playlist or a videoId, we callback with a blank string
                 var videoId = ""
                 if (playlist != null) {
@@ -127,6 +122,28 @@ class YouTubeAPI(context: Context, account: Account) {
 
             return
         }
+    }
+
+    fun removePlaylistDetailsFromPlaylist(playlistTitle: String, playlistDetailsToRemove: List<PlaylistDetail>) {
+        if (playlistDetailsToRemove.size == 0)
+            return
+
+        getOrCreatePlaylist(playlistTitle, { playlist ->
+            kotlin.run {
+                for (index in 0..playlistDetailsToRemove.size - 1) {
+                    if (!mCommitCancelled) {
+                        val playlistDetail = playlistDetailsToRemove[index]
+                        val playlistVideoId = playlistDetail.playlistVideoId
+
+                        var request = mYouTube.playlistItems().delete(playlistVideoId)
+                        request.execute()
+//                    setPercentageCallback(detailsToCommit.size, index + 1)
+                    } else {
+                        break;
+                    }
+                }
+            }
+        })
     }
 
     fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
@@ -185,6 +202,38 @@ class YouTubeAPI(context: Context, account: Account) {
         return
     }
 
+    // Get the details we want to remove from the playlist. These details' videoIds will refer to
+    // the longer playlist videoId returned from YouTubeAPI when its inPlaylistMode is true
+    fun getDetailsToRemove(playlistTitle: String, stopAtDetail: Detail, callback: (List<PlaylistDetail>) -> Unit) {
+
+        val playlistDetailsToRemove = mutableListOf<PlaylistDetail>()
+
+        // Get the last videoId so we know where to start with the commit
+        getLastVideoId(playlistTitle, { lastVideoId ->
+            // Remove all videos before the last videoId
+            // Get all the details from the user's playlist
+            getUserPlaylist(playlistTitle, {playlist ->
+                if (playlist != null) {
+                    YouTubeAPI.fetchAllDetails(null, playlist.id, stopAtDetail.dateUploaded, {}, { playlistDetails ->
+                        var found = false
+                        for (playlistDetail in playlistDetails) {
+                            if (playlistDetail.detail.videoId == lastVideoId) {
+                                found = true
+                            }
+                            if (!found) {
+                                playlistDetailsToRemove.add(playlistDetail)
+                            }
+                        }
+                    })
+                }
+            })
+        })
+
+        // If we didn't find the playlist or any playlistDetails, we return the empty list. Otherwise it'll be full
+        callback(playlistDetailsToRemove.toList().asReversed())
+        return
+    }
+
     // Static functions that don't require authoriation
     companion object {
         // Scope for modifying the user's private data
@@ -219,6 +268,18 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
+        fun getDetailsToRemove(playlistTitle: String, details: List<Detail>, callback: (List<PlaylistDetail>) -> Unit) {
+            if (details.isEmpty()) {
+                callback(listOf())
+            } else {
+                if (isAuthenticated()) {
+                    sYouTubeAPI!!.getDetailsToRemove(playlistTitle, details[0], callback)
+                } else {
+                    throw RuntimeException("Cannot getDetailsToCommmit. User is not authenticated.")
+                }
+            }
+        }
+
         fun cancelCommit() {
             if (isAuthenticated()) {
                 sYouTubeAPI!!.cancelCommit()
@@ -227,24 +288,37 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
-        fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
+        fun addVideosToPlaylist(playlistTitle: String, detailsToCommit: List<Detail>,
                                 setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit) {
             if (isAuthenticated()) {
                 sYouTubeAPI!!.addVideosToPlayList(playlistTitle, detailsToCommit, setPercentageCallback)
             } else {
-                throw RuntimeException("Cannot addVideosToPlayList. User is not authenticated.")
+                throw RuntimeException("Cannot addVideosToPlaylist. User is not authenticated.")
             }
         }
 
-        fun fetchAllDetails(channel: Channel,
+        fun removePlaylistDetailsFromPlaylist(playlistTitle: String, playlistDetailsToRemove: List<PlaylistDetail>) {
+            if (isAuthenticated()) {
+                sYouTubeAPI!!.removePlaylistDetailsFromPlaylist(playlistTitle, playlistDetailsToRemove)
+            } else {
+                throw RuntimeException("Cannot removePlaylistDetailsFromPlaylist. User is not authenticated.")
+            }
+        }
+
+        // channel refers to what the returned Details's channel val will be, it does not refer to
+        // the playlist it came from. playlistId is where the details will be fetched from, and the
+        // channel is where the video originated
+        fun fetchAllDetails(channel: Channel?,
+                            playlistId: String,
                             stopAtDate: DateTime?,
-                            incrementalDetailsFetched: (List<Detail>) -> Unit,
-                            callback: (details: List<Detail>) -> Unit) {
+                            incrementalDetailsFetched: (List<PlaylistDetail>) -> Unit,
+                            callback: (details: List<PlaylistDetail>) -> Unit) {
 
             // Clear the details in preparation of fetching them all
-            allDetails = mutableListOf<Detail>()
+            allDetails = mutableListOf<PlaylistDetail>()
 
             FetchNextDetailTask(channel,
+                    playlistId,
                     "",
                     stopAtDate,
                     accumulate,
@@ -252,16 +326,18 @@ class YouTubeAPI(context: Context, account: Account) {
                     callback).execute()
         }
 
-        var allDetails = mutableListOf<Detail>()
+        var allDetails = mutableListOf<PlaylistDetail>()
         var prevNextPageToken = ""
 
-        val accumulate: (channel: Channel,
-                         detailList: List<Detail>,
+        val accumulate: (channel: Channel?,
+                         playlistId: String,
+                         detailList: List<PlaylistDetail>,
                          nextPageToken: String,
                          stopAtDate: DateTime?,
-                         incrementalDetailsFetched: (List<Detail>) -> Unit,
-                         callbackWhenDone: (detailList: List<Detail>) -> Unit
+                         incrementalDetailsFetched: (List<PlaylistDetail>) -> Unit,
+                         callbackWhenDone: (detailList: List<PlaylistDetail>) -> Unit
         ) -> Unit = { channel,
+                      playlistId,
                       detailsList,
                       nextPageToken,
                       stopAtDate,
@@ -271,6 +347,7 @@ class YouTubeAPI(context: Context, account: Account) {
                 prevNextPageToken = nextPageToken
                 allDetails.addAll(detailsList)
                 FetchNextDetailTask(channel,
+                        playlistId,
                         nextPageToken,
                         stopAtDate,
                         accumulate,
@@ -279,21 +356,23 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
-        private class FetchNextDetailTask(val channel: Channel,
+        private class FetchNextDetailTask(val channel: Channel?,
+                                          val playlistId: String,
                                         var pageToken: String,
                                         val stopAtDate: DateTime?,
-                                        val callback: (channel: Channel,
-                                                 detailList: List<Detail>,
+                                        val callback: (channel: Channel?,
+                                                       playlistId: String,
+                                                 detailList: List<PlaylistDetail>,
                                                  nextPageToken: String,
                                                  stopAtDate: DateTime?,
-                                                 incrementalDetailsFetched: (List<Detail>) -> Unit,
-                                                 callbackWhenDone: (detailList: List<Detail>) -> Unit) -> Unit,
-                                        val incrementalDetailsFetched: (List<Detail>) -> Unit,
-                                        val callbackWhenDone: (detailList: List<Detail>) -> Unit
+                                                 incrementalDetailsFetched: (List<PlaylistDetail>) -> Unit,
+                                                 callbackWhenDone: (detailList: List<PlaylistDetail>) -> Unit) -> Unit,
+                                        val incrementalDetailsFetched: (List<PlaylistDetail>) -> Unit,
+                                        val callbackWhenDone: (detailList: List<PlaylistDetail>) -> Unit
                                               ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
                 val videosListByUploadPlaylistIdRequest = youtube.PlaylistItems().list("snippet")
-                videosListByUploadPlaylistIdRequest.playlistId = channel.uploadPlaylistId
+                videosListByUploadPlaylistIdRequest.playlistId = playlistId
                 videosListByUploadPlaylistIdRequest.key = (DeveloperKey.DEVELOPER_KEY)
                 videosListByUploadPlaylistIdRequest.maxResults = 50
                 videosListByUploadPlaylistIdRequest.pageToken = pageToken
@@ -302,18 +381,18 @@ class YouTubeAPI(context: Context, account: Account) {
                 var done = false
                 val searchResultList = searchResponse.items
                 if (searchResultList != null) {
-                    val results: MutableList<Detail> = mutableListOf()
+                    val results: MutableList<PlaylistDetail> = mutableListOf()
                     for (result in searchResultList) {
-                        val d = createDetail(result, channel)
+                        val playlistDetail = createPlaylistDetail(result, channel)
 
                         // Only stop if we specified a stopAtDate and the detail was uploaded before the stop at date
-                        if (stopAtDate != null && d.dateUploaded.value < stopAtDate.value) {
+                        if (stopAtDate != null && playlistDetail.detail.dateUploaded.value < stopAtDate.value) {
                             // Don't break here because our results come in out of order, so we need
                             // to keep looping to make sure we get all the new stuff
                             done = true
                         }
 
-                        results.add(d)
+                        results.add(playlistDetail)
                     }
 
                     // Let the caller know how close we are to being done
@@ -330,7 +409,7 @@ class YouTubeAPI(context: Context, account: Account) {
                         return
                     }
 
-                    callback(channel, results, searchResponse.nextPageToken, stopAtDate, incrementalDetailsFetched, callbackWhenDone)
+                    callback(channel, playlistId, results, searchResponse.nextPageToken, stopAtDate, incrementalDetailsFetched, callbackWhenDone)
                 }
             }
         }
@@ -362,16 +441,17 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
-        fun createDetail(item: PlaylistItem, channel: Channel): Detail {
+        fun createPlaylistDetail(item: PlaylistItem, channel: Channel?): PlaylistDetail {
 
             val thumbnail = if (item.snippet.thumbnails.standard != null) item.snippet.thumbnails.standard.url else item.snippet.thumbnails.high.url
 
-            val d = Detail(channel,
+            val d = PlaylistDetail(channel,
                     item.snippet.resourceId.videoId,
                     item.snippet.title,
                     item.snippet.description,
                     thumbnail,
-                    item.snippet.publishedAt)
+                    item.snippet.publishedAt,
+                    item.id)
 
             return d
         }
@@ -465,19 +545,23 @@ class YouTubeAPI(context: Context, account: Account) {
             return response
         }
 
-        private fun getUserPlaylist(authenticatedYoutube: YouTube, title: String, callback: (Playlist?) -> Unit) {
-            GetUserPlaylistsTask(authenticatedYoutube, { playlists ->
-                run {
-                    // Find the specified playlist
-                    for (playlist in playlists) {
-                        if (playlist.snippet.title == title) {
-                            callback(playlist)
-                            return@run
+        fun getUserPlaylist(title: String, callback: (Playlist?) -> Unit) {
+            if (isAuthenticated()) {
+                GetUserPlaylistsTask(sYouTubeAPI!!.mYouTube, { playlists ->
+                    run {
+                        // Find the specified playlist
+                        for (playlist in playlists) {
+                            if (playlist.snippet.title == title) {
+                                callback(playlist)
+                                return@run
+                            }
                         }
+                        callback(null)
                     }
-                    callback(null)
-                }
-            }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+                }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+            } else {
+                throw RuntimeException("Cannot getUserPlaylist. User is not authenticated.")
+            }
         }
 
         fun getUserPlaylistTitles(callback: (List<String>) -> Unit) {
