@@ -124,26 +124,22 @@ class YouTubeAPI(context: Context, account: Account) {
         }
     }
 
-    fun removePlaylistDetailsFromPlaylist(playlistTitle: String, playlistDetailsToRemove: List<PlaylistDetail>) {
+    fun removePlaylistDetailsFromPlaylist(playlistDetailsToRemove: List<PlaylistDetail>) {
         if (playlistDetailsToRemove.size == 0)
             return
 
-        getOrCreatePlaylist(playlistTitle, { playlist ->
-            kotlin.run {
-                for (index in 0..playlistDetailsToRemove.size - 1) {
-                    if (!mCommitCancelled) {
-                        val playlistDetail = playlistDetailsToRemove[index]
-                        val playlistVideoId = playlistDetail.playlistVideoId
+        for (index in 0..playlistDetailsToRemove.size - 1) {
+            if (!mCommitCancelled) {
+                val playlistDetail = playlistDetailsToRemove[index]
+                val playlistVideoId = playlistDetail.playlistVideoId
 
-                        var request = mYouTube.playlistItems().delete(playlistVideoId)
-                        request.execute()
+                var request = mYouTube.playlistItems().delete(playlistVideoId)
+                request.execute()
 //                    setPercentageCallback(detailsToCommit.size, index + 1)
-                    } else {
-                        break;
-                    }
-                }
+            } else {
+                break;
             }
-        })
+        }
     }
 
     fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
@@ -202,36 +198,32 @@ class YouTubeAPI(context: Context, account: Account) {
         return
     }
 
-    // Get the details we want to remove from the playlist. These details' videoIds will refer to
-    // the longer playlist videoId returned from YouTubeAPI when its inPlaylistMode is true
-    fun getDetailsToRemove(playlistTitle: String, stopAtDetail: Detail, callback: (List<PlaylistDetail>) -> Unit) {
+    // Get the PlaylistDetaild we want to remove from the playlist.
+    fun getDetailsToRemove(playlistTitle: String, stopRemovingAtDetail: Detail, callback: (List<PlaylistDetail>) -> Unit) {
 
-        val playlistDetailsToRemove = mutableListOf<PlaylistDetail>()
+        // Resmove all videos before the ond we're supposed to stop at
+        // Get all the details from the user's playlist
+        getUserPlaylist(playlistTitle, {playlist ->
+            if (playlist != null) {
+                YouTubeAPI.fetchAllDetails(null, playlist.id, stopRemovingAtDetail.dateUploaded, {}, { playlistDetails ->
+                    val playlistDetailsToRemove = mutableListOf<PlaylistDetail>()
 
-        // Get the last videoId so we know where to start with the commit
-        getLastVideoId(playlistTitle, { lastVideoId ->
-            // Remove all videos before the last videoId
-            // Get all the details from the user's playlist
-            getUserPlaylist(playlistTitle, {playlist ->
-                if (playlist != null) {
-                    YouTubeAPI.fetchAllDetails(null, playlist.id, stopAtDetail.dateUploaded, {}, { playlistDetails ->
-                        var found = false
-                        for (playlistDetail in playlistDetails) {
-                            if (playlistDetail.detail.videoId == lastVideoId) {
-                                found = true
-                            }
-                            if (!found) {
-                                playlistDetailsToRemove.add(playlistDetail)
-                            }
+                    var found = false
+                    for (playlistDetail in playlistDetails) {
+                        if (playlistDetail.detail.videoId == stopRemovingAtDetail.videoId) {
+                            found = true
+                            break
                         }
-                    })
-                }
-            })
-        })
+                        if (!found) {
+                            playlistDetailsToRemove.add(playlistDetail)
+                        }
+                    }
 
-        // If we didn't find the playlist or any playlistDetails, we return the empty list. Otherwise it'll be full
-        callback(playlistDetailsToRemove.toList().asReversed())
-        return
+                    // If we didn't find the playlist or any playlistDetails, we return the empty list. Otherwise it'll be full
+                    callback(playlistDetailsToRemove.toList())
+                })
+            }
+        })
     }
 
     // Static functions that don't require authoriation
@@ -273,7 +265,7 @@ class YouTubeAPI(context: Context, account: Account) {
                 callback(listOf())
             } else {
                 if (isAuthenticated()) {
-                    sYouTubeAPI!!.getDetailsToRemove(playlistTitle, details[0], callback)
+                    sYouTubeAPI!!.getDetailsToRemove(playlistTitle, details.last(), callback)
                 } else {
                     throw RuntimeException("Cannot getDetailsToCommmit. User is not authenticated.")
                 }
@@ -297,9 +289,9 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
-        fun removePlaylistDetailsFromPlaylist(playlistTitle: String, playlistDetailsToRemove: List<PlaylistDetail>) {
+        fun removePlaylistDetailsFromPlaylist(playlistDetailsToRemove: List<PlaylistDetail>) {
             if (isAuthenticated()) {
-                sYouTubeAPI!!.removePlaylistDetailsFromPlaylist(playlistTitle, playlistDetailsToRemove)
+                sYouTubeAPI!!.removePlaylistDetailsFromPlaylist(playlistDetailsToRemove)
             } else {
                 throw RuntimeException("Cannot removePlaylistDetailsFromPlaylist. User is not authenticated.")
             }
@@ -371,7 +363,9 @@ class YouTubeAPI(context: Context, account: Account) {
                                         val callbackWhenDone: (detailList: List<PlaylistDetail>) -> Unit
                                               ) : AsyncTask<Unit, Unit, Unit>() {
             override fun doInBackground(vararg params: Unit?) {
-                val videosListByUploadPlaylistIdRequest = youtube.PlaylistItems().list("snippet")
+                // this should be mYouTube not just youtube
+                val yt = if (isAuthenticated()) sYouTubeAPI!!.mYouTube else youtube
+                val videosListByUploadPlaylistIdRequest = yt.PlaylistItems().list("snippet")
                 videosListByUploadPlaylistIdRequest.playlistId = playlistId
                 videosListByUploadPlaylistIdRequest.key = (DeveloperKey.DEVELOPER_KEY)
                 videosListByUploadPlaylistIdRequest.maxResults = 50

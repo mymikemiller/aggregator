@@ -27,6 +27,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import com.mymikemiller.chronoplayer.util.PlaylistManipulator
 import com.mymikemiller.chronoplayer.util.RemovePrevious
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 /**
@@ -237,26 +238,52 @@ class PreferencesActivity : PreferenceActivity(),
         }
 
         fun commitPlaylist() {
-            if (isSignedIn()) {
+            if (!isSignedIn()) {
+                Toast.makeText(activity, getString(R.string.not_signed_in),
+                        Toast.LENGTH_LONG).show()
+                return
+            }
 
-                val playlistTitle = activity.intent.getSerializableExtra(PreferencesActivity.EXTRA_PLAYLIST_TITLE) as String
+            val playlistTitle = activity.intent.getSerializableExtra(PreferencesActivity.EXTRA_PLAYLIST_TITLE) as String
 
-                val channels = PlaylistChannels.getChannels(activity, playlistTitle)
+            val channels = PlaylistChannels.getChannels(activity, playlistTitle)
 
-                // We can't use the intent to pass in the list of details because it's too big.
-                // Instead, get the list of details from the database
-                // TODO: Make this work using the playlistTitle to find the remove before date
-                val details = RemovePrevious.filterOutRemoved(activity, playlistTitle,
-                        PlaylistManipulator.orderByDate(
-                                VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
+            // We can't use the intent to pass in the list of details because it's too big.
+            // Instead, get the list of details from the database
+            // TODO: Make this work using the playlistTitle to find the remove before date
+            val details = RemovePrevious.filterOutRemoved(activity, playlistTitle,
+                    PlaylistManipulator.orderByDate(
+                            VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
+            // TODO: Why is this asReversed?
 
-                if (mPlaylistTitle.isBlank()) {
-                    Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
-                    return
+            if (mPlaylistTitle.isBlank()) {
+                Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
+                return
+            }
+
+            // First remove videos from the beginning of the playlist
+            YouTubeAPI.getDetailsToRemove(mPlaylistTitle, details, {playlistDetailsToRemove ->
+                if (!playlistDetailsToRemove.isEmpty()) {
+                    YouTubeAPI.removePlaylistDetailsFromPlaylist(playlistDetailsToRemove)
                 }
 
-                // Get the last video in the user's playlist so we can start adding after that video
-                YouTubeAPI.getDetailsToCommit(playlistTitle, details, { detailsToCommit ->
+                // Remove all the removed details from the list we'll be committing
+                val allDetailsAfterRemoved = mutableListOf<Detail>()
+                for (detail in details) {
+                    var found = false
+                    for(playlistDetailToRemove in playlistDetailsToRemove) {
+                        if (playlistDetailToRemove.detail == detail) {
+                            found = true
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        allDetailsAfterRemoved.add(detail)
+                    }
+                }
+
+                // Now add the new videos
+                YouTubeAPI.getDetailsToCommit(playlistTitle, allDetailsAfterRemoved, { detailsToCommit ->
                     if (detailsToCommit.isEmpty()) {
                         activity.runOnUiThread({
                             Toast.makeText(activity, getString(R.string.noVideosToCommit),
@@ -282,16 +309,9 @@ class PreferencesActivity : PreferenceActivity(),
                         })
 
                         YouTubeAPI.addVideosToPlaylist(mPlaylistTitle, detailsToCommit, setPercentageOfVideosAdded)
-
-                        YouTubeAPI.getDetailsToRemove(mPlaylistTitle, detailsToCommit, {playlistDetails ->
-                            YouTubeAPI.removePlaylistDetailsFromPlaylist(mPlaylistTitle, playlistDetails)
-                        })
                     }
                 })
-            } else {
-                Toast.makeText(activity, getString(R.string.not_signed_in),
-                        Toast.LENGTH_LONG).show()
-            }
+            })
         }
 
         val setPercentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
