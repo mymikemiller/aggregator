@@ -82,6 +82,7 @@ class ManageChannelsActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        super.onBackPressed()
 
         // Clear PlaylistChannels for this playlist
         for (channel in PlaylistChannels.getChannels(this, mPlaylistTitle)) {
@@ -99,7 +100,6 @@ class ManageChannelsActivity : AppCompatActivity() {
         val addedChannels = getAddedChannels()
         i.putStringArrayListExtra("newChannelNames", addedChannels)
         finish()
-        super.onBackPressed()
     }
 
     private fun getAddedChannels(): ArrayList<String> {
@@ -112,14 +112,14 @@ class ManageChannelsActivity : AppCompatActivity() {
         return addedChannels
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         // Check which request we're responding to
         if (requestCode == CHANNEL_SELECT_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
                 // The user selected a new channel to add to our list
-                val channel = data.getSerializableExtra("channel") as Channel
+                val channel = data?.getSerializableExtra("channel") as Channel
                 PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
 
                 mChannels.add(channel)

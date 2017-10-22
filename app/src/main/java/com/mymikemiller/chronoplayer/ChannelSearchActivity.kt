@@ -81,6 +81,7 @@ class ChannelSearchActivity : Activity() {
     }
 
     override fun onBackPressed() {
+        super.onBackPressed()
         // Do nothing to prevent a crash in onActivityResult in MainActivity. So we just don't allow back to be pressed.
     }
 }
