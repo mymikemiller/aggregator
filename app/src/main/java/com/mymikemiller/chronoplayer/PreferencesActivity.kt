@@ -95,6 +95,9 @@ class PreferencesActivity : PreferenceActivity(),
                     .addConnectionCallbacks(activity as PreferencesActivity).build()
             mGoogleApiClient.connect()
 
+            //TODO: Maybe delete this to not automatically sign the user in?
+            signIn()
+
             val manageChannelsButton = findPreference(getString(R.string.pref_manageChannelsKey))
             manageChannelsButton.setOnPreferenceClickListener({
 
@@ -261,10 +264,28 @@ class PreferencesActivity : PreferenceActivity(),
                 return
             }
 
+            val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val view: View = inflater.inflate(R.layout.progress_dialog, null);
+
+            mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
+            mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
+
+            // Set up the commit progress alert dialog
+            val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
+            builder.setView(view);
+            mCommitProgressDialog = builder.create();
+            mCommitProgressDialog.setOnDismissListener({
+                YouTubeAPI.cancelCommit()
+            })
+            mCommitProgressDialog.setCanceledOnTouchOutside(false)
+
+
             // First remove videos from the beginning of the playlist
             YouTubeAPI.getDetailsToRemove(mPlaylistTitle, details, {playlistDetailsToRemove ->
                 if (!playlistDetailsToRemove.isEmpty()) {
-                    YouTubeAPI.removePlaylistDetailsFromPlaylist(playlistDetailsToRemove)
+
+
+                    YouTubeAPI.removePlaylistDetailsFromPlaylist(playlistDetailsToRemove, setPercentageOfVideosRemoved)
                 }
 
                 // Remove all the removed details from the list we'll be committing
@@ -288,23 +309,10 @@ class PreferencesActivity : PreferenceActivity(),
                         activity.runOnUiThread({
                             Toast.makeText(activity, getString(R.string.noVideosToCommit),
                                     Toast.LENGTH_LONG).show()
+                            mCommitProgressDialog.hide()
                         })
                     } else {
-                        val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-                        val view: View = inflater.inflate(R.layout.progress_dialog, null);
-
-                        mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
-                        mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
-
                         activity.runOnUiThread({
-                            val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
-                            builder.setView(view);
-                            mCommitProgressDialog = builder.create();
-                            mCommitProgressDialog.setOnDismissListener({
-                                YouTubeAPI.cancelCommit()
-                            })
-
-                            mCommitProgressDialog.setCanceledOnTouchOutside(false)
                             mCommitProgressDialog.show();
                         })
 
@@ -314,6 +322,23 @@ class PreferencesActivity : PreferenceActivity(),
             })
         }
 
+        val setPercentageOfVideosRemoved: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
+            run {
+
+                activity.runOnUiThread({
+
+                    mCommitProgressDialog.show()
+
+                    mProgressBar.max = totalVideos
+                    mProgressBar.setProgress(currentVideoNumber)
+
+                    mProgressTitle.setText(getString(R.string.commitRemoveProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
+
+//                    mCommitProgressDialog.dismiss()
+                })
+            }
+        }
+
         val setPercentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
             run {
 
@@ -321,7 +346,7 @@ class PreferencesActivity : PreferenceActivity(),
                     mProgressBar.max = totalVideos
                     mProgressBar.setProgress(currentVideoNumber)
 
-                    mProgressTitle.setText(getString(R.string.commitProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
+                    mProgressTitle.setText(getString(R.string.commitAddProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
 
                     if (currentVideoNumber == totalVideos) {
                         // After a short delay (so the user can see the progress at 100%), dismiss the dialog

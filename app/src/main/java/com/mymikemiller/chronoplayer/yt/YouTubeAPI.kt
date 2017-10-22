@@ -52,18 +52,6 @@ class YouTubeAPI(context: Context, account: Account) {
                 .build()
     }
 
-    private fun getOrCreatePlaylist(title: String, callback: (Playlist) -> Unit) {
-        getUserPlaylist(title, { playlist ->
-            if (playlist != null) {
-                // We found the playlist
-                callback(playlist)
-            } else {
-                val createdPlaylist = createPlaylist(mYouTube, title)
-                callback(createdPlaylist)
-            }
-        })
-    }
-
     fun cancelCommit() {
         mCommitCancelled = true
     }
@@ -124,9 +112,14 @@ class YouTubeAPI(context: Context, account: Account) {
         }
     }
 
-    fun removePlaylistDetailsFromPlaylist(playlistDetailsToRemove: List<PlaylistDetail>) {
+    fun removePlaylistDetailsFromPlaylist(playlistDetailsToRemove: List<PlaylistDetail>,
+                                          setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit) {
         if (playlistDetailsToRemove.size == 0)
             return
+
+        // Start out allowing commits. The user can cancel this commit
+        // operation by calling YouTubeAPI.cancelCommit()
+        mCommitCancelled = false
 
         for (index in 0..playlistDetailsToRemove.size - 1) {
             if (!mCommitCancelled) {
@@ -135,14 +128,14 @@ class YouTubeAPI(context: Context, account: Account) {
 
                 var request = mYouTube.playlistItems().delete(playlistVideoId)
                 request.execute()
-//                    setPercentageCallback(detailsToCommit.size, index + 1)
+                    setPercentageCallback(playlistDetailsToRemove.size, index + 1)
             } else {
                 break;
             }
         }
     }
 
-    fun addVideosToPlayList(playlistTitle: String, detailsToCommit: List<Detail>,
+    fun addVideosToPlaylist(playlistTitle: String, detailsToCommit: List<Detail>,
                             setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit)
     {
         if (detailsToCommit.size == 0)
@@ -152,7 +145,7 @@ class YouTubeAPI(context: Context, account: Account) {
         // operation by calling YouTubeAPI.cancelCommit()
         mCommitCancelled = false
 
-        getOrCreatePlaylist(playlistTitle, { playlist -> kotlin.run {
+        getOrCreateUserPlaylist(playlistTitle, { playlist -> kotlin.run {
             for (index in 0..detailsToCommit.size - 1) {
                 if (!mCommitCancelled) {
                     val detail = detailsToCommit[index]
@@ -198,12 +191,12 @@ class YouTubeAPI(context: Context, account: Account) {
         return
     }
 
-    // Get the PlaylistDetaild we want to remove from the playlist.
+    // Get the PlaylistDetails we want to remove from the playlist.
     fun getDetailsToRemove(playlistTitle: String, stopRemovingAtDetail: Detail, callback: (List<PlaylistDetail>) -> Unit) {
 
-        // Resmove all videos before the ond we're supposed to stop at
+        // Remove all videos before the one we're supposed to stop at
         // Get all the details from the user's playlist
-        getUserPlaylist(playlistTitle, {playlist ->
+        getOrCreateUserPlaylist(playlistTitle, {playlist ->
             if (playlist != null) {
                 YouTubeAPI.fetchAllDetails(null, playlist.id, stopRemovingAtDetail.dateUploaded, {}, { playlistDetails ->
                     val playlistDetailsToRemove = mutableListOf<PlaylistDetail>()
@@ -283,15 +276,16 @@ class YouTubeAPI(context: Context, account: Account) {
         fun addVideosToPlaylist(playlistTitle: String, detailsToCommit: List<Detail>,
                                 setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit) {
             if (isAuthenticated()) {
-                sYouTubeAPI!!.addVideosToPlayList(playlistTitle, detailsToCommit, setPercentageCallback)
+                sYouTubeAPI!!.addVideosToPlaylist(playlistTitle, detailsToCommit, setPercentageCallback)
             } else {
                 throw RuntimeException("Cannot addVideosToPlaylist. User is not authenticated.")
             }
         }
 
-        fun removePlaylistDetailsFromPlaylist(playlistDetailsToRemove: List<PlaylistDetail>) {
+        fun removePlaylistDetailsFromPlaylist(playlistDetailsToRemove: List<PlaylistDetail>,
+                                              setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit ) {
             if (isAuthenticated()) {
-                sYouTubeAPI!!.removePlaylistDetailsFromPlaylist(playlistDetailsToRemove)
+                sYouTubeAPI!!.removePlaylistDetailsFromPlaylist(playlistDetailsToRemove, setPercentageCallback)
             } else {
                 throw RuntimeException("Cannot removePlaylistDetailsFromPlaylist. User is not authenticated.")
             }
@@ -524,7 +518,7 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
-        fun createPlaylist(authenticatedYoutube: YouTube, title: String): Playlist{
+        fun createUserPlaylist(authenticatedYoutube: YouTube, title: String): Playlist{
             val playlist = Playlist()
             val snippet = PlaylistSnippet()
             val status = PlaylistStatus()
@@ -537,6 +531,22 @@ class YouTubeAPI(context: Context, account: Account) {
 
             val response = playlistsInsertRequest.execute()
             return response
+        }
+
+        fun getOrCreateUserPlaylist(title: String, callback: (Playlist) -> Unit) {
+            getUserPlaylist(title, { playlist ->
+                if (playlist != null) {
+                    // We found the playlist
+                    callback(playlist)
+                } else {
+                    if (isAuthenticated()) {
+                        val createdPlaylist = createUserPlaylist(sYouTubeAPI!!.mYouTube, title)
+                        callback(createdPlaylist)
+                    } else {
+                        throw RuntimeException("Cannot create playlist. User is not authenticated")
+                    }
+                }
+            })
         }
 
         fun getUserPlaylist(title: String, callback: (Playlist?) -> Unit) {

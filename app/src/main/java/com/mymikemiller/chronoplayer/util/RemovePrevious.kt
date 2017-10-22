@@ -28,7 +28,6 @@ class RemovePrevious {
                         KEY_REMOVE_BEFORE_DATE + " TEXT NOT NULL UNIQUE);"
 
         fun filterOutRemoved(context: Context, playlistTitle: String, details: List<Detail>) : List<Detail> {
-            Log.e(DATABASE_NAME, "filterOutRemoved is not implemented yet")
             val dbHelper = RemoveBeforeDateOpenHelper(context.applicationContext)
             val dateToRemoveBefore = dbHelper.getRemoveBeforeDateFromDb(playlistTitle)
             var newDetails = details
