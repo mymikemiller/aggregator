@@ -259,6 +259,7 @@ class PreferencesActivity : PreferenceActivity(),
                             VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
             // TODO: Why is this asReversed?
 
+
             if (mPlaylistTitle.isBlank()) {
                 Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
                 return
