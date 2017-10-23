@@ -187,7 +187,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         }
 
-//        setNoVideosWarningVisibility()
+        setNoVideosWarningVisibility()
     }
 
     private fun setNoVideosWarningVisibility() {
