@@ -24,7 +24,6 @@ import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
 import android.text.Spannable
 import android.text.method.LinkMovementMethod
-import android.text.method.MovementMethod
 import android.view.MotionEvent
 import com.google.api.client.util.DateTime
 import kotlinx.android.synthetic.main.activity_main.*
@@ -71,7 +70,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mBroadcastReceiver: BroadcastReceiver
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
-    private lateinit var mNoVideosDueToSkippedTextView: TextView
+    private lateinit var mNoVideosDueToRemovedTextView: TextView
     private lateinit var mNoVideosDueToNoChannelsTextView: TextView
     private var mNumVideosToFetch = 0
     private var mNumVideosFetched = 0
@@ -142,7 +141,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Save the launch channel to sharedPreferences so we start there next time
         saveLaunchPlaylistTitle(mPlaylistTitle)
 
-        setUpNoVideosLinks()
+        setUpNoVideosWarnings()
         setUpYouTubeFetch()
         setUpPlayer()
         setUpEpisodePager()
@@ -165,10 +164,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 //        Channels.addChannel(applicationContext, channel)
     }
 
-    private fun setUpNoVideosLinks() {
+    private fun setUpNoVideosWarnings() {
         // Set up the "no videos" text with a link to unskip all videos
-        mNoVideosDueToSkippedTextView = findViewById(R.id.noVideosWarningDueToSkipped);
-        mNoVideosDueToSkippedTextView.movementMethod = object: LinkMovementMethod() {
+        mNoVideosDueToRemovedTextView = findViewById(R.id.noVideosWarningDueToRemoved);
+        mNoVideosDueToRemovedTextView.movementMethod = object: LinkMovementMethod() {
             override fun onTouchEvent(widget: TextView?, buffer: Spannable?, event: MotionEvent?): Boolean {
 
                 unRemovePrevious()
@@ -187,15 +186,19 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         }
 
-        setNoVideosWarningVisibility()
+        setNoVideosWarningsVisibility()
     }
 
-    private fun setNoVideosWarningVisibility() {
+    private fun setNoVideosWarningsVisibility() {
         if (mDetailsByDate.size == 0 && mDetailsByDateIncludingRemoved.size > 0) {
-            mNoVideosDueToSkippedTextView.visibility = View.VISIBLE
+            mNoVideosDueToRemovedTextView.visibility = View.VISIBLE
+        } else {
+            mNoVideosDueToRemovedTextView.visibility = View.GONE
         }
         if (PlaylistChannels.getChannels(this, mPlaylistTitle).size == 0) {
             mNoVideosDueToNoChannelsTextView.visibility = View.VISIBLE
+        } else {
+            mNoVideosDueToNoChannelsTextView.visibility = View.GONE
         }
     }
 
@@ -248,8 +251,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 val orderedByDateIncludingRemoved = PlaylistManipulator.orderByDate(allDetailsUnorderedWithoutDuplicates)
 
                 mDetailsByDateIncludingRemoved = orderedByDateIncludingRemoved
-
                 mDetailsByDate = RemovePrevious.filterOutRemoved(this, mPlaylistTitle, mDetailsByDateIncludingRemoved)
+
+                // Now that we have the details, we can set visibility of warnings
+                setNoVideosWarningsVisibility()
 
                 // Now that we've got a list of details, we can prepare the Episode Pager and RecyclerView
                 mEpisodeViewPagerAdapter = EpisodePagerAdapter(this, mDetailsByDate, {
@@ -569,7 +574,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         updateAdapters(mDetailsByDate)
 
         // Removing videos may have caused the No Videos warning to appear, so make that happen
-        setNoVideosWarningVisibility()
+        setNoVideosWarningsVisibility()
     }
 
     fun updateAdapters(details: List<Detail>) {
@@ -578,6 +583,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             mAdapter.notifyDataSetChanged()
             mEpisodeViewPagerAdapter.details = details
             mEpisodeViewPagerAdapter.notifyDataSetChanged()
+
+//            if (details.isEmpty()) {
+//                mEpisodePager.visibility = View.GONE
+//            } else {
+//                mEpisodePager.visibility = View.VISIBLE
+//
+//            }
         }
     }
 
@@ -642,6 +654,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 val channelStrings = channels.map { it -> it.name }
                 loadPlaylist(channelStrings)
             }
+
+            // Adding/removing channels could cause the warning texts to show up/go away
+            setNoVideosWarningsVisibility()
         }
     }
 
@@ -655,7 +670,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             refreshPlaylist()
 
         // unRemoving all videos may have caused the No Videos warning to disappear, so make that happen
-        setNoVideosWarningVisibility()
+        setNoVideosWarningsVisibility()
 
         Toast.makeText(this, getString(R.string.allVideosShown),
                 Toast.LENGTH_SHORT).show()

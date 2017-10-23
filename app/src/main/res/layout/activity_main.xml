@@ -87,7 +87,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/noVideosWarningDueToSkipped"
+                    android:id="@+id/noVideosWarningDueToRemoved"
                     android:text="@string/noVideosWarningDueToSkipped"
                     android:visibility="visible"
                     android:textSize="@dimen/small_font"
