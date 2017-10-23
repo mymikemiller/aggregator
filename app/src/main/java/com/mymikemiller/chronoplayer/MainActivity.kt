@@ -22,10 +22,11 @@ import android.support.v4.view.ViewPager
 import android.content.Intent
 import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
-import android.preference.PreferenceActivity
-import android.util.Log
+import android.text.Spannable
+import android.text.method.LinkMovementMethod
+import android.text.method.MovementMethod
+import android.view.MotionEvent
 import com.google.api.client.util.DateTime
-import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
@@ -70,6 +71,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var mBroadcastReceiver: BroadcastReceiver
     private lateinit var mEpisodePager: ViewPager
     private lateinit var mEpisodeViewPagerAdapter: EpisodePagerAdapter
+    private lateinit var mNoVideosDueToSkippedTextView: TextView
+    private lateinit var mNoVideosDueToNoChannelsTextView: TextView
     private var mNumVideosToFetch = 0
     private var mNumVideosFetched = 0
 
@@ -139,6 +142,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Save the launch channel to sharedPreferences so we start there next time
         saveLaunchPlaylistTitle(mPlaylistTitle)
 
+        setUpNoVideosLinks()
         setUpYouTubeFetch()
         setUpPlayer()
         setUpEpisodePager()
@@ -159,6 +163,40 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // insert the Channel into the Channels database (or do nothing if it's already there).
         // We'll need it to launch MainActivity right away the next time LaunchActivity loads
 //        Channels.addChannel(applicationContext, channel)
+    }
+
+    private fun setUpNoVideosLinks() {
+        // Set up the "no videos" text with a link to unskip all videos
+        mNoVideosDueToSkippedTextView = findViewById(R.id.noVideosWarningDueToSkipped);
+        mNoVideosDueToSkippedTextView.movementMethod = object: LinkMovementMethod() {
+            override fun onTouchEvent(widget: TextView?, buffer: Spannable?, event: MotionEvent?): Boolean {
+
+                unRemovePrevious()
+
+                return super.onTouchEvent(widget, buffer, event)
+            }
+        }
+        // Set up the "no videos" text with a link to the Manage Channels page
+        mNoVideosDueToNoChannelsTextView = findViewById(R.id.noVideosWarningDueToNoChannels);
+        mNoVideosDueToNoChannelsTextView.movementMethod = object: LinkMovementMethod() {
+            override fun onTouchEvent(widget: TextView?, buffer: Spannable?, event: MotionEvent?): Boolean {
+
+                showManageChannelsActivity()
+
+                return super.onTouchEvent(widget, buffer, event)
+            }
+        }
+
+//        setNoVideosWarningVisibility()
+    }
+
+    private fun setNoVideosWarningVisibility() {
+        if (mDetailsByDate.size == 0 && mDetailsByDateIncludingRemoved.size > 0) {
+            mNoVideosDueToSkippedTextView.visibility = View.VISIBLE
+        }
+        if (PlaylistChannels.getChannels(this, mPlaylistTitle).size == 0) {
+            mNoVideosDueToNoChannelsTextView.visibility = View.VISIBLE
+        }
     }
 
     private fun setUpYouTubeFetch() {
@@ -482,7 +520,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // We may get here after we failed to play the video if we tried playing it before
         // initializing the player. Now that it's initialized we can play the video.
-        playVideo(mCurrentlyPlayingVideoDetail)
+        if (mCurrentlyPlayingVideoDetail != null) {
+            playVideo(mCurrentlyPlayingVideoDetail)
+        }
     }
     //endregion
 
@@ -534,6 +574,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         // Update our cached lists
         mDetailsByDate = RemovePrevious.filterOutRemoved(this, mPlaylistTitle, mDetailsByDate)
         updateAdapters(mDetailsByDate)
+
+        // Removing videos may have caused the No Videos warning to appear, so make that happen
+        setNoVideosWarningVisibility()
     }
 
     fun updateAdapters(details: List<Detail>) {
@@ -567,14 +610,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         startActivityForResult(manageChannelsActivityIntent, MANAGE_CHANNELS_REQUEST)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         // Check which request we're responding to
         if (requestCode == WATCH_HISTORY_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
                 // We clicked a video.  Find it and play it.
-                val videoId = data.getStringExtra(WatchHistoryActivity.WATCH_HISTORY_DETAIL)
+                val videoId = data?.getStringExtra(WatchHistoryActivity.WATCH_HISTORY_DETAIL)
                 val detailToPlay = mDetailsByDateIncludingRemoved.find { it.videoId == videoId }
                 playVideo(detailToPlay)
 
@@ -587,7 +630,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         } else if (requestCode == CHANNEL_SELECT_REQUEST) {
             if (resultCode == Activity.RESULT_OK) {
                 // The user selected an initial channel to add to our list
-                val channel = data.getSerializableExtra("channel") as Channel
+                val channel = data?.getSerializableExtra("channel") as Channel
                 PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
                 // channel is the only one, so we can send it in and it'll be the only one refreshed
                 loadPlaylist(listOf(channel.name))
@@ -596,8 +639,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             // The channels have been added/removed from the playlist in PlaylistChannels, so just
             // refresh the playlist and it'll have the new/removed channels.
             if (resultCode == Activity.RESULT_OK) {
-                val newChannels = data.getStringArrayListExtra("newChannelNames")
-                loadPlaylist(newChannels)
+                if (data != null) {
+                    val newChannels = data.getStringArrayListExtra("newChannelNames")
+                    loadPlaylist(newChannels)
+                }
             }
         }
     }
@@ -610,6 +655,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         if (mAdapterInitialized)
             refreshPlaylist()
+
+        // unRemoving all videos may have caused the No Videos warning to disappear, so make that happen
+        setNoVideosWarningVisibility()
+
+        Toast.makeText(this, getString(R.string.allVideosShown),
+                Toast.LENGTH_SHORT).show()
     }
     //endregion
 

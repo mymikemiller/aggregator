@@ -82,6 +82,31 @@
 
                 </LinearLayout>
 
+
+                <!-- The string telling the user they have no videos in their playlist due to being skipped -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/noVideosWarningDueToSkipped"
+                    android:text="@string/noVideosWarningDueToSkipped"
+                    android:visibility="visible"
+                    android:textSize="@dimen/small_font"
+                    android:padding="@dimen/text_padding"
+                    android:textColor="@color/dark_gray"
+                    android:textAlignment="center"/>
+
+                <!-- The string telling the user they have no videos in their playlist due to being skipped -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/noVideosWarningDueToNoChannels"
+                    android:text="@string/noVideosWarningDueToNoChannels"
+                    android:visibility="visible"
+                    android:textSize="@dimen/small_font"
+                    android:padding="@dimen/text_padding"
+                    android:textColor="@color/dark_gray"
+                    android:textAlignment="center"/>
+
                 <!-- The pager allowing the user to skip episodes by swiping the main view-->
                 <android.support.v4.view.ViewPager
                     android:id="@+id/episodeViewPager"

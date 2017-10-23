@@ -5,6 +5,8 @@
     <string name="thumbnail">Thumbnail</string>
     <string name="background">Background</string>
     <string name="fetching">Gathering videos from YouTube</string>
+    <string name="noVideosWarningDueToSkipped">No videos in playlist because they\'ve all been skipped. <a href="unskip">Unskip all videos</a></string>
+    <string name="noVideosWarningDueToNoChannels">No videos in playlist because there are no channels set up. <a href="manage">Manage channels</a></string>
     <string name="finalPageToken">FINAL_PAGE_TOKEN</string>
     <string name="currentVideoId">CURRENT_VIDEO_ID</string>
     <string name="currentVideoTimeMillis">CURRENT_VIDEO_TIME_MILLIS</string>

@@ -167,10 +167,6 @@ class PreferencesActivity : PreferenceActivity(),
                 intent.action = SHOW_ALL
                 LocalBroadcastManager.getInstance(activity).sendBroadcast(intent)
 
-                Toast.makeText(getActivity(), getString(R.string.allVideosShown),
-                        Toast.LENGTH_SHORT).show()
-
-
                 true
             })
         }
