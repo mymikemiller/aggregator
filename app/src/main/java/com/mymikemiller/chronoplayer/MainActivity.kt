@@ -22,6 +22,7 @@ import android.support.v4.view.ViewPager
 import android.content.Intent
 import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
+import android.preference.PreferenceActivity
 import android.util.Log
 import com.google.api.client.util.DateTime
 import com.mymikemiller.chronoplayer.yt.YouTubeAPI
@@ -258,7 +259,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         detailToPlay = details[0]
                     }
 
-                    // Doesn't get to here
                     playVideo(detailToPlay, true)
 
                     scrollToCurrentlyPlayingVideo()
@@ -419,15 +419,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         mBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, theIntent: Intent?) {
 
-                val currentlyPlaying = mCurrentlyPlayingVideoDetail
-                if (currentlyPlaying != null) {
-
-                    when (theIntent?.action) {
-                        PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
+                when (theIntent?.action) {
+                    PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
 //                        PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
-                        PreferencesActivity.CHANGE_PLAYLIST_TITLE -> showPlaylistChooserActivity()
-                        PreferencesActivity.SHOW_ALL -> unRemovePrevious(currentlyPlaying.channel!!)
-                    }
+                    PreferencesActivity.CHANGE_PLAYLIST_TITLE -> showPlaylistChooserActivity()
+                    PreferencesActivity.SHOW_ALL -> unRemovePrevious()
                 }
             }
         }
@@ -606,7 +602,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun unRemovePrevious(channel: Channel) {
+    fun unRemovePrevious() {
         RemovePrevious.unRemove(this, mPlaylistTitle)
 
         // Update our cached list
@@ -815,6 +811,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
             // Save the detail to Watch History
             WatchHistory.addDetail(this, detail)
+        } else {
+            if (mPlayerInitialized) {
+                // For some reason, the sliding panel is unresponsive unless we do this.
+                player.release()
+            }
+
+
+
         }
     }
 }

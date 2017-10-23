@@ -32,7 +32,7 @@ class RemovePrevious {
             val dateToRemoveBefore = dbHelper.getRemoveBeforeDateFromDb(playlistTitle)
             var newDetails = details
             if (dateToRemoveBefore != null) {
-                newDetails = details.filter { it -> it.dateUploaded.value >= dateToRemoveBefore.value}
+                newDetails = details.filter { it -> it.dateUploaded.value > dateToRemoveBefore.value}
             }
             return newDetails
         }
