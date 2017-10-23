@@ -51,6 +51,7 @@ class PreferencesActivity : PreferenceActivity(),
         private lateinit var mGoogleApiClient: GoogleApiClient
 
         private lateinit var mProgressTitle: TextView
+        private lateinit var mProgressTopTitle: TextView
         private lateinit var mProgressBar: ProgressBar
         private lateinit var mCommitProgressDialog: AlertDialog
         private lateinit var mPlaylistTitle: String
@@ -247,6 +248,30 @@ class PreferencesActivity : PreferenceActivity(),
                 return
             }
 
+            //new
+
+            val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val view: View = inflater.inflate(R.layout.progress_dialog, null);
+
+            mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
+            mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
+
+            mProgressTitle.setText(getString(R.string.commitPreparingTitle))
+
+            // Set up the commit progress alert dialog
+            val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
+            builder.setView(view);
+            mCommitProgressDialog = builder.create();
+            mCommitProgressDialog.setOnDismissListener({
+                YouTubeAPI.cancelCommit()
+            })
+            mCommitProgressDialog.setCanceledOnTouchOutside(false)
+            mCommitProgressDialog.setMessage(getString(R.string.commitPreparingTitle))
+
+            mCommitProgressDialog.show()
+
+            //new
+
             val playlistTitle = activity.intent.getSerializableExtra(PreferencesActivity.EXTRA_PLAYLIST_TITLE) as String
 
             val channels = PlaylistChannels.getChannels(activity, playlistTitle)
@@ -258,28 +283,10 @@ class PreferencesActivity : PreferenceActivity(),
                     PlaylistManipulator.orderByDate(
                             VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
             // TODO: Why is this asReversed?
-
-
             if (mPlaylistTitle.isBlank()) {
                 Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
                 return
             }
-
-            val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            val view: View = inflater.inflate(R.layout.progress_dialog, null);
-
-            mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
-            mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
-
-            // Set up the commit progress alert dialog
-            val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
-            builder.setView(view);
-            mCommitProgressDialog = builder.create();
-            mCommitProgressDialog.setOnDismissListener({
-                YouTubeAPI.cancelCommit()
-            })
-            mCommitProgressDialog.setCanceledOnTouchOutside(false)
-
 
             // First remove videos from the beginning of the playlist
             YouTubeAPI.getDetailsToRemove(mPlaylistTitle, details, {playlistDetailsToRemove ->

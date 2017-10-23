@@ -71,7 +71,7 @@
     <string name="connection_success">Connection to Google succeeded</string>
     <string name="connected">Connected to Google</string>
     <string name="not_signed_in">You must sign in first.</string>
-    <string name="commitPreparingTitle">Preparing to commit videos</string>
+    <string name="commitPreparingTitle">Committing videoss</string>
     <string name="commitRemoveProgressTitle">Removing videos from YouTube playlist</string>
     <string name="commitAddProgressTitle">Adding videos to YouTube playlist</string>
     <string name="noVideosToCommit">Playlist already contains all videos</string>
