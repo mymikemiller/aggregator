@@ -248,29 +248,7 @@ class PreferencesActivity : PreferenceActivity(),
                 return
             }
 
-            //new
-
-            val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            val view: View = inflater.inflate(R.layout.progress_dialog, null);
-
-            mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
-            mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
-
-            mProgressTitle.setText(getString(R.string.commitPreparingTitle))
-
-            // Set up the commit progress alert dialog
-            val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
-            builder.setView(view);
-            mCommitProgressDialog = builder.create();
-            mCommitProgressDialog.setOnDismissListener({
-                YouTubeAPI.cancelCommit()
-            })
-            mCommitProgressDialog.setCanceledOnTouchOutside(false)
-            mCommitProgressDialog.setMessage(getString(R.string.commitPreparingTitle))
-
-            mCommitProgressDialog.show()
-
-            //new
+            initProgressBar()
 
             val playlistTitle = activity.intent.getSerializableExtra(PreferencesActivity.EXTRA_PLAYLIST_TITLE) as String
 
@@ -364,6 +342,24 @@ class PreferencesActivity : PreferenceActivity(),
                     }
                 })
             }
+        }
+
+        fun initProgressBar() {
+            val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val view: View = inflater.inflate(R.layout.progress_dialog, null);
+
+            mProgressTitle = view.findViewById<TextView>(R.id.progressTitle)
+            mProgressBar = view.findViewById<ProgressBar>(R.id.progressBar)
+
+            // Set up the commit progress alert dialog
+            val builder: AlertDialog.Builder = AlertDialog.Builder(activity);
+            builder.setView(view);
+            mCommitProgressDialog = builder.create();
+            mCommitProgressDialog.setOnDismissListener({
+                YouTubeAPI.cancelCommit()
+            })
+            mCommitProgressDialog.setCanceledOnTouchOutside(false)
+
         }
 
         override fun onDestroy() {

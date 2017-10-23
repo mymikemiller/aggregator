@@ -258,6 +258,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                         detailToPlay = details[0]
                     }
 
+                    // Doesn't get to here
                     playVideo(detailToPlay, true)
 
                     scrollToCurrentlyPlayingVideo()
