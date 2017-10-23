@@ -121,29 +121,33 @@ class VideoList {
                 if (fetchInProgress) {
                     throw Error("Details fetch already in progress. Can't start another.")
                 }
-                numberOfCallbacksReceived = 0
-                details.clear()
-                fetchInProgress = true
+                if (channels.isEmpty()) {
+                    callbackWhenDoneFetchingAllChannels(listOf())
+                } else {
+                    numberOfCallbacksReceived = 0
+                    details.clear()
+                    fetchInProgress = true
 
-                for(channel in channels) {
-                    val stopAtDate = if (channelNamesToFetch.contains(channel.name)) null else stopAtDate
+                    for (channel in channels) {
+                        val stopAtDate = if (channelNamesToFetch.contains(channel.name)) null else stopAtDate
 
-                    fetchAllDetails(context,
-                            channel,
-                            channel.uploadPlaylistId,
-                            stopAtDate,
-                            incrementalDetailsFetched,
-                            { detailsFetched ->
-                                // We get here each time we finish fetching one of the channels' details
-                                details.addAll(detailsFetched)
-                                // TODO: Figure out what to do with setPercentageCallback. Probably use YoutubeAPI.getNumDetails(Task)
-                                numberOfCallbacksReceived++
-                                if (numberOfCallbacksReceived == channels.size) {
-                                    fetchInProgress = false
-                                    numberOfCallbacksReceived = 0
-                                    callbackWhenDoneFetchingAllChannels(details)
-                                }
-                            })
+                        fetchAllDetails(context,
+                                channel,
+                                channel.uploadPlaylistId,
+                                stopAtDate,
+                                incrementalDetailsFetched,
+                                { detailsFetched ->
+                                    // We get here each time we finish fetching one of the channels' details
+                                    details.addAll(detailsFetched)
+                                    // TODO: Figure out what to do with setPercentageCallback. Probably use YoutubeAPI.getNumDetails(Task)
+                                    numberOfCallbacksReceived++
+                                    if (numberOfCallbacksReceived == channels.size) {
+                                        fetchInProgress = false
+                                        numberOfCallbacksReceived = 0
+                                        callbackWhenDoneFetchingAllChannels(details)
+                                    }
+                                })
+                    }
                 }
             }
 
