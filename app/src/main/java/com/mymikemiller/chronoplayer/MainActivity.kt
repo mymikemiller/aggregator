@@ -484,7 +484,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                 when (theIntent?.action) {
                     PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
-//                        PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
+                        PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity()
                     PreferencesActivity.CHANGE_PLAYLIST_TITLE -> showPlaylistChooserActivity()
                     PreferencesActivity.SHOW_ALL -> showAllVideos()
                 }
@@ -620,10 +620,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun showWatchHistoryActivity(playlistTitle: String) {
+    fun showWatchHistoryActivity() {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
         // TODO: watchHistoryIntent should contain a playlistTitle, but currently it's expecting a channel
-        watchHistoryIntent.putExtra("playlistTitle", playlistTitle)
+        watchHistoryIntent.putExtra("playlistTitle", mPlaylistTitle)
         watchHistoryIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         startActivityForResult(watchHistoryIntent, WATCH_HISTORY_REQUEST)
     }
@@ -901,7 +901,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                 scrollToCurrentlyPlayingVideo()
 
             // Save the detail to Watch History
-            WatchHistory.addDetail(this, detail)
+            WatchHistory.addDetail(this, mPlaylistTitle, detail)
         } else {
             if (mPlayerInitialized) {
                 // For some reason, the sliding panel is unresponsive unless we do this.
