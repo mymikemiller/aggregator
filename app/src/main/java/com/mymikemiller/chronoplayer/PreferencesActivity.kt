@@ -96,9 +96,6 @@ class PreferencesActivity : PreferenceActivity(),
                     .addConnectionCallbacks(activity as PreferencesActivity).build()
             mGoogleApiClient.connect()
 
-            //TODO: Maybe delete this to not automatically sign the user in?
-            signIn()
-
             val manageChannelsButton = findPreference(getString(R.string.pref_manageChannelsKey))
             manageChannelsButton.setOnPreferenceClickListener({
 

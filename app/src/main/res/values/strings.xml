@@ -5,8 +5,10 @@
     <string name="thumbnail">Thumbnail</string>
     <string name="background">Background</string>
     <string name="fetching">Gathering videos from YouTube</string>
-    <string name="noVideosWarningDueToSkipped">No videos in playlist. They\'ve all been removed. <a href="unskip">Show all videos</a></string>
-    <string name="noVideosWarningDueToNoChannels">No videos in playlist. There are no channels set up. <a href="manage">Manage channels</a></string>
+    <string name="noVideosWarningDueToRemoved">No videos in playlist. They\'ve all been removed.</string>
+    <string name="noVideosWarningDueToNoChannels">No videos in playlist. There are no channels set up.</string>
+    <string name="showAllVideosLink">Show all videos.</string>
+    <string name="manageChannelsLink">Manage channels</string>
     <string name="finalPageToken">FINAL_PAGE_TOKEN</string>
     <string name="currentVideoId">CURRENT_VIDEO_ID</string>
     <string name="currentVideoTimeMillis">CURRENT_VIDEO_TIME_MILLIS</string>

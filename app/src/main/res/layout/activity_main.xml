@@ -88,7 +88,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/noVideosWarningDueToRemoved"
-                    android:text="@string/noVideosWarningDueToSkipped"
+                    android:text="@string/noVideosWarningDueToRemoved"
                     android:visibility="visible"
                     android:textSize="@dimen/small_font"
                     android:padding="@dimen/text_padding"

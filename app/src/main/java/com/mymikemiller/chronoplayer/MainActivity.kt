@@ -14,17 +14,16 @@ import android.preference.PreferenceManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
 import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.view.ViewPager
 import android.content.Intent
 import com.mymikemiller.chronoplayer.util.*
 import android.content.IntentFilter
-import android.text.Spannable
+import android.text.*
 import android.text.method.LinkMovementMethod
-import android.view.MotionEvent
+import android.text.style.ClickableSpan
+import android.text.style.URLSpan
 import com.google.api.client.util.DateTime
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -164,27 +163,54 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 //        Channels.addChannel(applicationContext, channel)
     }
 
+    protected fun makeLinkClickable(strBuilder: SpannableStringBuilder, span: URLSpan)
+    {
+        val start = strBuilder.getSpanStart(span);
+        val end = strBuilder.getSpanEnd(span);
+        val flags = strBuilder.getSpanFlags(span);
+        val clickable: ClickableSpan = object: ClickableSpan() {
+            override fun onClick(widget: View?) {
+                when (span.url) {
+                    "showAll" -> showAllVideos()
+                    "manageChannels" -> {
+                        val intent = Intent()
+                        intent.action = PreferencesActivity.MANAGE_CHANNELS
+                        LocalBroadcastManager.getInstance(this@MainActivity).sendBroadcast(intent)
+                    }
+                }
+
+            }
+        }
+        strBuilder.setSpan(clickable, start, end, flags);
+        strBuilder.removeSpan(span);
+    }
+
     private fun setUpNoVideosWarnings() {
-        // Set up the "no videos" text with a link to unskip all videos
-        mNoVideosDueToRemovedTextView = findViewById(R.id.noVideosWarningDueToRemoved);
-        mNoVideosDueToRemovedTextView.movementMethod = object: LinkMovementMethod() {
-            override fun onTouchEvent(widget: TextView?, buffer: Spannable?, event: MotionEvent?): Boolean {
+        // Set up the "no videos" text with a link to show all videos
+        mNoVideosDueToRemovedTextView = findViewById(R.id.noVideosWarningDueToRemoved)
+        var html = getString(R.string.noVideosWarningDueToRemoved) + " <a href=\"showAll\">" + getString(R.string.showAllVideosLink) + "</a>"
 
-                unRemovePrevious()
-
-                return super.onTouchEvent(widget, buffer, event)
-            }
+        // Make the links in the string clickable. They're handled in makeLinkClickable()
+        var sequence = Html.fromHtml(html);
+        var strBuilder = SpannableStringBuilder(sequence);
+        var urls = strBuilder.getSpans(0, sequence.length, URLSpan::class.java)
+        for(span in urls) {
+            makeLinkClickable(strBuilder, span)
         }
+        mNoVideosDueToRemovedTextView.setText(strBuilder)
+        mNoVideosDueToRemovedTextView.setMovementMethod(LinkMovementMethod.getInstance())
+
         // Set up the "no videos" text with a link to the Manage Channels page
-        mNoVideosDueToNoChannelsTextView = findViewById(R.id.noVideosWarningDueToNoChannels);
-        mNoVideosDueToNoChannelsTextView.movementMethod = object: LinkMovementMethod() {
-            override fun onTouchEvent(widget: TextView?, buffer: Spannable?, event: MotionEvent?): Boolean {
-
-                showManageChannelsActivity()
-
-                return super.onTouchEvent(widget, buffer, event)
-            }
+        mNoVideosDueToNoChannelsTextView = findViewById(R.id.noVideosWarningDueToNoChannels)
+        html = getString(R.string.noVideosWarningDueToNoChannels) + " <a href=\"manageChannels\">" + getString(R.string.manageChannelsLink) + "</a>"
+        sequence = Html.fromHtml(html);
+        strBuilder = SpannableStringBuilder(sequence);
+        urls = strBuilder.getSpans(0, sequence.length, URLSpan::class.java)
+        for(span in urls) {
+            makeLinkClickable(strBuilder, span)
         }
+        mNoVideosDueToNoChannelsTextView.setText(strBuilder)
+        mNoVideosDueToNoChannelsTextView.setMovementMethod(LinkMovementMethod.getInstance())
 
         setNoVideosWarningsVisibility()
     }
@@ -195,6 +221,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         } else {
             mNoVideosDueToRemovedTextView.visibility = View.GONE
         }
+
         if (PlaylistChannels.getChannels(this, mPlaylistTitle).size == 0) {
             mNoVideosDueToNoChannelsTextView.visibility = View.VISIBLE
         } else {
@@ -459,7 +486,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
 //                        PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity(currentlyPlaying.channel)
                     PreferencesActivity.CHANGE_PLAYLIST_TITLE -> showPlaylistChooserActivity()
-                    PreferencesActivity.SHOW_ALL -> unRemovePrevious()
+                    PreferencesActivity.SHOW_ALL -> showAllVideos()
                 }
             }
         }
@@ -660,7 +687,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         }
     }
 
-    fun unRemovePrevious() {
+    fun showAllVideos() {
         RemovePrevious.unRemove(this, mPlaylistTitle)
 
         // Update our cached list
