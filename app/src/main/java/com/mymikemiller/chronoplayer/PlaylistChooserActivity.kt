@@ -89,16 +89,6 @@ class PlaylistChooserActivity: AppCompatActivity(),
         if (YouTubeAPI.isAuthenticated()) {
             showUserPlaylists()
         }
-
-        // If we have a stored preference for the last playlist we opened, open that one
-        val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
-        val playlistTitle = preferences.getString(getString(R.string.prefPlaylistTitle), "")
-
-        if (!intent.hasExtra(getString(R.string.launchedFromSettings))) {
-            if (playlistTitle.isNotBlank()) {
-                launchMainActivity(playlistTitle)
-            }
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

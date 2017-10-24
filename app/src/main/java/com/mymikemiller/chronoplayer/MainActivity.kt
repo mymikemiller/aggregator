@@ -129,13 +129,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     fun setUp(theIntent: Intent) {
-        mPlaylistTitle = theIntent.getStringExtra(getString(R.string.extraLaunchPlaylistTitle))
-
-        // Save the channel's name as the youtube commit playlist name if there is no entry in the database
-        // TODO: Set the playlist title?
-//        if (PlaylistChannels.getChannels(this, mPlaylistTitle).isEmpty()) {
-//            changePlaylistTitle(mChannel.name)
-//        }
+        if (theIntent.hasExtra(getString(R.string.extraLaunchPlaylistTitle))) {
+            mPlaylistTitle = theIntent.getStringExtra(getString(R.string.extraLaunchPlaylistTitle))
+        } else {
+            // Look in shared preferences to see if we've chosen a playlist title, otherwise use the default
+            mPlaylistTitle = getLaunchPlaylistTitle()
+        }
 
         // Save the launch channel to sharedPreferences so we start there next time
         saveLaunchPlaylistTitle(mPlaylistTitle)
@@ -155,12 +154,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         val editor = preferences.edit()
         editor.putString(getString(R.string.prefPlaylistTitle), playlistTitle)
         editor.apply()
-
-        // TODO: make sure my assumption is correct about not needing this
-        // I don't think we need this anymore. The playlist should already be added when the playlist is created.
-        // insert the Channel into the Channels database (or do nothing if it's already there).
-        // We'll need it to launch MainActivity right away the next time LaunchActivity loads
-//        Channels.addChannel(applicationContext, channel)
+    }
+    private fun getLaunchPlaylistTitle(): String {
+        // If we have a stored preference for the last playlist we opened, open that one. OTherwise use the default.
+        val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
+        val playlistTitle = preferences.getString(getString(R.string.prefPlaylistTitle), getString(R.string.defaultPlaylistTitle))
+        return playlistTitle
     }
 
     protected fun makeLinkClickable(strBuilder: SpannableStringBuilder, span: URLSpan)
