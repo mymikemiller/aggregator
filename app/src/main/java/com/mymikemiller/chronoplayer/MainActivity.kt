@@ -215,12 +215,14 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     private fun setNoVideosWarningsVisibility() {
+        // Show the "no videos due to everything being removed" message if appropriate
         if (mDetailsByDate.size == 0 && mDetailsByDateIncludingRemoved.size > 0) {
             mNoVideosDueToRemovedTextView.visibility = View.VISIBLE
         } else {
             mNoVideosDueToRemovedTextView.visibility = View.GONE
         }
 
+        // Show the "no videos due to no channels" message if appropriate
         if (PlaylistChannels.getChannels(this, mPlaylistTitle).size == 0) {
             mNoVideosDueToNoChannelsTextView.visibility = View.VISIBLE
         } else {
@@ -615,12 +617,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             mEpisodeViewPagerAdapter.details = details
             mEpisodeViewPagerAdapter.notifyDataSetChanged()
 
-//            if (details.isEmpty()) {
-//                mEpisodePager.visibility = View.GONE
-//            } else {
-//                mEpisodePager.visibility = View.VISIBLE
-//
-//            }
+            if (details.isEmpty()) {
+                mEpisodePager.visibility = View.GONE
+            } else {
+                mEpisodePager.visibility = View.VISIBLE
+            }
         }
     }
 
