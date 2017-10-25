@@ -57,7 +57,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     val recordCurrentTimeHandler: Handler = Handler()
     private lateinit var mPlaylistRecyclerView: RecyclerView
     private lateinit var mLinearLayoutManager: LinearLayoutManager
-    private var mAdapter: RecyclerAdapter = RecyclerAdapter(this, listOf(), {true}, {true}, null)
+    private var mAdapter: RecyclerAdapter = RecyclerAdapter(this, listOf(), { true }, { true }, null)
     private lateinit var mUpButton: ImageView
     private lateinit var mDownButton: ImageView
     private lateinit var mTargetButton: ImageView
@@ -155,6 +155,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         editor.putString(getString(R.string.prefPlaylistTitle), playlistTitle)
         editor.apply()
     }
+
     private fun getLaunchPlaylistTitle(): String {
         // If we have a stored preference for the last playlist we opened, open that one. OTherwise use the default.
         val preferences = getSharedPreferences(getString(R.string.sharedPrefsName), Context.MODE_PRIVATE)
@@ -162,12 +163,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         return playlistTitle
     }
 
-    protected fun makeLinkClickable(strBuilder: SpannableStringBuilder, span: URLSpan)
-    {
+    protected fun makeLinkClickable(strBuilder: SpannableStringBuilder, span: URLSpan) {
         val start = strBuilder.getSpanStart(span);
         val end = strBuilder.getSpanEnd(span);
         val flags = strBuilder.getSpanFlags(span);
-        val clickable: ClickableSpan = object: ClickableSpan() {
+        val clickable: ClickableSpan = object : ClickableSpan() {
             override fun onClick(widget: View?) {
                 when (span.url) {
                     "showAll" -> showAllVideos()
@@ -193,7 +193,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         var sequence = Html.fromHtml(html);
         var strBuilder = SpannableStringBuilder(sequence);
         var urls = strBuilder.getSpans(0, sequence.length, URLSpan::class.java)
-        for(span in urls) {
+        for (span in urls) {
             makeLinkClickable(strBuilder, span)
         }
         mNoVideosDueToRemovedTextView.setText(strBuilder)
@@ -205,7 +205,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         sequence = Html.fromHtml(html);
         strBuilder = SpannableStringBuilder(sequence);
         urls = strBuilder.getSpans(0, sequence.length, URLSpan::class.java)
-        for(span in urls) {
+        for (span in urls) {
             makeLinkClickable(strBuilder, span)
         }
         mNoVideosDueToNoChannelsTextView.setText(strBuilder)
@@ -228,6 +228,8 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         } else {
             mNoVideosDueToNoChannelsTextView.visibility = View.GONE
         }
+
+        refreshEpisodePagerVisibility()
     }
 
     private fun setUpYouTubeFetch() {
@@ -296,11 +298,12 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     mEpisodePager.setCurrentItem(mEpisodePager.currentItem + 1, true)
                 })
                 mEpisodePager.setAdapter(mEpisodeViewPagerAdapter)
+                refreshEpisodePagerVisibility()
 
                 mAdapter = RecyclerAdapter(this, mDetailsByDate, isSelected, onItemClick, removeBeforeDate)
                 mAdapterInitialized = true
                 mPlaylistRecyclerView.setAdapter(mAdapter)
-                mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size-1)
+                mAdapter.notifyItemRangeChanged(0, mDetailsByDate.size - 1)
                 fetchVideosProgressSection.visibility = View.GONE
 
                 // If the channel has no videos, don't play anything.
@@ -337,7 +340,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     }
 
     // Set up what happens when a playlist item is clicked
-    val onItemClick: (Detail) -> Unit = {detail ->
+    val onItemClick: (Detail) -> Unit = { detail ->
         run {
             if (detail != mCurrentlyPlayingVideoDetail) {
                 playVideo(detail, false)
@@ -351,7 +354,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
     fun removeDuplicates(details: List<Detail>): List<Detail> {
         val withoutDuplicates = mutableListOf<Detail>()
-        for(detail in details) {
+        for (detail in details) {
             if (!withoutDuplicates.contains(detail)) {
                 withoutDuplicates.add(detail)
             }
@@ -359,7 +362,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         return withoutDuplicates
     }
 
-    val isSelected: (Detail) -> Boolean = {detail ->
+    val isSelected: (Detail) -> Boolean = { detail ->
         run {
             detail == mCurrentlyPlayingVideoDetail
         }
@@ -387,8 +390,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private fun setUpPlayer() {
         playerView.initialize(DeveloperKey.DEVELOPER_KEY, this)
     }
+
     private fun setUpEpisodePager() {
-        mEpisodePager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
+        mEpisodePager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
                 if (state == 0) { // finished scrolling
                     val detail = mEpisodeViewPagerAdapter.details[mEpisodePager.currentItem]
@@ -400,6 +404,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             override fun onPageSelected(position: Int) {}
         })
     }
+
     private fun setUpPlaylist() {
         mPlaylistRecyclerView.setLayoutManager(mLinearLayoutManager)
 
@@ -448,14 +453,15 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
                     mExpandButton.scaleY = -1f
                 }
             }
+
             override fun onPanelSlide(panel: View, slideOffset: Float) {}
         })
 
-        mExpandButton.setOnClickListener(object : View.OnClickListener{
+        mExpandButton.setOnClickListener(object : View.OnClickListener {
             override fun onClick(p0: View?) {
                 if (slidingLayout.panelState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
                     openPlaylist()
-                }else {
+                } else {
                     closePlaylist()
                 }
             }
@@ -479,6 +485,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             }
         })
     }
+
     private fun setUpPreferences() {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         mPreferencesButton.setOnClickListener {
@@ -490,7 +497,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                 when (theIntent?.action) {
                     PreferencesActivity.MANAGE_CHANNELS -> showManageChannelsActivity()
-                        PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity()
+                    PreferencesActivity.WATCH_HISTORY -> showWatchHistoryActivity()
                     PreferencesActivity.CHANGE_PLAYLIST_TITLE -> showPlaylistChooserActivity()
                     PreferencesActivity.SHOW_ALL -> showAllVideos()
                 }
@@ -589,9 +596,11 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         updateAdapters(mDetailsByDate)
         scrollToCurrentlyPlayingVideo()
     }
+
     fun openPlaylist() {
         slidingLayout.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
     }
+
     fun closePlaylist() {
         slidingLayout.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
     }
@@ -617,7 +626,18 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             mEpisodeViewPagerAdapter.details = details
             mEpisodeViewPagerAdapter.notifyDataSetChanged()
         }
+
+        refreshEpisodePagerVisibility()
     }
+
+    fun refreshEpisodePagerVisibility() {
+        if (mDetailsByDate.isEmpty()) {
+            mEpisodePager.visibility = View.GONE
+        } else {
+            mEpisodePager.visibility = View.VISIBLE
+        }
+    }
+
 
     fun showWatchHistoryActivity() {
         val watchHistoryIntent = Intent(this, WatchHistoryActivity::class.java)
@@ -825,10 +845,10 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
                 if (removeBeforeDate != null) {
                     if (detail.dateUploaded.value > removeBeforeDate.value) {
-                        afterRemoveBeforeDate == true
+                        afterRemoveBeforeDate = true
                     }
                 } else {
-                    afterRemoveBeforeDate == true
+                    afterRemoveBeforeDate = true
                 }
             }
         }
