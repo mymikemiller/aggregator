@@ -27,7 +27,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import com.mymikemiller.chronoplayer.util.PlaylistManipulator
 import com.mymikemiller.chronoplayer.util.RemovePrevious
-import kotlinx.android.synthetic.main.activity_main.*
 
 
 /**
@@ -245,6 +244,11 @@ class PreferencesActivity : PreferenceActivity(),
 
             val playlistTitle = activity.intent.getSerializableExtra(PreferencesActivity.EXTRA_PLAYLIST_TITLE) as String
 
+            if (mPlaylistTitle.isBlank()) {
+                Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
+                return
+            }
+
             val channels = PlaylistChannels.getChannels(activity, playlistTitle)
 
             // We can't use the intent to pass in the list of details because it's too big.
@@ -252,18 +256,23 @@ class PreferencesActivity : PreferenceActivity(),
             val details = RemovePrevious.filterOutRemoved(activity, playlistTitle,
                     PlaylistManipulator.orderByDate(
                             VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
-            // TODO: Why is this asReversed?
-            if (mPlaylistTitle.isBlank()) {
-                Toast.makeText(activity, "No playlist title set", Toast.LENGTH_LONG)
+
+            // If our playlist is empty, delete it instead of removing all videos. It's faster.
+            if (details.isEmpty()) {
+                // If we've removed all videos from the playlist, just delete the playlist.
+                // We'll create it again when the user commits some videos.
+                YouTubeAPI.emptyPlaylist(playlistTitle, {
+                    activity.runOnUiThread({
+                        Toast.makeText(activity, getString(R.string.playlistEmptied), Toast.LENGTH_LONG).show()
+                    })
+                })
                 return
             }
 
             // First remove videos from the beginning of the playlist
             YouTubeAPI.getDetailsToRemove(mPlaylistTitle, details, {playlistDetailsToRemove ->
                 if (!playlistDetailsToRemove.isEmpty()) {
-
-
-                    YouTubeAPI.removePlaylistDetailsFromPlaylist(playlistDetailsToRemove, setPercentageOfVideosRemoved)
+                    YouTubeAPI.removePlaylistDetailsFromPlaylist(activity, playlistDetailsToRemove, setPercentageOfVideosRemoved)
                 }
 
                 // Remove all the removed details from the list we'll be committing
@@ -319,20 +328,21 @@ class PreferencesActivity : PreferenceActivity(),
 
         val setPercentageOfVideosAdded: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->
             run {
+                if (activity != null) {
+                    activity.runOnUiThread({
+                        mProgressBar.max = totalVideos
+                        mProgressBar.setProgress(currentVideoNumber)
 
-                activity.runOnUiThread({
-                    mProgressBar.max = totalVideos
-                    mProgressBar.setProgress(currentVideoNumber)
+                        mProgressTitle.setText(getString(R.string.commitAddProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
 
-                    mProgressTitle.setText(getString(R.string.commitAddProgressTitle) + " (" + currentVideoNumber + "/" + totalVideos + ")")
-
-                    if (currentVideoNumber == totalVideos) {
-                        // After a short delay (so the user can see the progress at 100%), dismiss the dialog
-                        Handler().postDelayed({
-                            mCommitProgressDialog.dismiss()
-                        }, 1000)
-                    }
-                })
+                        if (currentVideoNumber == totalVideos) {
+                            // After a short delay (so the user can see the progress at 100%), dismiss the dialog
+                            Handler().postDelayed({
+                                mCommitProgressDialog.dismiss()
+                            }, 1000)
+                        }
+                    })
+                }
             }
         }
 

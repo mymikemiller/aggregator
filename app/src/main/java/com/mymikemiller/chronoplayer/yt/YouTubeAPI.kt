@@ -3,6 +3,7 @@ package com.mymikemiller.chronoplayer.yt
 import android.accounts.Account
 import android.content.Context
 import android.os.AsyncTask
+import android.widget.Toast
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.services.youtube.YouTube
@@ -112,7 +113,7 @@ class YouTubeAPI(context: Context, account: Account) {
         }
     }
 
-    fun removePlaylistDetailsFromPlaylist(playlistDetailsToRemove: List<PlaylistDetail>,
+    fun removePlaylistDetailsFromPlaylist(context: Context, playlistDetailsToRemove: List<PlaylistDetail>,
                                           setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit) {
         if (playlistDetailsToRemove.size == 0)
             return
@@ -127,8 +128,15 @@ class YouTubeAPI(context: Context, account: Account) {
                 val playlistVideoId = playlistDetail.playlistVideoId
 
                 var request = mYouTube.playlistItems().delete(playlistVideoId)
-                request.execute()
-                    setPercentageCallback(playlistDetailsToRemove.size, index + 1)
+                try {
+                    request.execute()
+                } catch (e: Exception) {
+                    context.run {
+                        Toast.makeText(context, R.string.errorOccurred, Toast.LENGTH_LONG)
+                    }
+                    return
+                }
+                setPercentageCallback(playlistDetailsToRemove.size, index + 1)
             } else {
                 break;
             }
@@ -219,6 +227,19 @@ class YouTubeAPI(context: Context, account: Account) {
         })
     }
 
+    fun emptyPlaylist(playlistTitle: String, callback: () -> Unit) {
+        getUserPlaylist(playlistTitle, { playlist ->
+            if (playlist != null) {
+                mYouTube.playlists().delete(playlist.id).execute()
+
+                getOrCreateUserPlaylist(playlistTitle, { playlist ->
+                    callback()
+                })
+            }
+
+        })
+    }
+
     // Static functions that don't require authoriation
     companion object {
         // Scope for modifying the user's private data
@@ -282,12 +303,20 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
-        fun removePlaylistDetailsFromPlaylist(playlistDetailsToRemove: List<PlaylistDetail>,
+        fun removePlaylistDetailsFromPlaylist(context: Context, playlistDetailsToRemove: List<PlaylistDetail>,
                                               setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit ) {
             if (isAuthenticated()) {
-                sYouTubeAPI!!.removePlaylistDetailsFromPlaylist(playlistDetailsToRemove, setPercentageCallback)
+                sYouTubeAPI!!.removePlaylistDetailsFromPlaylist(context, playlistDetailsToRemove, setPercentageCallback)
             } else {
                 throw RuntimeException("Cannot removePlaylistDetailsFromPlaylist. User is not authenticated.")
+            }
+        }
+
+        fun emptyPlaylist(playlistTitle: String, callback: ()->Unit) {
+            if (isAuthenticated()) {
+                sYouTubeAPI!!.emptyPlaylist(playlistTitle, callback)
+            } else {
+                throw RuntimeException("Cannot getDetailsToCommmit. User is not authenticated.")
             }
         }
 
