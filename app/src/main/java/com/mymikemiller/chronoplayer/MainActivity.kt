@@ -616,12 +616,6 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
             mAdapter.notifyDataSetChanged()
             mEpisodeViewPagerAdapter.details = details
             mEpisodeViewPagerAdapter.notifyDataSetChanged()
-
-            if (details.isEmpty()) {
-                mEpisodePager.visibility = View.GONE
-            } else {
-                mEpisodePager.visibility = View.VISIBLE
-            }
         }
     }
 

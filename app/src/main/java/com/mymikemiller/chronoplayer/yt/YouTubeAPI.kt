@@ -143,7 +143,7 @@ class YouTubeAPI(context: Context, account: Account) {
         }
     }
 
-    fun addVideosToPlaylist(playlistTitle: String, detailsToCommit: List<Detail>,
+    fun addVideosToPlaylist(context: Context, playlistTitle: String, detailsToCommit: List<Detail>,
                             setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit)
     {
         if (detailsToCommit.size == 0)
@@ -153,7 +153,9 @@ class YouTubeAPI(context: Context, account: Account) {
         // operation by calling YouTubeAPI.cancelCommit()
         mCommitCancelled = false
 
+        // Get the user's playlist
         getOrCreateUserPlaylist(playlistTitle, { playlist -> kotlin.run {
+            // Now add the items
             for (index in 0..detailsToCommit.size - 1) {
                 if (!mCommitCancelled) {
                     val detail = detailsToCommit[index]
@@ -168,9 +170,12 @@ class YouTubeAPI(context: Context, account: Account) {
 
                     snippet.resourceId = resourceId
                     playlistItem.snippet = snippet
-
                     var request = mYouTube.playlistItems().insert("snippet", playlistItem)
-                    request.execute()
+                    try {
+                        request.execute()
+                    } catch (e: Exception) {
+                        Toast.makeText(context, R.string.errorOccurred, Toast.LENGTH_LONG)
+                    }
                     setPercentageCallback(detailsToCommit.size, index + 1)
                 } else {
                     break;
@@ -294,10 +299,10 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
-        fun addVideosToPlaylist(playlistTitle: String, detailsToCommit: List<Detail>,
+        fun addVideosToPlaylist(context: Context, playlistTitle: String, detailsToCommit: List<Detail>,
                                 setPercentageCallback: (totalVideos: kotlin.Int, currentVideoNumber: kotlin.Int) -> Unit) {
             if (isAuthenticated()) {
-                sYouTubeAPI!!.addVideosToPlaylist(playlistTitle, detailsToCommit, setPercentageCallback)
+                sYouTubeAPI!!.addVideosToPlaylist(context, playlistTitle, detailsToCommit, setPercentageCallback)
             } else {
                 throw RuntimeException("Cannot addVideosToPlaylist. User is not authenticated.")
             }

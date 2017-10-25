@@ -303,7 +303,7 @@ class PreferencesActivity : PreferenceActivity(),
                             mCommitProgressDialog.show();
                         })
 
-                        YouTubeAPI.addVideosToPlaylist(mPlaylistTitle, detailsToCommit, setPercentageOfVideosAdded)
+                        YouTubeAPI.addVideosToPlaylist(activity, mPlaylistTitle, detailsToCommit, setPercentageOfVideosAdded)
                     }
                 })
             })
