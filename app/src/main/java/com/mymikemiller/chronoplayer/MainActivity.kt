@@ -269,8 +269,13 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     // details, including those from the database, removed or not.
     val detailsFetched: (List<Detail>) -> Unit = { allDetailsUnordered ->
         run {
+            // Add the details from the database
+            val allDetailsIncludingOld = mutableListOf<Detail>()
+            allDetailsIncludingOld.addAll(
+                    VideoList.getAllDetailsFromDb(this, mPlaylistTitle))
+
             // Make sure there are no duplicates in the list. It's a bandaid, but that's fine.
-            val allDetailsUnorderedWithoutDuplicates = removeDuplicates(allDetailsUnordered)
+            val allDetailsUnorderedWithoutDuplicates = removeDuplicates(allDetailsIncludingOld)
 
             //TODO: we probably shouldn't be doing all this on the UI thread
             runOnUiThread {

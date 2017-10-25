@@ -249,7 +249,6 @@ class PreferencesActivity : PreferenceActivity(),
 
             // We can't use the intent to pass in the list of details because it's too big.
             // Instead, get the list of details from the database
-            // TODO: Make this work using the playlistTitle to find the remove before date
             val details = RemovePrevious.filterOutRemoved(activity, playlistTitle,
                     PlaylistManipulator.orderByDate(
                             VideoList.getAllDetailsFromDb(activity, channels))).asReversed()
