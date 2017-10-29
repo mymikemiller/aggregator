@@ -79,7 +79,7 @@
     <string name="commitPreparingTitle">Committing videoss</string>
     <string name="commitRemoveProgressTitle">Removing videos from YouTube playlist</string>
     <string name="commitAddProgressTitle">Adding videos to YouTube playlist</string>
-    <string name="noVideosToCommit">Playlist already contains all videos</string>
+    <string name="success">Success!</string>
     <string name="playlistEmptied">Playlist emptied.</string>
     <string name="show_my_playlists">Show my playlists</string>
     <string name="errorOccurred">An error occurred. Please try again.</string>

@@ -17,12 +17,17 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import android.view.KeyEvent.KEYCODE_BACK
 import android.widget.ImageView
 import com.mymikemiller.chronoplayer.util.VideoList
+import com.mymikemiller.chronoplayer.yt.YouTubeAPI
 
 
 /**
  * Allows you to manage which channels end up in the playlist
  */
 class ManageChannelsActivity : AppCompatActivity() {
+
+    companion object {
+        var channelsChanged = false
+    }
 
     val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
 
@@ -92,6 +97,8 @@ class ManageChannelsActivity : AppCompatActivity() {
         for (channel in mChannels) {
             PlaylistChannels.addChannel(this, mPlaylistTitle, channel)
         }
+
+        channelsChanged = true
 
         val i: Intent = Intent()
         // when we press back, we want to fetch everything again, so clear the video list

@@ -261,52 +261,46 @@ class PreferencesActivity : PreferenceActivity(),
             if (details.isEmpty()) {
                 // If we've removed all videos from the playlist, just delete the playlist.
                 // We'll create it again when the user commits some videos.
-                YouTubeAPI.emptyPlaylist(playlistTitle, {
+                YouTubeAPI.emptyPlaylistIfNecessary(playlistTitle, true, {
                     activity.runOnUiThread({
                         Toast.makeText(activity, getString(R.string.playlistEmptied), Toast.LENGTH_LONG).show()
                     })
                 })
+                // We're done here. No need to remove (we already did) or add any videos
                 return
             }
 
-            // First remove videos from the beginning of the playlist
-            YouTubeAPI.getDetailsToRemove(mPlaylistTitle, details, {playlistDetailsToRemove ->
-                if (!playlistDetailsToRemove.isEmpty()) {
-                    YouTubeAPI.removePlaylistDetailsFromPlaylist(activity, playlistDetailsToRemove, setPercentageOfVideosRemoved)
-                }
+            // If we added or removed channels, we simply remove everything first because if we don't,
+            // we won't pick up the new channel's stuff earlier in the playlist.
+            YouTubeAPI.emptyPlaylistIfNecessary(playlistTitle, ManageChannelsActivity.channelsChanged, {
+                // reset channelsChanged so we don't delete everything next time
+                ManageChannelsActivity.channelsChanged = false
+                // First remove videos from the beginning of the playlist
+                YouTubeAPI.getDetailsToRemove(mPlaylistTitle, details, {playlistDetailsToRemove ->
+                    if (playlistDetailsToRemove.isNotEmpty()) {
+                        YouTubeAPI.removePlaylistDetailsFromPlaylist(activity, playlistDetailsToRemove, setPercentageOfVideosRemoved)
+                    }
 
-                // Remove all the removed details from the list we'll be committing
-                val allDetailsAfterRemoved = mutableListOf<Detail>()
-                for (detail in details) {
-                    var found = false
-                    for(playlistDetailToRemove in playlistDetailsToRemove) {
-                        if (playlistDetailToRemove.detail == detail) {
-                            found = true
-                            break;
+                    // Now add the new videos
+                    YouTubeAPI.getDetailsToCommit(playlistTitle, details, { detailsToCommit ->
+                        if (detailsToCommit.isEmpty()) {
+                            activity.runOnUiThread({
+                                Toast.makeText(activity, getString(R.string.success),
+                                        Toast.LENGTH_LONG).show()
+                                mCommitProgressDialog.hide()
+                            })
+                        } else {
+                            activity.runOnUiThread({
+                                mCommitProgressDialog.show();
+                            })
+
+                            YouTubeAPI.addVideosToPlaylist(activity, mPlaylistTitle, detailsToCommit, setPercentageOfVideosAdded)
                         }
-                    }
-                    if (!found) {
-                        allDetailsAfterRemoved.add(detail)
-                    }
-                }
-
-                // Now add the new videos
-                YouTubeAPI.getDetailsToCommit(playlistTitle, allDetailsAfterRemoved, { detailsToCommit ->
-                    if (detailsToCommit.isEmpty()) {
-                        activity.runOnUiThread({
-                            Toast.makeText(activity, getString(R.string.noVideosToCommit),
-                                    Toast.LENGTH_LONG).show()
-                            mCommitProgressDialog.hide()
-                        })
-                    } else {
-                        activity.runOnUiThread({
-                            mCommitProgressDialog.show();
-                        })
-
-                        YouTubeAPI.addVideosToPlaylist(activity, mPlaylistTitle, detailsToCommit, setPercentageOfVideosAdded)
-                    }
+                    })
                 })
             })
+
+
         }
 
         val setPercentageOfVideosRemoved: (kotlin.Int, kotlin.Int) -> Unit = { totalVideos, currentVideoNumber ->

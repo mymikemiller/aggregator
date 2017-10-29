@@ -317,11 +317,15 @@ class YouTubeAPI(context: Context, account: Account) {
             }
         }
 
-        fun emptyPlaylist(playlistTitle: String, callback: ()->Unit) {
-            if (isAuthenticated()) {
-                sYouTubeAPI!!.emptyPlaylist(playlistTitle, callback)
+        fun emptyPlaylistIfNecessary(playlistTitle: String, necessary: Boolean, callback: ()->Unit) {
+            if (necessary) {
+                if (isAuthenticated()) {
+                    sYouTubeAPI!!.emptyPlaylist(playlistTitle, callback)
+                } else {
+                    throw RuntimeException("Cannot getDetailsToCommmit. User is not authenticated.")
+                }
             } else {
-                throw RuntimeException("Cannot getDetailsToCommmit. User is not authenticated.")
+                callback()
             }
         }
 
