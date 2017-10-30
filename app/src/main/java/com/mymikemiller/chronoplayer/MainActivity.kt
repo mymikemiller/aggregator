@@ -249,6 +249,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
 
         // Show the fetch progress section
         fetchVideosProgressSection.visibility = View.VISIBLE
+        gatheringTextView.text = getString(R.string.preparingToGather)
+        fetchVideosProgresBar.setProgress(0)
+        fetchVideosProgressText.setText("")
 
         // Get the details ordered by date uploaded and force an upgrade if necessary
         val detailsFromDbByDate = PlaylistManipulator.orderByDate(VideoList.getAllDetailsFromDb(this,
@@ -526,6 +529,9 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         run {
 
             runOnUiThread({
+
+                gatheringTextView.text = getString(R.string.fetching)
+
                 if (fetchVideosProgresBar.max == 0) {
                     // Prevent showing 0/0
                     fetchVideosProgressText.visibility = View.GONE

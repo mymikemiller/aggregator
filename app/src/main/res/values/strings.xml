@@ -5,6 +5,7 @@
     <string name="error_player">There was an error initializing the YouTubePlayer (%1$s)</string>
     <string name="thumbnail">Thumbnail</string>
     <string name="background">Background</string>
+    <string name="preparingToGather">Preparing to gather videos from YouTube</string>
     <string name="fetching">Gathering videos from YouTube</string>
     <string name="noVideosWarningDueToRemoved">No videos in playlist. They\'ve all been removed.</string>
     <string name="noVideosWarningDueToNoChannels">No videos in playlist. There are no channels set up.</string>

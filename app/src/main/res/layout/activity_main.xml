@@ -46,7 +46,7 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
 
-                <!-- Progress section (text box and bar) -->
+                <!-- Progress section (text boxes and bar) -->
                 <LinearLayout
                     android:id="@+id/fetchVideosProgressSection"
                     android:layout_width="match_parent"
