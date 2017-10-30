@@ -48,6 +48,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
     private lateinit var player: YouTubePlayer
     private lateinit var otherViews: View
     private lateinit var fetchVideosProgressSection: LinearLayout
+    private lateinit var gatheringTextView: TextView
     private lateinit var fetchVideosProgresBar: ProgressBar
     private lateinit var fetchVideosProgresText: TextView
     private var fullscreen: Boolean = false
@@ -94,6 +95,7 @@ class MainActivity : YouTubeFailureRecoveryActivity(),
         playerView = findViewById<YouTubePlayerView>(R.id.player)
         otherViews = findViewById(R.id.other_views)
         fetchVideosProgressSection = findViewById(R.id.fetchVideosProgressSection)
+        gatheringTextView = findViewById(R.id.gatheringTextView)
         fetchVideosProgresBar = findViewById(R.id.fetchVideosProgressBar)
         fetchVideosProgresText = findViewById(R.id.fetchVideosProgressText)
         playerStateChangeListener = MyPlayerStateChangeListener(playNextVideo)

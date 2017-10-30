@@ -239,6 +239,12 @@ class YouTubeAPI(context: Context, account: Account) {
 
                 getOrCreateUserPlaylist(playlistTitle, { playlist ->
                     callback()
+                    return@getOrCreateUserPlaylist
+                })
+            } else {
+                // We didn't find a playlist, so create one
+                getOrCreateUserPlaylist(playlistTitle, { playlist ->
+                    callback()
                 })
             }
 

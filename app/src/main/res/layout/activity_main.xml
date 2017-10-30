@@ -56,6 +56,7 @@
 
                     <!-- The string telling the user that we're fetching from youtube -->
                     <TextView
+                        android:id = "@+id/gatheringTextView"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="@string/fetching"
