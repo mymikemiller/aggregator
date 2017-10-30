@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 import android.app.Activity
 import android.os.Bundle
@@ -8,9 +8,7 @@ import kotlinx.android.synthetic.main.activity_watch_history.*
 import android.content.Intent
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import com.google.api.client.util.DateTime
-import com.mymikemiller.chronoplayer.util.VideoList
-import com.mymikemiller.chronoplayer.util.WatchHistory
+import com.mymikemiller.aggregator.util.WatchHistory
 
 
 class WatchHistoryActivity : AppCompatActivity() {

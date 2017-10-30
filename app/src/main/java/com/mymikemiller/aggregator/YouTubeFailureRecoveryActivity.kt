@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 /*
  * Copyright 2012 Google Inc. All Rights Reserved.
@@ -22,7 +22,6 @@ import com.google.android.youtube.player.YouTubePlayer
 
 import android.content.Intent
 import android.widget.Toast
-import com.mymikemiller.chronoplayer.R
 
 /**
  * An abstract activity which deals with recovering from errors which may occur during API

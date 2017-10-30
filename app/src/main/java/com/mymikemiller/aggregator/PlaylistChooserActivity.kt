@@ -1,31 +1,22 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.SearchView
 import android.support.v7.widget.Toolbar
 import android.view.Menu
-import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.Toast
-import com.mymikemiller.chronoplayer.util.Channels
-import com.mymikemiller.chronoplayer.util.PlaylistChannels
-import com.mymikemiller.chronoplayer.yt.YouTubeAPI
-import kotlinx.android.synthetic.main.activity_main.*
+import com.mymikemiller.aggregator.yt.YouTubeAPI
 import android.widget.ArrayAdapter
-import android.R.string.cancel
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.os.Handler
 import android.text.InputType
-import android.support.v4.widget.SearchViewCompat.setInputType
 import android.util.Log
 import android.widget.EditText
 import com.google.android.gms.auth.api.Auth
@@ -35,7 +26,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.Scope
-import com.google.api.services.youtube.YouTube
 
 /**
  * Created by mikem on 10/14/2017.

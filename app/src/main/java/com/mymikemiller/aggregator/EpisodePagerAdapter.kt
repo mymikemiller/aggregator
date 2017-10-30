@@ -1,15 +1,13 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 import android.content.Context
 import android.graphics.Typeface
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.support.v4.view.PagerAdapter
-import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import com.squareup.picasso.Picasso
-import me.grantland.widget.AutofitTextView
 
 /**
  *

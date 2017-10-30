@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">ChronoPlayer</string>
-    <string name="app_label">ChronoPlayer</string>
-    <string name="defaultPlaylistTitle">ChronoPlayer Playlist</string>
+    <string name="app_name">Aggregator</string>
+    <string name="app_label">Aggregator</string>
+    <string name="defaultPlaylistTitle">Aggregator Playlist</string>
     <string name="error_player">There was an error initializing the YouTubePlayer (%1$s)</string>
     <string name="thumbnail">Thumbnail</string>
     <string name="background">Background</string>

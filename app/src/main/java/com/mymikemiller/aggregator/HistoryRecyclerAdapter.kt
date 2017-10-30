@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
@@ -9,8 +9,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.squareup.picasso.Picasso
-import java.text.SimpleDateFormat
-import java.util.*
 
 class HistoryRecyclerAdapter(private val context: Context,
                              var details: List<Detail>,

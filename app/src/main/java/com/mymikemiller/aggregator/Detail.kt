@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 import android.os.Parcel
 import android.os.Parcelable

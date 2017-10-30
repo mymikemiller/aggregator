@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 import android.app.Activity
 import android.content.*
@@ -18,7 +18,7 @@ import android.view.inputmethod.InputMethodManager
 import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.view.ViewPager
 import android.content.Intent
-import com.mymikemiller.chronoplayer.util.*
+import com.mymikemiller.aggregator.util.*
 import android.content.IntentFilter
 import android.text.*
 import android.text.method.LinkMovementMethod

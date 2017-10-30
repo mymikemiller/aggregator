@@ -1,23 +1,16 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.os.Parcelable
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ListView
-import android.widget.Toast
-import com.mymikemiller.chronoplayer.util.PlaylistChannels
-import com.sothree.slidinguppanel.SlidingUpPanelLayout
-import android.view.KeyEvent.KEYCODE_BACK
-import android.widget.ImageView
-import com.mymikemiller.chronoplayer.util.VideoList
-import com.mymikemiller.chronoplayer.yt.YouTubeAPI
+import com.mymikemiller.aggregator.util.PlaylistChannels
+import com.mymikemiller.aggregator.util.VideoList
 
 
 /**

@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 import android.app.Activity
 import android.content.Intent
@@ -8,9 +8,8 @@ import android.support.v7.widget.SearchView
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
-import com.mymikemiller.chronoplayer.util.Channels
-import com.mymikemiller.chronoplayer.util.PlaylistChannels
-import com.mymikemiller.chronoplayer.yt.YouTubeAPI
+import com.mymikemiller.aggregator.util.Channels
+import com.mymikemiller.aggregator.yt.YouTubeAPI
 
 
 /**

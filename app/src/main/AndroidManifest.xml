@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mymikemiller.chronoplayer">
+    package="com.mymikemiller.aggregator">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -16,7 +16,7 @@
 
         <!-- this SearchableActivity performs youtube channel searches
              and displays the results in a ListView-->
-        <activity android:name=".PlaylistChooserActivity"
+        <activity android:name="com.mymikemiller.aggregator.PlaylistChooserActivity"
             android:launchMode="singleTop"
             android:label="@string/title_activity_select_playlist"
             android:theme="@style/AppTheme.NoActionBar">
@@ -25,7 +25,7 @@
 
         <!-- this SearchableActivity performs youtube channel searches
              and displays the results in a ListView-->
-        <activity android:name=".ChannelSearchActivity"
+        <activity android:name="com.mymikemiller.aggregator.ChannelSearchActivity"
             android:launchMode="singleTop">
 
             <intent-filter>
@@ -39,7 +39,7 @@
                 android:value=".ChannelSearchableActivity" />
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name="com.mymikemiller.aggregator.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="sensor"
             android:windowSoftInputMode="adjustResize">
@@ -50,19 +50,19 @@
             </intent-filter>
 
         </activity>
-        <activity android:name=".PreferencesActivity">
+        <activity android:name="com.mymikemiller.aggregator.PreferencesActivity">
 
             <intent-filter>
-                <action android:name="com.mikemiller.chronoplayer.USER_SIGNED_IN" />
-                <action android:name="com.mikemiller.chronoplayer.USER_SIGNED_OUT" />
+                <action android:name="com.mikemiller.aggregator.USER_SIGNED_IN" />
+                <action android:name="com.mikemiller.aggregator.USER_SIGNED_OUT" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".WatchHistoryActivity"
+            android:name="com.mymikemiller.aggregator.WatchHistoryActivity"
             android:label="@string/title_activity_watch_history"
             android:theme="@style/AppTheme.NoActionBar"/>
         <activity
-            android:name=".ManageChannelsActivity"
+            android:name="com.mymikemiller.aggregator.ManageChannelsActivity"
             android:label="@string/title_activity_manage_channels"
             android:theme="@style/AppTheme.NoActionBar"/>
     </application>

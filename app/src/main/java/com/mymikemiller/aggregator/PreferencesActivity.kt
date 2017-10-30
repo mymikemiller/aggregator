@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 import android.app.AlertDialog
 import android.os.Bundle
@@ -16,17 +16,17 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.Scope
-import com.mymikemiller.chronoplayer.util.PlaylistChannels
-import com.mymikemiller.chronoplayer.util.VideoList
-import com.mymikemiller.chronoplayer.yt.YouTubeAPI
+import com.mymikemiller.aggregator.util.PlaylistChannels
+import com.mymikemiller.aggregator.util.VideoList
+import com.mymikemiller.aggregator.yt.YouTubeAPI
 import android.content.Context
 import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import com.mymikemiller.chronoplayer.util.PlaylistManipulator
-import com.mymikemiller.chronoplayer.util.RemovePrevious
+import com.mymikemiller.aggregator.util.PlaylistManipulator
+import com.mymikemiller.aggregator.util.RemovePrevious
 
 
 /**

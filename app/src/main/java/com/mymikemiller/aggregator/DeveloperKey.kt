@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer
+package com.mymikemiller.aggregator
 
 /**
  * Static container class for holding a reference to your YouTube Developer Key.
@@ -11,6 +11,6 @@ object DeveloperKey {
      * [Google Developers Console](https://console.developers.google.com/)
      * to register a new developer key.
      */
-    val DEVELOPER_KEY = "REPLACEME"
+    val DEVELOPER_KEY = "AIzaSyCwBqRjexUgwnrREfmhV8gelI6U0Ptgc60"
 
 }

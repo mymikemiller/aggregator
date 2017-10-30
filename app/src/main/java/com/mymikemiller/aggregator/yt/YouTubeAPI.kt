@@ -1,4 +1,4 @@
-package com.mymikemiller.chronoplayer.yt
+package com.mymikemiller.aggregator.yt
 
 import android.accounts.Account
 import android.content.Context
@@ -21,7 +21,7 @@ import com.google.api.services.youtube.model.PlaylistSnippet
 import com.google.api.services.youtube.model.PlaylistItem
 import com.google.api.services.youtube.model.ResourceId
 import com.google.api.services.youtube.model.PlaylistItemSnippet
-import com.mymikemiller.chronoplayer.*
+import com.mymikemiller.aggregator.*
 
 
 val HTTP_TRANSPORT = NetHttpTransport()
@@ -49,7 +49,7 @@ class YouTubeAPI(context: Context, account: Account) {
         val JSON_FACTORY: JsonFactory = JacksonFactory.getDefaultInstance()
 
         mYouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-                .setApplicationName("ChronoPlayer")
+                .setApplicationName("Aggregator")
                 .build()
     }
 
@@ -263,7 +263,7 @@ class YouTubeAPI(context: Context, account: Account) {
          * YouTube Data API requests.
          */
         private val youtube: YouTube = YouTube.Builder(HTTP_TRANSPORT, JSON_FACTORY,
-                HttpRequestInitializer { }).setApplicationName("chronoplayer").build()
+                HttpRequestInitializer { }).setApplicationName("aggregator").build()
 
 
         fun isAuthenticated() : Boolean{

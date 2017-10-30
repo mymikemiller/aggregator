@@ -1,19 +1,16 @@
-package com.mymikemiller.chronoplayer.util
+package com.mymikemiller.aggregator.util
 
 import android.content.Context
-import com.mymikemiller.chronoplayer.Detail
-import com.mymikemiller.chronoplayer.yt.YouTubeAPI
+import com.mymikemiller.aggregator.Detail
+import com.mymikemiller.aggregator.yt.YouTubeAPI
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.content.ContentValues.TAG
 import android.content.ContentValues
-import android.os.AsyncTask
 import android.util.Log
 import com.google.api.client.util.DateTime
-import com.google.api.services.youtube.model.Playlist
-import com.mymikemiller.chronoplayer.Channel
-import com.mymikemiller.chronoplayer.DeveloperKey
-import com.mymikemiller.chronoplayer.PlaylistDetail
+import com.mymikemiller.aggregator.Channel
+import com.mymikemiller.aggregator.PlaylistDetail
 import java.sql.SQLException
 
 /**
