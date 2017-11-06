@@ -28,7 +28,8 @@ import com.google.api.client.util.DateTime
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
- * A video player allowing users to watch YouTube episodes in chronological order and commit the resulting playlist to YouTube.
+ * A video player allowing users to watch aggregated YouTube episodes in chronological order and
+ * commit the resulting playlist to YouTube.
  */
 class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubePlayer.OnFullscreenListener {
