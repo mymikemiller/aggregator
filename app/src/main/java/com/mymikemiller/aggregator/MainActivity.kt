@@ -34,7 +34,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : YouTubeFailureRecoveryActivity(),
         YouTubePlayer.OnFullscreenListener {
 
-    val TAG = "ChronoPlayer"
+    val TAG = "Aggregator"
 
     val WATCH_HISTORY_REQUEST = 1  // The request code from the WatchHistoryActivity activity
     val CHANNEL_SELECT_REQUEST = 2  // The request code from the ChannelSelectActivity activity
