@@ -39,13 +39,13 @@ class PreferencesActivity : PreferenceActivity(),
         val RC_SIGN_IN = 3 // The request code for google sign in
         val TAG = "PreferencesActivity"
         val EXTRA_PLAYLIST_TITLE = "playlistTitle"
-        val APP_SHARED_PREFERENCES = "CHRONOPLAYER_SHARED_PREFERENCES"
+        val APP_SHARED_PREFERENCES = "AGGREGATOR_SHARED_PREFERENCES"
         val PLAYLIST_SHARED_PREF_NAME = "PlaylistPrefs"
 
-        const val MANAGE_CHANNELS = "com.mymikemiller.chronoplayer.MANAGE_CHANNELS"
-        const val CHANGE_PLAYLIST_TITLE = "com.mymikemiller.chronoplayer.CHANGE_PLAYLIST_TITLE"
-        const val SHOW_ALL = "com.mymikemiller.chronoplayer.SHOW_ALL"
-        const val WATCH_HISTORY = "com.mymikemiller.chronoplayer.WATCH_HISTORY"
+        const val MANAGE_CHANNELS = "com.mymikemiller.aggregator.MANAGE_CHANNELS"
+        const val CHANGE_PLAYLIST_TITLE = "com.mymikemiller.aggregator.CHANGE_PLAYLIST_TITLE"
+        const val SHOW_ALL = "com.mymikemiller.aggregator.SHOW_ALL"
+        const val WATCH_HISTORY = "com.mymikemiller.aggregator.WATCH_HISTORY"
 
         private lateinit var mGoogleApiClient: GoogleApiClient
 
