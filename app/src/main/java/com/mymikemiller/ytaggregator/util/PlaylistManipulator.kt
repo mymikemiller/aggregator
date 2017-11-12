@@ -1,6 +1,6 @@
-package com.mymikemiller.aggregator.util
+package com.mymikemiller.ytaggregator.util
 
-import com.mymikemiller.aggregator.Detail
+import com.mymikemiller.ytaggregator.Detail
 
 /**
  * This file manipulates playlist to be set in the RecylerAdapter

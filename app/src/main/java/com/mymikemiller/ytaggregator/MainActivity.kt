@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator
+package com.mymikemiller.ytaggregator
 
 import android.app.Activity
 import android.content.*
@@ -18,7 +18,7 @@ import android.view.inputmethod.InputMethodManager
 import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.view.ViewPager
 import android.content.Intent
-import com.mymikemiller.aggregator.util.*
+import com.mymikemiller.ytaggregator.util.*
 import android.content.IntentFilter
 import android.text.*
 import android.text.method.LinkMovementMethod

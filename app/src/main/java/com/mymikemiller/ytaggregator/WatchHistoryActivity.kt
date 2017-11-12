@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator
+package com.mymikemiller.ytaggregator
 
 import android.app.Activity
 import android.os.Bundle
@@ -8,7 +8,7 @@ import kotlinx.android.synthetic.main.activity_watch_history.*
 import android.content.Intent
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import com.mymikemiller.aggregator.util.WatchHistory
+import com.mymikemiller.ytaggregator.util.WatchHistory
 
 
 class WatchHistoryActivity : AppCompatActivity() {

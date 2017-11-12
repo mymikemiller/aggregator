@@ -1,11 +1,11 @@
-package com.mymikemiller.aggregator.util
+package com.mymikemiller.ytaggregator.util
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
-import com.mymikemiller.aggregator.Channel
+import com.mymikemiller.ytaggregator.Channel
 import java.sql.SQLException
 
 /**

@@ -1,16 +1,16 @@
-package com.mymikemiller.aggregator.util
+package com.mymikemiller.ytaggregator.util
 
 import android.content.Context
-import com.mymikemiller.aggregator.Detail
-import com.mymikemiller.aggregator.yt.YouTubeAPI
+import com.mymikemiller.ytaggregator.Detail
+import com.mymikemiller.ytaggregator.yt.YouTubeAPI
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.content.ContentValues.TAG
 import android.content.ContentValues
 import android.util.Log
 import com.google.api.client.util.DateTime
-import com.mymikemiller.aggregator.Channel
-import com.mymikemiller.aggregator.PlaylistDetail
+import com.mymikemiller.ytaggregator.Channel
+import com.mymikemiller.ytaggregator.PlaylistDetail
 import java.sql.SQLException
 
 /**

@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator
+package com.mymikemiller.ytaggregator
 
 import android.app.Activity
 import android.content.Intent
@@ -9,8 +9,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ListView
-import com.mymikemiller.aggregator.util.PlaylistChannels
-import com.mymikemiller.aggregator.util.VideoList
+import com.mymikemiller.ytaggregator.util.PlaylistChannels
+import com.mymikemiller.ytaggregator.util.VideoList
 
 
 /**

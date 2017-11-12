@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mymikemiller.aggregator">
+    package="com.mymikemiller.ytaggregator">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -15,7 +15,7 @@
 
         <!-- this SearchableActivity performs youtube channel searches
              and displays the results in a ListView-->
-        <activity android:name="com.mymikemiller.aggregator.PlaylistChooserActivity"
+        <activity android:name="com.mymikemiller.ytaggregator.PlaylistChooserActivity"
             android:launchMode="singleTop"
             android:label="@string/title_activity_select_playlist"
             android:theme="@style/AppTheme.NoActionBar">
@@ -24,7 +24,7 @@
 
         <!-- this SearchableActivity performs youtube channel searches
              and displays the results in a ListView-->
-        <activity android:name="com.mymikemiller.aggregator.ChannelSearchActivity"
+        <activity android:name="com.mymikemiller.ytaggregator.ChannelSearchActivity"
             android:launchMode="singleTop">
 
             <intent-filter>
@@ -38,7 +38,7 @@
                 android:value=".ChannelSearchableActivity" />
         </activity>
         <activity
-            android:name="com.mymikemiller.aggregator.MainActivity"
+            android:name="com.mymikemiller.ytaggregator.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="sensor"
             android:windowSoftInputMode="adjustResize">
@@ -49,7 +49,7 @@
             </intent-filter>
 
         </activity>
-        <activity android:name="com.mymikemiller.aggregator.PreferencesActivity">
+        <activity android:name="com.mymikemiller.ytaggregator.PreferencesActivity">
 
             <intent-filter>
                 <action android:name="com.mikemiller.aggregator.USER_SIGNED_IN" />
@@ -57,11 +57,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.mymikemiller.aggregator.WatchHistoryActivity"
+            android:name="com.mymikemiller.ytaggregator.WatchHistoryActivity"
             android:label="@string/title_activity_watch_history"
             android:theme="@style/AppTheme.NoActionBar"/>
         <activity
-            android:name="com.mymikemiller.aggregator.ManageChannelsActivity"
+            android:name="com.mymikemiller.ytaggregator.ManageChannelsActivity"
             android:label="@string/title_activity_manage_channels"
             android:theme="@style/AppTheme.NoActionBar"/>
     </application>

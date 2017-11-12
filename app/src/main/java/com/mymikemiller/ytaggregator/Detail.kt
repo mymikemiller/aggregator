@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator
+package com.mymikemiller.ytaggregator
 
 import android.os.Parcel
 import android.os.Parcelable

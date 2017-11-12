@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator
+package com.mymikemiller.ytaggregator
 
 import android.content.Context
 import android.content.Intent
@@ -12,7 +12,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.Toast
-import com.mymikemiller.aggregator.yt.YouTubeAPI
+import com.mymikemiller.ytaggregator.yt.YouTubeAPI
 import android.widget.ArrayAdapter
 import android.app.AlertDialog
 import android.os.Handler

@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator
+package com.mymikemiller.ytaggregator
 
 /*
  * Copyright 2012 Google Inc. All Rights Reserved.

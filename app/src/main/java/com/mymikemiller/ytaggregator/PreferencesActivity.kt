@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator
+package com.mymikemiller.ytaggregator
 
 import android.app.AlertDialog
 import android.os.Bundle
@@ -16,17 +16,17 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.Scope
-import com.mymikemiller.aggregator.util.PlaylistChannels
-import com.mymikemiller.aggregator.util.VideoList
-import com.mymikemiller.aggregator.yt.YouTubeAPI
+import com.mymikemiller.ytaggregator.util.PlaylistChannels
+import com.mymikemiller.ytaggregator.util.VideoList
+import com.mymikemiller.ytaggregator.yt.YouTubeAPI
 import android.content.Context
 import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import com.mymikemiller.aggregator.util.PlaylistManipulator
-import com.mymikemiller.aggregator.util.RemovePrevious
+import com.mymikemiller.ytaggregator.util.PlaylistManipulator
+import com.mymikemiller.ytaggregator.util.RemovePrevious
 
 
 /**
@@ -42,10 +42,10 @@ class PreferencesActivity : PreferenceActivity(),
         val APP_SHARED_PREFERENCES = "AGGREGATOR_SHARED_PREFERENCES"
         val PLAYLIST_SHARED_PREF_NAME = "PlaylistPrefs"
 
-        const val MANAGE_CHANNELS = "com.mymikemiller.aggregator.MANAGE_CHANNELS"
-        const val CHANGE_PLAYLIST_TITLE = "com.mymikemiller.aggregator.CHANGE_PLAYLIST_TITLE"
-        const val SHOW_ALL = "com.mymikemiller.aggregator.SHOW_ALL"
-        const val WATCH_HISTORY = "com.mymikemiller.aggregator.WATCH_HISTORY"
+        const val MANAGE_CHANNELS = "com.mymikemiller.ytaggregator.MANAGE_CHANNELS"
+        const val CHANGE_PLAYLIST_TITLE = "com.mymikemiller.ytaggregator.CHANGE_PLAYLIST_TITLE"
+        const val SHOW_ALL = "com.mymikemiller.ytaggregator.SHOW_ALL"
+        const val WATCH_HISTORY = "com.mymikemiller.ytaggregator.WATCH_HISTORY"
 
         private lateinit var mGoogleApiClient: GoogleApiClient
 

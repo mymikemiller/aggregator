@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator.yt
+package com.mymikemiller.ytaggregator.yt
 
 import android.accounts.Account
 import android.content.Context
@@ -21,7 +21,7 @@ import com.google.api.services.youtube.model.PlaylistSnippet
 import com.google.api.services.youtube.model.PlaylistItem
 import com.google.api.services.youtube.model.ResourceId
 import com.google.api.services.youtube.model.PlaylistItemSnippet
-import com.mymikemiller.aggregator.*
+import com.mymikemiller.ytaggregator.*
 
 
 val HTTP_TRANSPORT = NetHttpTransport()

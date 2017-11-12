@@ -1,4 +1,4 @@
-package com.mymikemiller.aggregator
+package com.mymikemiller.ytaggregator
 
 /**
  * Static container class for holding a reference to your YouTube Developer Key.

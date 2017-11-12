@@ -8,7 +8,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:434170587550:android:ea9acdf666487d58",
         "android_client_info": {
-          "package_name": "com.mymikemiller.aggregator"
+          "package_name": "com.mymikemiller.ytaggregator"
         }
       },
       "oauth_client": [
@@ -20,7 +20,7 @@
           "client_id": "434170587550-j231ddihsb216ou5kveqfq0qrllhcis9.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.mymikemiller.aggregator",
+            "package_name": "com.mymikemiller.ytaggregator",
             "certificate_hash": "a1365e108d7008373d1968b168a5b2c45baf4ee7"
           }
         }
