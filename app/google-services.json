@@ -1,33 +1,111 @@
 {
   "project_info": {
-    "project_number": "434170587550",
-    "project_id": "chrono-player-181521"
+    "project_number": "691713754073",
+    "project_id": "yt-aggregator"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:434170587550:android:ea9acdf666487d58",
+        "mobilesdk_app_id": "1:691713754073:android:6c8536e983ff21e1",
+        "android_client_info": {
+          "package_name": "com.mymikemiller.ytaggregator"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "691713754073-209tff3vbog5ghbi2mu7leb2ur631rt4.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "691713754073-lg5juh2hkncd4ce0m9o3lsmpeklt95vo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mymikemiller.ytaggregator",
+            "certificate_hash": "2f39433621923008540a65afabea593881935822"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLcB7gGFOPmM8ivADjDWKux_SzorqM-uc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:691713754073:android:a3b3e6624b32f1c4",
+        "android_client_info": {
+          "package_name": "com.mymikemiller.ytaggregator2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "691713754073-9d43i4vfr7528ds5csvrk6oe2jofr7mc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mymikemiller.ytaggregator2",
+            "certificate_hash": "2f39433621923008540a65afabea593881935822"
+          }
+        },
+        {
+          "client_id": "691713754073-209tff3vbog5ghbi2mu7leb2ur631rt4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLcB7gGFOPmM8ivADjDWKux_SzorqM-uc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:691713754073:android:fc717d405e8473c7",
         "android_client_info": {
           "package_name": "com.mymikemiller.aggregator2"
         }
       },
       "oauth_client": [
         {
-          "client_id": "434170587550-8pe21shjv67vr5f4p20gh73k28f4e692.apps.googleusercontent.com",
-          "client_type": 3
-        },
-        {
-          "client_id": "434170587550-j231ddihsb216ou5kveqfq0qrllhcis9.apps.googleusercontent.com",
+          "client_id": "691713754073-r3arvnjnbrou3vq1iq0agcchjoc9taku.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.mymikemiller.ytaggregator",
-            "certificate_hash": "a1365e108d7008373d1968b168a5b2c45baf4ee7"
+            "package_name": "com.mymikemiller.aggregator2",
+            "certificate_hash": "2f39433621923008540a65afabea593881935822"
           }
+        },
+        {
+          "client_id": "691713754073-209tff3vbog5ghbi2mu7leb2ur631rt4.apps.googleusercontent.com",
+          "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCpd7rcldTve62svRBUi4_nN8GCgzWF7qw"
+          "current_key": "AIzaSyDLcB7gGFOPmM8ivADjDWKux_SzorqM-uc"
         }
       ],
       "services": {
