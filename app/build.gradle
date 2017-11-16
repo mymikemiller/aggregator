@@ -11,8 +11,8 @@ android {
         applicationId "com.mymikemiller.aggregator2" // If changing this, make sure to update google-services by creating one here: https://developers.google.com/mobile/add?platform=android&
         minSdkVersion 19
         targetSdkVersion 19
-        versionCode 5
-        versionName "5.0"
+        versionCode 6
+        versionName "6.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
